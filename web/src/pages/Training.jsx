@@ -62,8 +62,8 @@ export function MbActivities() {
       <Rows
         path="pages.mb-activities.rows"
         min={3}
-        cap={6}
-        addLabel="加一次活動"
+        addLabel={null}
+        del={false}
         cols={[
           { k: 'date', label: '日期', en: 'Date', type: 'date' },
           { k: 'place', label: '地點', en: 'Place' },
@@ -71,9 +71,6 @@ export function MbActivities() {
           { k: 'certifiedBy', label: '確認人簽署', en: 'Certified by', width: 1.2 },
         ]}
       />
-      <div className="mini-sig">
-        <ItemLine label="三次活動已完成並經確認" en="Three activities certified" ids={['L1-ACT-01']} />
-      </div>
     </Page>
   );
 }
@@ -135,11 +132,15 @@ export function MbPresented() {
   return (
     <Page id="mb-presented" className="p-presented">
       <H en="Membership Badge">會員章</H>
-      <Present page="mb-presented" signer="樂行童軍團長" en="Rover Scout Leader" />
-      <div className="present__extra">
-        <Sig path="pages.mb-presented.chair" title="管理委員會主席" label="管理委員會主席簽署 Signature of Chairperson, Management Committee" />
-        <Sig path="pages.mb-presented.counter" title="副署" label="副署 Countersigned by" />
+      <div className="present__first">
+        <Sig
+          path="pages.mb-presented.chair"
+          title="管理委員會主席"
+          label="管理委員會主席簽署 Signature of Chairperson, Management Committee"
+          en="Chairperson, Management Committee"
+        />
       </div>
+      <Present page="mb-presented" signer="樂行童軍團長" en="Rover Scout Leader" />
     </Page>
   );
 }
@@ -176,11 +177,15 @@ export function EpPresented() {
   return (
     <Page id="ep-presented" className="p-presented">
       <H en="Rover Scout Epaulettes">樂行童軍肩章</H>
-      <Present page="ep-presented" signer="樂行童軍團長" en="Rover Scout Leader" />
-      <div className="present__extra">
-        <Sig path="pages.ep-presented.chair" title="管理委員會主席" label="管理委員會主席簽署 Signature of Chairperson, Management Committee" />
-        <Sig path="pages.ep-presented.counter" title="副署" label="副署 Countersigned by" />
+      <div className="present__first">
+        <Sig
+          path="pages.ep-presented.chair"
+          title="管理委員會主席"
+          label="管理委員會主席簽署 Signature of Chairperson, Management Committee"
+          en="Chairperson, Management Committee"
+        />
       </div>
+      <Present page="ep-presented" signer="樂行童軍團長" en="Rover Scout Leader" />
     </Page>
   );
 }
@@ -278,7 +283,7 @@ export function Scoutcraft() {
         <ProgressRow label="證書及日期" en="" ids={['L3-SCOUT-02']} />
       </div>
 
-      <Bilingual as="h4" className="pgh" zh="2.3 隊列訓練（第五版新增）" en="Footdrill" />
+      <Bilingual as="h4" className="pgh" zh="2.3 隊列訓練" en="Footdrill" />
       <ProgressRow label="完成隊列訓練工作坊及步操訓練班" en="Footdrill workshop and drill course" ids={['L3-SCOUT-03']} />
 
       <Comment page="scoutcraft" />
@@ -356,7 +361,7 @@ export function Wellness1() {
       <Rows
         path="pages.wellness-1.certs"
         min={2}
-        addLabel="加一項證書／課程"
+        addLabel={null}
         cols={[
           { k: 'item', label: '項目', en: 'Items', width: 2.2 },
           { k: 'cert', label: '證書編號', en: 'Certificate No.' },

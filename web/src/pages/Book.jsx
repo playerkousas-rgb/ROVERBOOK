@@ -223,13 +223,13 @@ export function Changes() {
       <H en="TRANSFER / CHANGE OF ADDRESS / CHANGE OF PARTICULARS">轉旅 · 遷移地址 · 更改摘要</H>
 
       <Bilingual as="h4" className="pgh" zh="轉旅" en="TRANSFER OF GROUP" />
-      <Rows path="transfers" min={3} addLabel="加一次轉旅" cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'groupNo', label: '新旅旅號', en: 'Number of New Group' }]} />
+      <Rows path="transfers" min={3} addLabel={null} cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'groupNo', label: '新旅旅號', en: 'Number of New Group' }]} />
 
       <Bilingual as="h4" className="pgh" zh="遷移地址" en="CHANGE OF ADDRESS" />
-      <Rows path="addressChanges" min={3} addLabel="加一次搬遷" cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'address', label: '新地址', en: 'New Address', width: 2.4 }]} />
+      <Rows path="addressChanges" min={3} addLabel={null} cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'address', label: '新地址', en: 'New Address', width: 2.4 }]} />
 
       <Bilingual as="h4" className="pgh" zh="更改個人摘要" en="CHANGE OF PERSONAL PARTICULARS" />
-      <Rows path="detailChanges" min={3} addLabel="加一次更改" cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'item', label: '項目', en: 'Item' }, { k: 'content', label: '內容', en: 'Content', width: 2 }]} />
+      <Rows path="detailChanges" min={3} addLabel={null} cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'item', label: '項目', en: 'Item' }, { k: 'content', label: '內容', en: 'Content', width: 2 }]} />
     </Page>
   );
 }
@@ -285,11 +285,7 @@ export function Renewals({ part = 0 }) {
           );
         })}
       </div>
-      {part === 0 ? (
-        <button type="button" className="addrow addrow--quiet" onClick={() => update((b) => ({ ...b, renewals: [...(b.renewals || []), { id: `rnw_${Math.random().toString(36).slice(2, 8)}`, year: '', validUntil: '', signature: null }] }))}>
-          + {isEn ? 'Add a renewal year' : '加一年續會'}
-        </button>
-      ) : (
+      {part === 1 && (
         <Note en="Membership has to be renewed and confirmed by the Rover Scout Leader by signature and chop, valid from 1 January to 31 December each year.">
           更新成員資格應按年由團長簽署及蓋章確認，並由該年一月一日至十二月三十一日止。
         </Note>
@@ -307,7 +303,7 @@ export function ServiceAwards() {
       <Rows
         path="service"
         min={3}
-        addLabel="加一項服務"
+        addLabel={null}
         cols={[
           { k: 'post', label: '崗位／職位', en: 'Post / Title', width: 1.6 },
           { k: 'from', label: '由', en: 'From' },
@@ -323,7 +319,7 @@ export function ServiceAwards() {
       <Rows
         path="awards"
         min={3}
-        addLabel="加一項獎章"
+        addLabel={null}
         cols={[
           { k: 'name', label: '獎章／獎勵名稱', en: 'Name of Award' },
           { k: 'summary', label: '內容簡述', en: 'Summary of Content', width: 1.5 },
@@ -409,7 +405,7 @@ export function BadgeTable({ id, title, en, path }) {
       <Rows
         path={path}
         min={8}
-        addLabel="加一個獎章"
+        addLabel={null}
         cols={[
           { k: 'name', label: '獎章', en: 'Badges', width: 2 },
           { k: 'cert', label: '證書編號', en: 'Certificate No.', width: 1.4 },
@@ -430,7 +426,7 @@ export function Experience({ id, title, en, path, lead, leadEn }) {
       <Rows
         path={path}
         min={9}
-        addLabel="加一項"
+        addLabel={null}
         cols={[
           { k: 'period', label: '時段', en: 'Period', width: 1.1 },
           { k: 'item', label: '項目', en: 'Items', width: 1.2 },

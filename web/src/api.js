@@ -14,7 +14,7 @@ async function request(path, { method = 'GET', body } = {}) {
     }
   }
   if (res.ok && data === null) {
-    const err = new Error('此部署未提供伺服器功能（分享／Wallet 需要 Node 伺服器）；其餘紀錄冊功能不受影響。');
+    const err = new Error('此部署未提供伺服器功能（分享需要 Node 伺服器）；其餘紀錄冊功能不受影響。');
     err.status = res.status;
     throw err;
   }

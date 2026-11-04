@@ -14,10 +14,10 @@ import {
   Interview, BpaPresented,
 } from './pages/Training.jsx';
 import Appendix from './pages/Appendix.jsx';
+import PrintBook from './pages/PrintBook.jsx';
 import Welcome from './pages/Welcome.jsx';
 import SharedBook from './pages/SharedBook.jsx';
 import ShareDialog from './components/ShareDialog.jsx';
-import WalletDialog from './components/WalletDialog.jsx';
 import MenuDialog from './components/MenuDialog.jsx';
 import { FormsIndex, FormDoc, FormsAll } from './pages/Forms.jsx';
 import Scan, { ScanView } from './pages/Scan.jsx';
@@ -157,7 +157,6 @@ function BookApp({ book, saveIssue }) {
   const { isEn, toggle } = useLang();
   const { push } = useToast();
   const [shareOpen, setShareOpen] = useState(false);
-  const [walletOpen, setWalletOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
@@ -189,6 +188,7 @@ function BookApp({ book, saveIssue }) {
     return all[0] || null;
   });
 
+  const printAll = path === '/print';
   const section = path.startsWith('/p/') ? path.slice(3) : null;
   const formId = path.startsWith('/forms') ? path.split('/').filter(Boolean)[1] || 'index' : null;
   const scanPath = ['/scan', '/scan/view', '/scan/signoff'].includes(path) ? path : null;
@@ -248,7 +248,7 @@ function BookApp({ book, saveIssue }) {
   }, [go]);
 
   return (
-    <div className={cx('app', scanPath ? 'app--scan' : formId ? 'app--forms' : section ? 'app--book' : 'app--cover')}>
+    <div className={cx('app', printAll ? 'app--print' : scanPath ? 'app--scan' : formId ? 'app--forms' : section ? 'app--book' : 'app--cover')}>
       <header className={cx('chipbar', section && 'chipbar--page')}>
         <Link to="/" className="chipbar__brand">
           <Crest size={26} />
@@ -363,7 +363,9 @@ function BookApp({ book, saveIssue }) {
           )}
           style={{ zoom }}
         >
-          {scanPath ? (
+          {printAll ? (
+            <PrintBook pages={PAGES} />
+          ) : scanPath ? (
             scanPath === '/scan/view' ? (
               <ScanView />
             ) : scanPath === '/scan/signoff' ? (
@@ -394,7 +396,7 @@ function BookApp({ book, saveIssue }) {
         </div>
       </main>
 
-      {scanPath ? null : section ? (
+      {scanPath || printAll ? null : section ? (
         <Pager current={section} />
       ) : (
         <div className="coverhint">
@@ -409,12 +411,7 @@ function BookApp({ book, saveIssue }) {
         onClose={() => setShareOpen(false)}
         share={share}
         setShare={setShare}
-        onWallet={() => {
-          setShareOpen(false);
-          setWalletOpen(true);
-        }}
       />
-      <WalletDialog open={walletOpen} onClose={() => setWalletOpen(false)} share={share} setShare={setShare} />
       {updateReady && (
         <div className="updatebar" role="status">
           <span>有新版本</span>
@@ -436,10 +433,6 @@ function BookApp({ book, saveIssue }) {
           setQrOpen(true);
         }}
         onIndex={() => setIndexOpen(true)}
-        onHome={() => {
-          setMenuOpen(false);
-          setWalletOpen(true);
-        }}
       />
     </div>
   );

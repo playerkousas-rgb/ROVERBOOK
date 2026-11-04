@@ -1,6 +1,6 @@
 // ROVERBOOK smoke test (v3 — one printed page per chapter)
 // Renders the cover, every page and the read-only share page inside jsdom
-// against the running dev server, then exercises the sharing / QR / wallet API.
+// against the running dev server, then exercises the sharing / QR API.
 //
 //   npm run dev      # in another terminal
 //   npm run smoke
@@ -636,14 +636,32 @@ await screen({
 // ---------------------------------------------------------------- 3. 互動
 
 await screen({
-  name: '填寫：新增一項服務並自動儲存',
+  name: '紙本固定行數：表單不再提供「加一行」',
   path: '/p/service-awards',
   interact: async (doc) => {
-    const before = (JSON.parse(localStorage.getItem('roverbook.book.v3')).service || []).length;
-    doc.querySelector('.addrow').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    if (doc.querySelector('.addrow')) throw new Error('仍出現「加一行」按鈕（紙本表格行數固定）');
+  },
+});
+
+await screen({
+  name: '填寫：服務紀錄第一行即時儲存',
+  path: '/p/service-awards',
+  interact: async (doc) => {
+    const rows = [...doc.querySelectorAll('.pgtable__row')].slice(1);
+    const blank = rows[1] || rows[0];
+    if (!blank) throw new Error('找不到資料行');
+    const box = blank.querySelector('.write');
+    if (!box) throw new Error('找不到可填寫的表格欄位');
+    box.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 200));
+    const input = blank.querySelector('.write__input');
+    if (!input) throw new Error('點擊後未出現輸入框');
+    const setValue = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setValue.call(input, '副團長');
+    input.dispatchEvent(new window.Event('input', { bubbles: true }));
     await new Promise((r) => setTimeout(r, 400));
-    const after = (JSON.parse(localStorage.getItem('roverbook.book.v3')).service || []).length;
-    if (after !== before + 1) throw new Error(`服務由 ${before} 變成 ${after}`);
+    const after = JSON.parse(localStorage.getItem('roverbook.book.v3')).service || [];
+    if (!after.some((r) => r.post === '副團長')) throw new Error(`未寫入：${JSON.stringify(after)}`);
   },
 });
 
@@ -810,46 +828,12 @@ const snapshot = buildSnapshot(demoBook(), { ...DEFAULT_SHARE, contact: false })
   const qr = await api('/api/qr.svg?d=' + encodeURIComponent(`${BASE}/v/abc`));
   report(qr.res.ok && qr.type.includes('svg') && qr.body.includes('<svg'), 'API /api/qr.svg 產生 SVG');
 
-  const status = await api('/api/wallet/status');
-  const apple = status.body.apple || {};
-  const google = status.body.google || {};
-  report(
-    status.res.ok && Array.isArray(apple.missing) && apple.configured === false && Array.isArray(google.missing),
-    'API /api/wallet/status',
-    `apple 缺 ${apple.missing?.length ?? '?'}、google 缺 ${google.missing?.length ?? '?'}`,
-  );
-
   const created = await api('/api/share', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ snapshot }),
   });
   const id = created.body.id;
-
-  const applePass = await api('/api/wallet/apple', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id }),
-  });
-  report(
-    applePass.res.status === 501 && (applePass.body.missing || []).includes('APPLE_PASS_TYPE_ID'),
-    'API Apple pass 未配置回 501 + 缺少清單',
-    applePass.res.status,
-  );
-
-  const googlePass = await api('/api/wallet/google', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id }),
-  });
-  report(
-    googlePass.res.status === 501 && (googlePass.body.missing || []).includes('GOOGLE_WALLET_ISSUER_ID'),
-    'API Google pass 未配置回 501 + 缺少清單',
-    googlePass.res.status,
-  );
-
-  const preview = await api(`/api/wallet/preview/${id}`);
-  report(preview.res.ok && preview.body.passJson?.generic?.primaryFields?.[0]?.value, 'API /api/wallet/preview/:id');
 
   await api(`/api/share/${id}`, {
     method: 'DELETE',
@@ -929,6 +913,18 @@ await screen({
   report(html.includes('PAGE 3') && html.includes('PERSONAL PARTICULARS'), '語言：重新載入後仍為英文');
   localStorage.removeItem('roverbook.lang');
 }
+
+// --------------------------------------------------------- v13 整本列印對頁
+
+await screen({
+  name: '整本列印：40 頁紙對 40 頁紀錄冊',
+  path: '/print',
+  expect: ['第 2 頁 · 共 41 頁', '第 41 頁 · 共 41 頁'],
+  interact: async (doc) => {
+    const n = doc.querySelectorAll('.printall__one .sheet').length;
+    if (n !== 40) throw new Error(`列印頁數 ${n}，應為 40`);
+  },
+});
 
 // ------------------------------------------------------- v12 圖示 · 聲明 · 頂欄
 

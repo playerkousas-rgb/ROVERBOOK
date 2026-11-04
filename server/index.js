@@ -16,7 +16,6 @@ app.disable('x-powered-by');
 app.set('trust proxy', true);
 
 app.get('/healthz', (_req, res) => res.json({ ok: true }));
-app.use('/assets/wallet', express.static(path.join(__dirname, 'assets', 'wallet'), { maxAge: '7d' }));
 app.use('/api', api);
 
 if (isProd) {

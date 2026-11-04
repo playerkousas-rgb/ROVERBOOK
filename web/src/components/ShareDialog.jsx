@@ -5,7 +5,7 @@ import { useBook } from '../bookContext.js';
 import { saveShare, forgetShare } from '../bookStore.js';
 import { Icon, Modal, useToast, cx, fmtDate } from '../ui.jsx';
 
-export default function ShareDialog({ open, onClose, share, setShare, onWallet }) {
+export default function ShareDialog({ open, onClose, share, setShare }) {
   const { book } = useBook();
   const { push } = useToast();
   const [include, setInclude] = useState(share?.include || DEFAULT_SHARE);
@@ -129,9 +129,6 @@ export default function ShareDialog({ open, onClose, share, setShare, onWallet }
                 <a className="btn btn--ghost btn--sm" href={share.path} target="_blank" rel="noreferrer">
                   <Icon name="external" size={14} /> 預覽
                 </a>
-                <button className="btn btn--ghost btn--sm" onClick={onWallet}>
-                  <Icon name="wallet" size={14} /> 放入錢包
-                </button>
               </div>
               <p className="sharestamp">
                 建立於 {fmtDate(share.createdAt, true)}
