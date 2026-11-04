@@ -704,18 +704,18 @@ await screen({
 });
 
 await screen({
-  name: '訓練細項：勾選寫入本機',
+  name: '訓練細項：填寫審核日期會寫入進度',
   path: '/p/mb-commitment',
   expect: ['Safe From Harm'],
   interact: async (doc) => {
-    const before = Object.values(JSON.parse(localStorage.getItem('roverbook.book.v3')).progress || {}).filter((p) => p?.date).length;
-    const box = doc.querySelector('.itemline__tick');
-    if (!box) throw new Error('找不到勾選框');
-    box.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    const field = doc.querySelector('.prow .write__date');
+    if (!field) throw new Error('找不到審核日期欄');
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setter.call(field, '2026-05-01');
+    field.dispatchEvent(new window.Event('input', { bubbles: true }));
     await new Promise((r) => setTimeout(r, 450));
-    const after = Object.values(JSON.parse(localStorage.getItem('roverbook.book.v3')).progress || {}).filter((p) => p?.date).length;
-    if (after === before) throw new Error(`進度項目數沒有改變（${before}）`);
-    if (window.document.querySelectorAll('.itemline.is-done').length === 0) throw new Error('勾選後未標記完成');
+    const progress = JSON.parse(localStorage.getItem('roverbook.book.v3')).progress || {};
+    if (!Object.values(progress).some((p) => p?.date === '2026-05-01')) throw new Error('審核日期未寫入進度');
   },
 });
 

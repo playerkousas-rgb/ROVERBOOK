@@ -106,10 +106,20 @@ export function MbCommitment() {
   return (
     <Page id="mb-commitment" className="p-items">
       <H no="(4)" en="Commitment" progress={['L1-PRM-01']}>許諾</H>
-      <ItemLine label="明瞭及能接納童軍誓詞及規律" en="Understand and accept the Scout Promise and Scout Law" ids={['L1-PRM-01']} />
+      <div className="itemhead itemhead--3">
+        <Bilingual zh="項目" en="Items" />
+        <Bilingual zh="審核員" en="Assessor" />
+        <Bilingual zh="日期" en="Date" />
+      </div>
+      <ProgressRow label="明瞭及能接納童軍誓詞及規律" en="Understand and accept the Scout Promise and Scout Law" ids={['L1-PRM-01']} cert={false} />
 
       <H no="(5)" en="Safe From Harm" progress={['L1-CP-01']}>保護童軍成員免受傷害</H>
-      <ItemLine label="完成「保護童軍成員免受傷害」網上自學課程" en="Finish the Safe From Harm Online Learning Course" ids={['L1-CP-01']} />
+      <div className="itemhead itemhead--3">
+        <Bilingual zh="項目" en="Items" />
+        <Bilingual zh="審核員" en="Assessor" />
+        <Bilingual zh="日期" en="Date" />
+      </div>
+      <ProgressRow label="完成「保護童軍成員免受傷害」網上自學課程" en="Finish the Safe From Harm Online Learning Course" ids={['L1-CP-01']} cert={false} />
 
       <div className="fduo sigspace">
         <Line label="宣誓日期 Date of Investiture" type="date" path="pages.mb-commitment.investiture" />
