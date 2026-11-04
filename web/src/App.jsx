@@ -23,6 +23,7 @@ import { FormsIndex, FormDoc, FormsAll } from './pages/Forms.jsx';
 import Scan, { ScanView } from './pages/Scan.jsx';
 import Signoff from './pages/Signoff.jsx';
 import ShowQrDialog from './components/ShowQrDialog.jsx';
+import { UPDATE_EVENT, applyPwaUpdate } from './pwa.js';
 
 const PAGES = {
   contents: Contents,
@@ -150,6 +151,22 @@ function BookApp({ book, saveIssue }) {
   const [walletOpen, setWalletOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
+  const [updateReady, setUpdateReady] = useState(false);
+  const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine !== false));
+
+  useEffect(() => {
+    const onUpdate = () => setUpdateReady(true);
+    const onOnline = () => setOnline(true);
+    const onOffline = () => setOnline(false);
+    window.addEventListener(UPDATE_EVENT, onUpdate);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener(UPDATE_EVENT, onUpdate);
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
   const [indexOpen, setIndexOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [savedAt, setSavedAt] = useState(null);
@@ -276,6 +293,13 @@ function BookApp({ book, saveIssue }) {
         </div>
       </header>
 
+      {!online && (
+        <div className="offlinebar" role="status">
+          <Icon name="lock" size={14} />
+          <span>離線模式：紀錄冊全部在這部手機，照樣可以填寫、簽名、生成表格及列印。</span>
+        </div>
+      )}
+
       {saveIssue && (
         <div className="savealert" role="alert">
           <Icon name="alert" size={16} />
@@ -373,6 +397,18 @@ function BookApp({ book, saveIssue }) {
         }}
       />
       <WalletDialog open={walletOpen} onClose={() => setWalletOpen(false)} share={share} setShare={setShare} />
+      {updateReady && (
+        <div className="updatebar" role="status">
+          <span>有新版本</span>
+          <button className="btn btn--primary btn--sm" onClick={() => applyPwaUpdate()}>
+            重新載入
+          </button>
+          <button className="updatebar__x" aria-label="稍後" onClick={() => setUpdateReady(false)}>
+            <Icon name="x" size={14} />
+          </button>
+        </div>
+      )}
+
       <ShowQrDialog open={qrOpen} onClose={() => setQrOpen(false)} />
       <MenuDialog
         open={menuOpen}

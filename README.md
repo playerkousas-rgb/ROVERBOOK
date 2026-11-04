@@ -181,18 +181,31 @@ PUBLIC_BASE_URL
 - 儲存失敗（例如爆 quota 或私人模式封鎖）時：頂欄會顯示「未儲存」，並出現紅色提示條叫你壓縮或匯出 —— 唔會再靜靜咁失效。
 - 建議每隔一段時間匯出一次備份（JSON），換機或清理瀏覽器資料時可完整還原。
 
-## 10. 與 ROVERBADGE 互通（匯出／匯入）
+## 10. 離線使用（PWA）
+
+第一次**連網**開啟之後，app 外殼（HTML／JS／CSS／圖示）會由 service worker 存落手機；之後**飛機模式都用得**。
+
+- 離線可以做：逐頁填寫、手寫、簽名、生成三張官方表格、「預覽」及列印／存 PDF、掃描二維碼（相機唔需要網絡）。
+- 離線做唔到：建立分享連結（需要伺服器）——但日常核對用二維碼即可。
+- 開啟方式：iOS Safari／Chrome「分享 → 加入主畫面」；Android Chrome「安裝應用程式」。用主畫面圖示開啟即為全螢幕。
+- **更新**：每次開 app 或回到前景會檢查新版本；一有更新會彈「有新版本 / 重新載入」，唔會長期停留在舊版。
+- 快取策略：`/assets/*`（有 hash）用 cache-first；頁面導航用 network-first，失敗才用快取；`/api/*` 完全唔經快取。
+- 開發者：改版時把 `web/public/sw.js` 的 `VERSION` 加一，`activate` 會清走舊 cache。
+
+**驗證方法**：開一次網站 → DevTools → Network → 勾 Offline → 重新載入，應該照開、照填、照列印。
+
+## 11. 與 ROVERBADGE 互通（匯出／匯入）
 
 同一套 `L1…L4` 項目編號（32 細項，綱要第五版）。訓練頁或附錄可匯出 ROVERBADGE 相容 JSON；
 匯入時先配 YMIS、再配姓名，不會覆寫本機已有的日期與簽名。只交換「項目 + 日期」，不交換簽名。
 部分紙本細項（例如禮節 3.2）在綱要中併入同一項，電子版會同步標記同一組細項。
 
-## 11. 開始使用
+## 12. 開始使用
 
 ```bash
 npm install
 npm run dev      # http://localhost:3001
-npm run smoke    # 96 項：封面、41 頁逐頁、填寫／手寫／壓縮／簽名、三張表格、列印、二維碼傳送、領袖核簽、儲存健康、分享、API、Wallet 501
+npm run smoke    # 99 項：封面、41 頁逐頁、填寫／手寫／壓縮／簽名、三張表格、列印、二維碼傳送、領袖核簽、儲存健康、離線／更新、分享、API、Wallet 501
 npm run build && npm start
 ```
 
@@ -205,9 +218,9 @@ repo 已附 `vercel.json`：`npm run build` → `dist`，所有路徑 rewrite �
 - Vercel 上係**純靜態、零後端、零按人頭成本**：紀錄冊資料只存喺各人自己部機，你唔需要為每個旅團準備資料庫或儲存空間。
 - 換機／換瀏覽器要先用「匯出備份」再「匯入」。
 - 分享連結、QR、Apple/Google Wallet 需要 Node 伺服器（`npm start` 或自行部署 `server/`）先有 `/api`；靜態部署時呢幾粒掣會報錯，其餘功能不受影響。
-- 部署後建議即試：`/forms/pt21` →「預覽」→「列印」；以及 `/scan`（相機需要 HTTPS，Vercel 已提供）。
+- 部署後建議即試：`/forms/pt21` →「預覽」→「列印」；`/scan`（相機需要 HTTPS，Vercel 已提供）；以及**離線測試**（第一次開完 → 開飛機模式 → 重新載入）。
 
-## 12. 結構
+## 13. 結構
 
 ```
 server/   index.js（Vite/靜態）、api.js（share/QR/wallet）、store.js、wallet.js
@@ -219,7 +232,7 @@ web/src/  App.jsx（封面／翻頁／目錄／放大）
 scripts/  smoke.mjs、make-wallet-assets.mjs
 ```
 
-## 13. 已知限制
+## 14. 已知限制
 
 - 資料在 localStorage；清除瀏覽器資料會失去，請定期匯出備份。
 - 自動縮字是版面效果，不是無限容量：極長文字仍建議用放大輸入查看。
