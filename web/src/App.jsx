@@ -19,7 +19,7 @@ import SharedBook from './pages/SharedBook.jsx';
 import ShareDialog from './components/ShareDialog.jsx';
 import WalletDialog from './components/WalletDialog.jsx';
 import MenuDialog from './components/MenuDialog.jsx';
-import { FormsIndex, FormDoc } from './pages/Forms.jsx';
+import { FormsIndex, FormDoc, FormsAll } from './pages/Forms.jsx';
 
 const PAGES = {
   contents: Contents,
@@ -230,7 +230,7 @@ function BookApp({ book }) {
         {formId && (
           <span className="chipbar__page chipbar__page--static">
             <span>表格</span>
-            <strong>{formId === 'index' ? '三張官方表格' : 'PT/' + formId.slice(2)}</strong>
+            <strong>{formId === 'index' ? '三張官方表格' : formId === 'all' ? '全部三張' : 'PT/' + formId.slice(2)}</strong>
           </span>
         )}
 
@@ -286,7 +286,7 @@ function BookApp({ book }) {
         <div className={cx('stage__inner', section && 'stage__inner--page', formId && 'stage__inner--forms')} style={{ zoom }}>
           {formId ? (
             <div className="turn" key={formId}>
-              {formId === 'index' ? <FormsIndex /> : <FormDoc id={formId} />}
+              {formId === 'index' ? <FormsIndex /> : formId === 'all' ? <FormsAll /> : <FormDoc id={formId} />}
             </div>
           ) : Page ? (
             <div className="turn" key={section}>

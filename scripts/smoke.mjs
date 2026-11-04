@@ -8,6 +8,7 @@
 import { build } from 'esbuild';
 import { JSDOM } from 'jsdom';
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { demoBook, buildSnapshot, DEFAULT_SHARE, SECTIONS, PAGE_TOTAL } from '../shared/book.js';
 
@@ -236,6 +237,72 @@ await screen({
   expect: ['貝登堡獎章及證書申請表', '有效急救證書編號', '樂行童軍獎章'],
   wait: 520,
 });
+
+{
+  reset();
+  seed(demoBook());
+  await renderPath('/forms/pt21', {
+    wait: 520,
+    interact: async (doc) => {
+      const btn = [...doc.querySelectorAll('button')].find((b) => b.textContent.includes('預覽'));
+      if (!btn) throw new Error('找不到預覽按鈕');
+      btn.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 220));
+      if (!doc.body.classList.contains('preview-print')) throw new Error('未進入列印預覽');
+    },
+  });
+  report(true, '列印預覽：隱藏介面、原尺寸顯示文件');
+}
+
+{
+  reset();
+  seed(demoBook());
+  await renderPath('/forms/pt69', {
+    wait: 520,
+    interact: async (doc) => {
+      const cell = doc.querySelector('.fd-tbl--plan tbody .write');
+      if (!cell) throw new Error('找不到計劃簡述欄位');
+      cell.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 220));
+      const input = doc.querySelector('.fd-tbl--plan .write__input');
+      if (!input) throw new Error('點擊後未出現輸入框');
+      const proto =
+        input.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+      Object.getOwnPropertyDescriptor(proto, 'value').set.call(input, '木章第一階段 1A／1B 已完成');
+      input.dispatchEvent(new window.Event('input', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 700));
+      const stored = JSON.parse(localStorage.getItem('roverbook.book.v3'));
+      if (!stored.forms?.pt69?.plans?.dedication) throw new Error('補寫內容未存入紀錄冊');
+    },
+  });
+  report(true, '表格內補寫的計劃簡述會存檔並可列印');
+}
+
+{
+  reset();
+  seed(demoBook());
+  const all = await renderPath('/forms/all', { wait: 620 });
+  const docs = (all.match(/class="formdoc/g) || []).length;
+  report(
+    all.includes('列印全部') && all.includes('FORM PT/69') && all.includes('FORM PT/21') && all.includes('FORM PT/22'),
+    '一次列印三張：三份文件同頁',
+  );
+  report(docs === 3, '全部列印：文件數目', `${docs} 份`);
+}
+
+{
+  const assets = path.join(ROOT, 'dist', 'assets');
+  const css = fs.existsSync(assets)
+    ? fs
+        .readdirSync(assets)
+        .filter((f) => f.endsWith('.css'))
+        .map((f) => fs.readFileSync(path.join(assets, f), 'utf8'))
+        .join('\n')
+    : '';
+  const hasPrint = css.includes('@media print') && css.includes('.app--forms .formbar');
+  const hasBreak = css.includes('break-before') || css.includes('page-break-before');
+  report(hasPrint && hasBreak, '列印樣式：只印文件、逐張分頁', hasPrint ? '' : '缺少列印規則');
+}
 
 {
   reset();

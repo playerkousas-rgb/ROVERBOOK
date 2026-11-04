@@ -13,6 +13,73 @@ const fmtDate = (v) => {
 };
 const tick = (on) => (on ? '☑' : '☐');
 
+const getIn = (obj, path) =>
+  path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
+
+function setIn(obj, path, value) {
+  const next = structuredClone(obj || {});
+  const keys = path.split('.');
+  let cur = next;
+  keys.slice(0, -1).forEach((k) => {
+    if (!cur[k] || typeof cur[k] !== 'object') cur[k] = {};
+    cur = cur[k];
+  });
+  cur[keys[keys.length - 1]] = value;
+  return next;
+}
+
+const printNow = async () => {
+  try {
+    await document.fonts?.ready;
+  } catch {
+    /* ignore */
+  }
+  setTimeout(() => window.print(), 80);
+};
+
+/* 螢幕上的「列印預覽」：把將要印出的結果原樣顯示 */
+function usePrintPreview() {
+  const [preview, setPreview] = useState(false);
+  useEffect(() => {
+    document.body.classList.toggle('preview-print', preview);
+    return () => document.body.classList.remove('preview-print');
+  }, [preview]);
+  return [preview, setPreview];
+}
+
+function PreviewBar({ preview, onToggle, onPrint }) {
+  if (!preview) return null;
+  return (
+    <div className="previewbar">
+      <span>列印預覽 · 只會印出文件</span>
+      <button className="btn btn--ghost btn--sm" onClick={onToggle}>
+        離開預覽
+      </button>
+      <button className="btn btn--primary btn--sm" onClick={onPrint}>
+        <Icon name="print" size={14} /> 列印
+      </button>
+    </div>
+  );
+}
+
+/* 文件內可直接補寫的欄位（紀錄冊沒有的資料），存於 book.forms */
+function FormField({ path, fallback = '', placeholder = '', multiline = false, rows = 2 }) {
+  const { book, update } = useBook();
+  const stored = getIn(book, `forms.${path}`);
+  const value = stored === undefined || stored === null || stored === '' ? fallback : stored;
+  return (
+    <Write
+      value={value}
+      multiline={multiline}
+      rows={rows}
+      compact
+      label={placeholder || '填寫'}
+      placeholder={placeholder}
+      onChange={(v) => update((b) => ({ ...b, forms: setIn(b.forms || {}, path, v) }))}
+    />
+  );
+}
+
 /* ------------------------------------------------------------------ 首頁 */
 
 export function FormsIndex() {
@@ -91,6 +158,9 @@ export function FormsIndex() {
         <Link to="/p/particulars-1" className="btn btn--ghost">
           <Icon name="back" size={15} /> 返回紀錄冊
         </Link>
+        <Link to="/forms/all" className="btn btn--gold">
+          <Icon name="print" size={15} /> 一次列印三張
+        </Link>
         <p>
           三張表格的公函部分（區總監、地域、青少年活動署簽署及蓋章）留白，交由領袖及總會填寫。
         </p>
@@ -127,6 +197,7 @@ export function FormDoc({ id }) {
   const status = formStatus(book)[id];
   const [wrapRef, scale] = useFitScale();
   const [full, setFull] = useState(false);
+  const [preview, setPreview] = usePrintPreview();
 
   useEffect(() => {
     if (!meta) navigate('/forms', { replace: true });
@@ -136,6 +207,7 @@ export function FormDoc({ id }) {
 
   return (
     <div className="formpage">
+      <PreviewBar preview={preview} onToggle={() => setPreview(false)} onPrint={printNow} />
       <div className="formbar">
         <Link to="/forms" className="btn btn--ghost btn--sm">
           <Icon name="back" size={14} /> 三張表格
@@ -146,7 +218,13 @@ export function FormDoc({ id }) {
         <button className="btn btn--ghost btn--sm" onClick={() => setFull((v) => !v)}>
           <Icon name="zoom" size={14} /> {full ? '全頁' : '放大'}
         </button>
-        <button className="btn btn--primary btn--sm" onClick={() => window.print()}>
+        <Link to="/forms/all" className="btn btn--ghost btn--sm">
+          <Icon name="book" size={14} /> 全部三張
+        </Link>
+        <button className="btn btn--ghost btn--sm" onClick={() => setPreview(true)}>
+          <Icon name="expand" size={14} /> 預覽
+        </button>
+        <button className="btn btn--primary btn--sm" onClick={printNow}>
           <Icon name="print" size={14} /> 列印 / 存 PDF
         </button>
       </div>
@@ -156,6 +234,10 @@ export function FormDoc({ id }) {
           <Icon name="info" size={14} /> {status?.note} 仍可生成，未完成的欄位會留白待手寫。
         </p>
       )}
+
+      <p className="formtip">
+        <Icon name="print" size={13} /> 列印：電腦 ⌘P／Ctrl+P；iPhone 分享 →「列印」（可揀另存 PDF）；Android ⋮ →「列印」。
+      </p>
 
       <div className={`formwrap${full ? ' is-full' : ''}`} ref={wrapRef}>
         <div className="formdoc" style={full ? undefined : { zoom: scale }}>
@@ -367,7 +449,15 @@ function Doc69({ data }) {
                     </small>
                   )}
                 </th>
-                <td className="fd-summary">{c.summary}</td>
+                <td className="fd-summary">
+                  <FormField
+                    path={`pt69.plans.${c.key}`}
+                    fallback={c.summary}
+                    placeholder="計劃簡述"
+                    multiline
+                    rows={2}
+                  />
+                </td>
                 <td>{c.from ? fmtDate(c.from) : ''}</td>
                 <td>{c.to ? fmtDate(c.to) : ''}</td>
               </tr>
@@ -748,6 +838,51 @@ function Doc22({ data }) {
         <p>2) 在一般情況下，申請表將於審批完成後 2 年銷毀。</p>
       </div>
     </>
+  );
+}
+
+/* --------------------------------------------------------- 一次列印三張 */
+
+export function FormsAll() {
+  const { book } = useBook();
+  const [wrapRef, scale] = useFitScale();
+  const [preview, setPreview] = usePrintPreview();
+
+  return (
+    <div className="formpage formsallpage">
+      <PreviewBar preview={preview} onToggle={() => setPreview(false)} onPrint={printNow} />
+      <div className="formbar">
+        <Link to="/forms" className="btn btn--ghost btn--sm">
+          <Icon name="back" size={14} /> 三張表格
+        </Link>
+        <span className="formbar__name">PT/69 · PT/21 · PT/22 — 一次列印</span>
+        <button className="btn btn--ghost btn--sm" onClick={() => setPreview(true)}>
+          <Icon name="expand" size={14} /> 預覽
+        </button>
+        <button className="btn btn--primary btn--sm" onClick={printNow}>
+          <Icon name="print" size={14} /> 列印全部
+        </button>
+      </div>
+
+      <p className="formwarn formwarn--info">
+        <Icon name="info" size={14} /> 三張文件會依次列印，每張由新一頁開始；未完成的欄位會留白，方便手寫。
+      </p>
+
+      <div className="formwrap formwrap--stack" ref={wrapRef}>
+        <div className="formsall" style={{ zoom: scale }}>
+          {FORM_ORDER.map((id) => {
+            const data = formData(book, id);
+            return (
+              <div className="formdoc formdoc--stack" key={id} id={`doc-${id}`}>
+                {id === 'pt69' && <Doc69 data={data} />}
+                {id === 'pt21' && <Doc21 data={data} />}
+                {id === 'pt22' && <Doc22 data={data} />}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 

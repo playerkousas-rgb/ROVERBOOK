@@ -59,6 +59,7 @@ export function newBook(partial = {}) {
     addressChanges: [],
     detailChanges: [],
     pages: {},
+    forms: {},
     holderSignature: null,
     endorsement: null,
     meta: { createdAt: now, updatedAt: now, ...(partial.meta || {}) },
