@@ -8018,8 +8018,10 @@ html[data-lang='en'] .fareas .frow__label {
   color: var(--navy);
 }
 
-.legal__app {
-  color: #8a8069;
+.legal__copy {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--navy);
 }
 
 .legal--compact {

@@ -943,7 +943,7 @@ await screen({
 await screen({
   name: '非官方聲明（附錄）',
   path: '/p/appendix',
-  expect: ['非官方獨立工具', '與香港童軍總會無任何官方從屬關係'],
+  expect: ['Copyright © 2026 SCOUT SYSTEM', '本網站為非官方獨立工具', '與香港童軍總會無任何官方從屬關係', '版權歸香港童軍總會所有'],
 });
 
 await screen({
