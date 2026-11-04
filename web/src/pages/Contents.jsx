@@ -4,6 +4,7 @@ import { Spread } from '../components/Paper.jsx';
 import { allStats, membershipStatus, SECTIONS, SYLLABUS_META } from '@shared/book.js';
 import { Link } from '../router.jsx';
 import { Icon, fmtDate } from '../ui.jsx';
+import { useLang } from '../i18n.jsx';
 
 const GROUPS = [
   { title: '成員資料', en: 'Particulars', ids: ['colophon', 'particulars-1', 'particulars-2', 'group', 'scouting', 'changes'] },
@@ -31,6 +32,7 @@ const GROUPS = [
 
 export default function Contents() {
   const { book } = useBook();
+  const { isEn } = useLang();
   const stats = allStats(book);
   const membership = membershipStatus(book);
   const byId = Object.fromEntries(SECTIONS.map((s) => [s.id, s]));
@@ -46,20 +48,25 @@ export default function Contents() {
             </div>
             <div className="tocpage__progress-text">
               <strong>
-                {stats.done} / {stats.total} 項已完成
+                {isEn ? `${stats.done} / ${stats.total} items done` : `${stats.done} / ${stats.total} 項已完成`}
               </strong>
               <span>
                 {stats.nextBadge?.badge?.name
-                  ? `下一枚：${stats.nextBadge.badge.name} · ${stats.nextBadge.done}/${stats.nextBadge.total}`
-                  : '全部完成'}
+                  ? isEn
+                    ? `Next: ${stats.nextBadge.badge.en || stats.nextBadge.badge.name} · ${stats.nextBadge.done}/${stats.nextBadge.total}`
+                    : `下一枚：${stats.nextBadge.badge.name} · ${stats.nextBadge.done}/${stats.nextBadge.total}`
+                  : isEn
+                    ? 'All complete'
+                    : '全部完成'}
               </span>
             </div>
           </div>
 
           <div className="tocpage__intro">
             <p>
-              本電子版逐頁對應《Rover Scout Record Book》（2026 年 7 月 27 日版）第 1–41 頁。
-              每一頁都可以直接點擊填寫，字體會自動縮放。
+              {isEn
+                ? 'This digital edition follows the Rover Scout Record Book (27 July 2026 edition) page by page, pages 1–41. Every page is directly editable and the type scales to fit.'
+                : '本電子版逐頁對應《Rover Scout Record Book》（2026 年 7 月 27 日版）第 1–41 頁。每一頁都可以直接點擊填寫，字體會自動縮放。'}
             </p>
           </div>
 
@@ -67,8 +74,8 @@ export default function Contents() {
             {GROUPS.map((g) => (
               <section className="tocgroup" key={g.title}>
                 <h4>
-                  {g.title}
-                  <em>{g.en}</em>
+                  {isEn ? g.en : g.title}
+                  {!isEn && <em>{g.en}</em>}
                 </h4>
                 <ul>
                   {g.ids.map((id) => {
@@ -78,7 +85,7 @@ export default function Contents() {
                       <li key={id}>
                         <Link to={`/p/${id}`}>
                           <span className="tocgroup__no">{s.page}</span>
-                          <span className="tocgroup__label">{s.label}</span>
+                          <span className="tocgroup__label">{isEn ? s.en || s.label : s.label}</span>
                           <Icon name="chevron" size={11} />
                         </Link>
                       </li>
@@ -91,19 +98,24 @@ export default function Contents() {
 
           <div className="tocfooter">
             <div>
-              <span className="tocfooter__k">{stats.done} / {stats.total} 項訓練細項</span>
+              <span className="tocfooter__k">
+                {isEn ? `${stats.done} / ${stats.total} training items` : `${stats.done} / ${stats.total} 項訓練細項`}
+              </span>
               <span className="tocfooter__v">{stats.percent}%</span>
             </div>
             <div>
-              <span className="tocfooter__k">會籍有效至</span>
-              <span className="tocfooter__v">{membership.validUntil ? fmtDate(membership.validUntil) : '未續會'}</span>
+              <span className="tocfooter__k">{isEn ? 'Membership valid until' : '會籍有效至'}</span>
+              <span className="tocfooter__v">
+                {membership.validUntil ? fmtDate(membership.validUntil) : isEn ? 'Not renewed' : '未續會'}
+              </span>
             </div>
             <div>
-              <span className="tocfooter__k">綱要版本</span>
+              <span className="tocfooter__k">{isEn ? 'Syllabus edition' : '綱要版本'}</span>
               <span className="tocfooter__v">{SYLLABUS_META.version}</span>
             </div>
             <Link to="/p/appendix" className="tocfooter__link">
-              數位附錄：備份 · 分享 · 錢包 <Icon name="chevron" size={12} />
+              {isEn ? 'Digital appendix: backup · share · wallet' : '數位附錄：備份 · 分享 · 錢包'}{' '}
+              <Icon name="chevron" size={12} />
             </Link>
           </div>
         </div>

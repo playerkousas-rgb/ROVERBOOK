@@ -4,6 +4,7 @@ import { Spread } from './Paper.jsx';
 import Write from './Write.jsx';
 import { SignatureBlock } from './Ink.jsx';
 import { today } from '@shared/book.js';
+import { useLang, englishOf, addLabelFor, termFor } from '../i18n.jsx';
 
 /* ---------------------------------------------------------------- 版面外框 */
 
@@ -12,12 +13,13 @@ export function Page({ id, children, className = '', dense = false }) {
 }
 
 export function H({ no, children, en, sub, progress }) {
+  const { isEn } = useLang();
   return (
     <div className="pghead">
       <h3 className="pghead__title">
         {no && <span className="pghead__no">{no}</span>}
-        {children}
-        {en && <em className="pghead__en">{en}</em>}
+        {isEn ? en || englishOf(children) || termFor('en', children) : children}
+        {!isEn && en && <em className="pghead__en">{en}</em>}
         {progress && <Progress ids={progress} />}
       </h3>
       {sub && <p className="pghead__sub">{sub}</p>}
@@ -43,6 +45,14 @@ function Progress({ ids }) {
 }
 
 export function P({ children, en, className = '' }) {
+  const { isEn } = useLang();
+  if (isEn && en) {
+    return (
+      <div className={`pgpara ${className} pgpara--en`}>
+        <p>{en}</p>
+      </div>
+    );
+  }
   return (
     <div className={`pgpara ${className}`}>
       <p>{children}</p>
@@ -52,10 +62,11 @@ export function P({ children, en, className = '' }) {
 }
 
 export function Note({ children, en }) {
+  const { isEn } = useLang();
   return (
     <div className="pgnote">
-      <p>{children}</p>
-      {en && <p className="pgnote__en">{en}</p>}
+      <p>{isEn && en ? en : children}</p>
+      {!isEn && en && <p className="pgnote__en">{en}</p>}
     </div>
   );
 }
@@ -64,11 +75,12 @@ export function Note({ children, en }) {
 
 export function Line({ label, en, path, type = 'text', rows = 1, wide, hint, placeholder, max }) {
   const [value, set] = useField(path);
+  const { isEn } = useLang();
   return (
     <div className={`frow${wide ? ' frow--wide' : ''}`}>
       <span className="frow__label">
-        {label}
-        {en && <em>{en}</em>}
+        {isEn ? en || englishOf(label) || termFor('en', label) : label}
+        {!isEn && en && <em>{en}</em>}
       </span>
       <span className="frow__value">
         <Write value={value} onChange={set} type={type} multiline={rows > 1} rows={rows} max={max} placeholder={placeholder} label={label} />
@@ -80,11 +92,12 @@ export function Line({ label, en, path, type = 'text', rows = 1, wide, hint, pla
 
 export function Area({ label, en, path, rows = 3, placeholder }) {
   const [value, set] = useField(path);
+  const { isEn } = useLang();
   return (
     <div className="fareas">
       <span className="frow__label">
-        {label}
-        {en && <em>{en}</em>}
+        {isEn ? en || englishOf(label) || termFor('en', label) : label}
+        {!isEn && en && <em>{en}</em>}
       </span>
       <Write value={value} onChange={set} multiline rows={rows} placeholder={placeholder} label={label} className="write--area" />
     </div>
@@ -97,6 +110,7 @@ export function Grid({ cols = 2, children, className = '' }) {
 
 export function Check({ label, en, path, options, multi = false }) {
   const [value, set] = useField(path, multi ? [] : '');
+  const { isEn } = useLang();
   const toggle = (v) => {
     if (!multi) return set(value === v ? '' : v);
     const list = Array.isArray(value) ? value : [];
@@ -106,8 +120,8 @@ export function Check({ label, en, path, options, multi = false }) {
   return (
     <div className="chk">
       <span className="chk__label">
-        {label}
-        {en && <em>{en}</em>}
+        {isEn ? en || englishOf(label) || termFor('en', label) : label}
+        {!isEn && en && <em>{en}</em>}
       </span>
       <div className="chk__opts">
         {options.map((o) => (
@@ -120,8 +134,8 @@ export function Check({ label, en, path, options, multi = false }) {
           >
             <span className="chk__box">{on(o.value) ? '✓' : ''}</span>
             <span>
-              {o.label}
-              {o.en && <em>{o.en}</em>}
+              {isEn ? o.en || englishOf(o.label) || o.label : o.label}
+              {!isEn && o.en && <em>{o.en}</em>}
             </span>
           </button>
         ))}
@@ -130,10 +144,30 @@ export function Check({ label, en, path, options, multi = false }) {
   );
 }
 
+/* -------------------------------------------------------------- 中英對照標題 */
+
+export function Bilingual({ zh, en, as: Tag = 'span', className = '', children }) {
+  const { isEn } = useLang();
+  if (isEn) return <Tag className={className}>{en}</Tag>;
+  return (
+    <Tag className={className}>
+      {zh}
+      {en && (
+        <>
+          {' '}
+          <em>{en}</em>
+        </>
+      )}
+      {children}
+    </Tag>
+  );
+}
+
 /* -------------------------------------------------------------------- 表格 */
 
-export function Rows({ path, cols, min = 3, addLabel = '加一行', del = true, dense = false, cap }) {
+export function Rows({ path, cols, min = 3, addLabel, del = true, dense = false, cap }) {
   const [stored, set] = useField(path, []);
+  const { isEn } = useLang();
   const list = Array.isArray(stored) ? stored : [];
   const total = Math.max(min, list.length);
 
@@ -151,8 +185,8 @@ export function Rows({ path, cols, min = 3, addLabel = '加一行', del = true, 
       <div className={`pgtable__head pgtable__row pgtable__row--${cols.length}`}>
         {cols.map((c) => (
           <span key={c.k} style={c.width ? { flex: c.width } : undefined}>
-            {c.label}
-            {c.en && <em>{c.en}</em>}
+            {isEn ? c.en || englishOf(c.label) || termFor('en', c.label) : c.label}
+            {!isEn && c.en && <em>{c.en}</em>}
           </span>
         ))}
         {del && <span className="pgtable__delcol" />}
@@ -183,9 +217,9 @@ export function Rows({ path, cols, min = 3, addLabel = '加一行', del = true, 
           )}
         </div>
       ))}
-      {addLabel && (!cap || list.length < cap) && (
+      {addLabel !== null && (!cap || list.length < cap) && (
         <button type="button" className="addrow addrow--quiet" onClick={add}>
-          + {addLabel}
+          + {addLabelFor(isEn ? 'en' : 'zh', addLabel || '加一行')}
         </button>
       )}
     </div>
@@ -196,6 +230,7 @@ export function Rows({ path, cols, min = 3, addLabel = '加一行', del = true, 
 
 export function ItemLine({ label, en, ids = [], page, extra, note }) {
   const { book, update } = useBook();
+  const { isEn } = useLang();
   const primary = ids[0];
   const state = primary ? getPath(book, `progress.${primary}`) || {} : {};
   const done = !!state.date;
@@ -226,8 +261,8 @@ export function ItemLine({ label, en, ids = [], page, extra, note }) {
         {done ? '✓' : ''}
       </button>
       <span className="itemline__label">
-        {label}
-        {en && <em>{en}</em>}
+        {isEn ? en || englishOf(label) || termFor('en', label) : label}
+        {!isEn && en && <em>{en}</em>}
         {note && <small>{note}</small>}
       </span>
       <span className="itemline__date">
@@ -242,6 +277,7 @@ export function ItemLine({ label, en, ids = [], page, extra, note }) {
 
 export function ProgressRow({ label, en, ids = [], certKey, note }) {
   const { book, update } = useBook();
+  const { isEn } = useLang();
   const primary = ids[0];
   const state = (primary && getPath(book, `progress.${primary}`)) || {};
   const page = certKey ? certKey.split('.').slice(0, 2).join('.') : null;
@@ -266,8 +302,8 @@ export function ProgressRow({ label, en, ids = [], certKey, note }) {
   return (
     <div className={`prow${state.date ? ' is-done' : ''}`}>
       <span className="prow__label">
-        {label}
-        {en && <em>{en}</em>}
+        {isEn ? en || englishOf(label) || termFor('en', label) : label}
+        {!isEn && en && <em>{en}</em>}
         {note && <small>{note}</small>}
       </span>
       <span className="prow__cell">
@@ -287,16 +323,18 @@ export function ProgressRow({ label, en, ids = [], certKey, note }) {
 
 export function Sig({ path, title, en, name, label, compact = false }) {
   const [value, set] = useField(path, null);
+  const { isEn } = useLang();
+  const primary = label || title || '簽署';
   return (
     <SignatureBlock
-      label={label || title || '簽署'}
+      label={isEn ? en || englishOf(primary) || primary : primary}
       value={value}
       onSign={set}
       onClear={() => set(null)}
       name={name}
       title={title}
       compact={compact}
-      hint={en ? `點擊簽署 · ${en}` : undefined}
+      hint={isEn ? 'Tap to sign' : en ? `點擊簽署 · ${en}` : undefined}
     />
   );
 }
@@ -311,16 +349,17 @@ export function Comment({ page, title = '審核員評語', en = "Assessor's Comm
         <Line label="職位" en="Post" path={`pages.${page}.post`} />
         <Line label="日期" en="Date" type="date" path={`pages.${page}.date`} />
       </div>
-      <Sig path={`pages.${page}.sig`} title="審核員" label="審核員簽署" compact />
+      <Sig path={`pages.${page}.sig`} title="審核員" label="審核員簽署" en="Assessor's signature" compact />
     </div>
   );
 }
 
 export function Present({ page, signer = '樂行童軍團長', en = 'Rover Scout Leader', extra }) {
   const [presentedOn] = useField(`pages.${page}.presentedOn`);
+  const { isEn } = useLang();
   return (
     <div className="present">
-      {presentedOn && <span className="present__stamp">已頒發</span>}
+      {presentedOn && <span className="present__stamp">{isEn ? 'PRESENTED' : '已頒發'}</span>}
       <div className="present__grid">
         <Line label="頒發日期" en="Presented on" type="date" path={`pages.${page}.presentedOn`} />
         <Line label="地點" en="at" path={`pages.${page}.place`} />
@@ -328,7 +367,7 @@ export function Present({ page, signer = '樂行童軍團長', en = 'Rover Scout
       </div>
       {extra}
       <div className="present__sig">
-        <Sig path={`pages.${page}.sig`} title={signer} label={signer} />
+        <Sig path={`pages.${page}.sig`} title={signer} label={signer} en={en} />
       </div>
     </div>
   );

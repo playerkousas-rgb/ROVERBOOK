@@ -194,13 +194,58 @@ PUBLIC_BASE_URL
 
 **驗證方法**：開一次網站 → DevTools → Network → 勾 Offline → 重新載入，應該照開、照填、照列印。
 
-## 11. 與 ROVERBADGE 互通（匯出／匯入）
+## 11. 全中／全英切換
+
+右上角地球圖示（手機顯示「中」／「EN」）一下切換，選擇會記住，重開仍然生效。
+
+| 切換後會轉語言的 | 說明 |
+| --- | --- |
+| 頁眉、頁碼 | 第 22 頁 ⇄ PAGE 22 |
+| 章節標題 | 個人資料 ⇄ PERSONAL PARTICULARS |
+| 正文 | 條文、備註、指示全部轉英文 |
+| 欄位標籤 | 紀錄冊編號 ⇄ Record Book No. · Scout ID (YMIS) |
+| 目錄、翻頁、上方跳頁、分享／表格介面 | 全部轉英文 |
+
+- 全書 41 頁已逐頁核對：英文模式下**每一頁都不再有未翻譯的中文**（用 headless Chromium 逐頁掃描 CJK 字元驗證）。
+- 官方未出英文版的地方，由本工具依《訓練綱要》用語自行翻譯（例如 Members' Badge 章節、七項考驗欄位、領袖簽署欄）。
+- `<html lang>` 同步更新，瀏覽器翻譯與讀屏都跟得上。
+- 語言選擇存在 `localStorage` 的 `roverbook.lang`，不上傳。
+
+## 12. 版面與身份編號
+
+**版面（v11 修正）**：訓練計劃頁的行樣式用了 `.stage` 這個名字，跟主畫面的 `.stage` 撞名，結果整個紀錄冊被壓成 ~30px 闊的一條。現已把訓練計劃改名 `.pstage`，主畫面回復全寬、桌面置中；smoke test 有一項專門守住這個回歸。
+
+**身份編號**：統一叫 **SCOUT ID**（ROVERBADGE 同步改名，不再叫 YMIS）。紀錄冊內 `scoutId`、`memberNo` 及匯出檔一律同一個號碼，`syncIdentity()` 每次寫入自動同步。
+
+- 舊資料相容：舊版存檔的 `ymis` 會自動讀成 `scoutId`，之後不再寫入 `ymis`（smoke 有測試守住）。
+- 匯出 ROVERBADGE 時仍會附一個 `ymis` 鏡像欄位，讓未改名的舊版 BADGE 也讀得懂。
+
+**個人資料頁**：改回紙本的「地域 · 區 · 旅」三格，並在下面用一句話顯示所屬旅團，不再用「樂行童軍團」當作「旅」。
+
+## 13. 應用程式圖示及非官方聲明
+
+- **圖示**：`/favicon.svg`（可縮放）、`/favicon-32.png`、`/favicon-48.png`、`/icons/apple-touch-icon.png`、`/icons/icon-192.png`、`/icons/icon-512.png`——全部由同一個深藍＋金色 SVG 產生，主畫面、瀏覽器分頁、iOS 書籤一致。
+- **聲明**（見附錄、出版資料頁及「關於」，逐字用家指定字句）：
+  > Copyright © 2026 SCOUT SYSTEM
+  > 本網站為非官方獨立工具，旨在方便成員，與香港童軍總會無任何官方從屬關係。所有訓練綱要及紀錄冊內容，版權歸香港童軍總會所有。
+
+## 14. 頂欄按鈕
+
+| 按鈕 | 功能 |
+| --- | --- |
+| 頁碼藥丸（第 3 頁 · 個人資料 ▾） | 開目錄／跳頁（唯一入口，唔會重覆） |
+| 放大 | 放大／還原紙頁 |
+| 分享（金色） | 建立分享連結及二維碼 |
+| 中／EN | 中英切換 |
+| ☰ | 更多：掃描、出示二維碼、表格、列印、備份、ROVERBADGE、示範、關於、清除 |
+
+## 15. 與 ROVERBADGE 互通（匯出／匯入）
 
 同一套 `L1…L4` 項目編號（32 細項，綱要第五版）。訓練頁或附錄可匯出 ROVERBADGE 相容 JSON；
 匯入時先配 YMIS、再配姓名，不會覆寫本機已有的日期與簽名。只交換「項目 + 日期」，不交換簽名。
 部分紙本細項（例如禮節 3.2）在綱要中併入同一項，電子版會同步標記同一組細項。
 
-## 12. 開始使用
+## 16. 開始使用
 
 ```bash
 npm install
@@ -220,19 +265,21 @@ repo 已附 `vercel.json`：`npm run build` → `dist`，所有路徑 rewrite �
 - 分享連結、QR、Apple/Google Wallet 需要 Node 伺服器（`npm start` 或自行部署 `server/`）先有 `/api`；靜態部署時呢幾粒掣會報錯，其餘功能不受影響。
 - 部署後建議即試：`/forms/pt21` →「預覽」→「列印」；`/scan`（相機需要 HTTPS，Vercel 已提供）；以及**離線測試**（第一次開完 → 開飛機模式 → 重新載入）。
 
-## 13. 結構
+## 17. 結構
 
 ```
 server/   index.js（Vite/靜態）、api.js（share/QR/wallet）、store.js、wallet.js
 shared/   book.js（模型、SECTIONS 41 頁、分享快照、ROVERBADGE、demoBook）、syllabus.js（32 項）
 web/src/  App.jsx（封面／翻頁／目錄／放大）
+          i18n.jsx（全中／全英切換、記住語言、中英標籤自動拆解）
+          components/Legal.jsx（版權及非官方聲明）
           components/Form.jsx（逐頁表單工具）、Write.jsx（就地輸入＋自動縮字）、Ink.jsx（簽名）
           pages/Book.jsx（2–12、34–41 頁）、Training.jsx（13–33 頁）、Contents、Appendix、Welcome
           styles.css（藍布封面、紙頁、表單線、A4 列印）
 scripts/  smoke.mjs、make-wallet-assets.mjs
 ```
 
-## 14. 已知限制
+## 18. 已知限制
 
 - 資料在 localStorage；清除瀏覽器資料會失去，請定期匯出備份。
 - 自動縮字是版面效果，不是無限容量：極長文字仍建議用放大輸入查看。

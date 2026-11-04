@@ -9,10 +9,11 @@ export default function Welcome({ onReady }) {
   const [form, setForm] = useState({
     nameZh: '',
     nameEn: '',
-    ymis: '',
-    memberNo: '',
+    scoutId: '',
     crew: '',
     group: '',
+    district: '',
+    region: '',
   });
   const fileRef = useRef(null);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -26,7 +27,7 @@ export default function Welcome({ onReady }) {
   const create = (e) => {
     e.preventDefault();
     if (!form.nameZh.trim()) return;
-    start(newBook({ member: form }), '/p/particulars');
+    start(newBook({ member: form }), '/p/particulars-1');
     push('紀錄冊已建立，開始填寫吧');
   };
 
@@ -103,22 +104,29 @@ export default function Welcome({ onReady }) {
           </div>
           <div className="welcome__row">
             <label className="field">
-              <span className="field__label">YMIS 編號 <em>與 ROVERBADGE 相同</em></span>
-              <input className="welcome__input" value={form.ymis} onChange={set('ymis')} placeholder="24010001" />
+              <span className="field__label">
+                紀錄冊編號 <em>＝ 童軍成員編號 SCOUT ID（ROVERBADGE 同一個號碼）</em>
+              </span>
+              <input
+                className="welcome__input"
+                value={form.scoutId}
+                onChange={(e) => setForm((f) => ({ ...f, scoutId: e.target.value }))}
+                placeholder="24010001"
+              />
             </label>
             <label className="field">
-              <span className="field__label">紀錄冊編號</span>
-              <input className="welcome__input" value={form.memberNo} onChange={set('memberNo')} placeholder="RS-2401" />
+              <span className="field__label">旅 Group</span>
+              <input className="welcome__input" value={form.group} onChange={set('group')} placeholder="九龍第 145 旅" />
             </label>
           </div>
           <div className="welcome__row">
             <label className="field">
-              <span className="field__label">樂行童軍團</span>
+              <span className="field__label">樂行童軍團 Crew</span>
               <input className="welcome__input" value={form.crew} onChange={set('crew')} placeholder="九龍第 145 旅樂行童軍團" />
             </label>
             <label className="field">
-              <span className="field__label">旅</span>
-              <input className="welcome__input" value={form.group} onChange={set('group')} placeholder="九龍第 145 旅" />
+              <span className="field__label">區 District</span>
+              <input className="welcome__input" value={form.district} onChange={set('district')} placeholder="九龍城" />
             </label>
           </div>
 

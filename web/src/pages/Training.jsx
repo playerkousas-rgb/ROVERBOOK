@@ -1,24 +1,26 @@
 import React from 'react';
-import { Page, H, P, Note, Line, Area, Grid, Check, ItemLine, ProgressRow, Comment, Present, Sig, Rows } from '../components/Form.jsx';
+import { Page, H, P, Note, Line, Area, Grid, Check, ItemLine, ProgressRow, Comment, Present, Sig, Rows , Bilingual } from '../components/Form.jsx';
 import Write from '../components/Write.jsx';
 import { useBook, useField } from '../bookContext.js';
 import { navigate } from '../router.jsx';
 import { FORM_META, formStatus } from '@shared/forms.js';
+import { useLang } from '../i18n.jsx';
 
 /* 完成頒發後，直接一鍵生成對應申請表 */
 function FormLink({ id }) {
   const { book } = useBook();
+  const { isEn } = useLang();
   const st = formStatus(book)[id];
   return (
     <div className={`formlink${st.ready ? ' is-ready' : ''}`}>
       <div className="formlink__text">
         <strong>
-          {FORM_META[id].code} · {st.ready ? '已備妥，可以一鍵生成' : '資料未齊'}
+          {FORM_META[id].code} · {st.ready ? (isEn ? 'ready to generate' : '已備妥，可以一鍵生成') : isEn ? 'incomplete' : '資料未齊'}
         </strong>
-        <em>{st.note}</em>
+        <em>{isEn ? st.noteEn || st.note : st.note}</em>
       </div>
       <button className="btn btn--gold btn--sm" onClick={() => navigate(`/forms/${id}`)}>
-        生成表格
+        {isEn ? 'Generate form' : '生成表格'}
       </button>
     </div>
   );
@@ -56,7 +58,7 @@ export function MbActivities() {
   return (
     <Page id="mb-activities">
       <H no="(1)" en="Activities" progress={['L1-ACT-01']}>活動</H>
-      <p className="pglead">參與最少三次團活動 <em>Take part in the crew activities at least 3 times</em></p>
+      <Bilingual as="p" className="pglead" zh="參與最少三次團活動" en="Take part in the crew activities at least 3 times" />
       <Rows
         path="pages.mb-activities.rows"
         min={3}
@@ -83,20 +85,20 @@ export function MbUnderstanding() {
     <Page id="mb-understanding" className="p-items">
       <H no="(2)" en="Understanding" progress={['L1-UND-01', 'L1-UND-02', 'L1-UND-03', 'L1-UND-04']}>理解</H>
       <div className="itemhead">
-        <span>項目 <em>Items</em></span>
-        <span>完成</span>
-        <span>日期</span>
-        <span>審核員 <em>Assessor</em></span>
+        <Bilingual zh="項目" en="Items" />
+        <Bilingual zh="完成" en="Done" />
+        <Bilingual zh="日期" en="Date" />
+        <Bilingual zh="審核員" en="Assessor" />
       </div>
       <ItemLine label="(2.1) 對國旗、國徽、區旗、區徽和國歌的認識" en="Understand the National Flag and Emblem, Regional Flag and Emblem, and National Anthem" ids={['L1-UND-01', 'L1-UND-02', 'L1-UND-03']} />
       <ItemLine label="(2.2) 對香港及世界童軍運動有普遍的認識" en="Understand Hong Kong and World Scout Movement" ids={['L1-UND-04']} />
 
       <H no="(3)" en="Ceremonial" progress={['L1-ETQ-01', 'L1-ETQ-02', 'L1-ETQ-03', 'L1-ETQ-04', 'L1-ETQ-05', 'L1-ETQ-06']}>禮節</H>
       <div className="itemhead">
-        <span>項目 <em>Items</em></span>
-        <span>完成</span>
-        <span>日期</span>
-        <span>審核員 <em>Assessor</em></span>
+        <Bilingual zh="項目" en="Items" />
+        <Bilingual zh="完成" en="Done" />
+        <Bilingual zh="日期" en="Date" />
+        <Bilingual zh="審核員" en="Assessor" />
       </div>
       <ItemLine label="(3.1) 認識在國歌奏唱和升掛國旗、區旗時應有之禮儀" en="Know the rite to the National Flag and Emblem, Regional Flag and Emblem, and National Anthem" ids={['L1-ETQ-01']} />
       <ItemLine label="(3.2) 認識升掛國旗、區旗及展示國徽、區徽時之注意事項及使用限制" en="Know the regulations for the use and display of the flags and emblems" ids={['L1-ETQ-01']} />
@@ -155,7 +157,7 @@ export function EpIntro() {
         樂行童軍肩章是由管理委員會安排訓練及考核，經所屬團長批核及推薦，由樂行童軍區長、助理區總監（樂行童軍）、助理地域總部總監（樂行童軍）或地域總部總監（樂行童軍）確認及簽發。
       </P>
 
-      <p className="pglead">內容：完成下列 (1) 或 (2) 項 <em>Complete either (1) OR (2)</em></p>
+      <Bilingual as="p" className="pglead" zh="內容：完成下列 (1) 或 (2) 項" en="Complete either (1) OR (2)" />
       <ItemLine label="(1) 完成樂行童軍啟導班" en="Complete a Rover Scout Introductory Course" ids={['L2-INTRO-01']} />
       <ItemLine label="(2) 完成同等項目" en="Complete the equivalent items" ids={['L2-INTRO-01']} />
 
@@ -189,11 +191,11 @@ export function RsaIntro() {
   return (
     <Page id="rsa-intro" className="p-intro">
       <H en="Rover Scout Award and Baden-Powell Award">樂行童軍獎章及貝登堡獎章</H>
-      <h4 className="pgh">簡介 <em>Introduction</em></h4>
+      <Bilingual as="h4" className="pgh" zh="簡介" en="Introduction" />
       <P en="The assessments of the two awards comprise seven components including “Dedication”, “Scoutcraft”, “Volunteerism”, “Global Vision”, “Tenacity”, “Mental and Physical Wellness”, and “Intrepidity”. Rover Scouts can carry out the assessments simultaneously. Rover Scout Award will be awarded when the member completed four components, while Baden-Powell Award will be awarded when the member completed all the components.">
         兩項獎章的考驗由 7 個項目組成，分別為「準領袖培訓」、「童軍技能」、「服務」、「國際視野」、「興趣及技能」、「身心健康」及「挑戰」。樂行童軍可同時進行這 7 項考驗，當完成其中任何 4 項後，成員可獲頒發「樂行童軍獎章」；而在完成所有考驗後，可獲頒發「貝登堡獎章」。
       </P>
-      <h4 className="pgh">考核流程 <em>Assessment progress</em></h4>
+      <Bilingual as="h4" className="pgh" zh="考核流程" en="Assessment progress" />
       <P en="Rover Scouts must plan their personal progress and gain approval from the affiliated Headquarter Commissioner (Rover Scouts) by submitting the “Application for Assessment of the Rover Scout Award and Baden-Powell Award” before the initiation of the assessment.">
         樂行童軍須自行計劃其考驗內容和進程，並於展開考驗前提交「樂行童軍獎章及貝登堡獎章考驗申請」予所屬總部總監（樂行童軍）作批核，除另有註明外，所有考驗項目必須於「考驗申請」批核後完成。
       </P>
@@ -209,11 +211,11 @@ export function RsaAwards() {
   return (
     <Page id="rsa-awards" className="p-intro">
       <H en="Rover Scout Award / Baden-Powell Award">樂行童軍獎章 · 貝登堡獎章</H>
-      <h4 className="pgh">樂行童軍獎章</h4>
+      <Bilingual as="h4" className="pgh" zh="樂行童軍獎章" en="Rover Scout Award" />
       <P en="The Respective Rover Scout Leader is responsible for the training while the Respective Regional Headquarters Commissioner (Rover Scouts) is responsible for the assessments of the Rover Scout Award. After completing four components, the Rover Scout Award will be endorsed and issued by the Region upon confirmation and recommendation by the District. The Headquarters will confirm and issue the certificate.">
         樂行童軍獎章是由所屬團長負責安排訓練及由所屬總部總監（樂行童軍）負責考核，樂行童軍在完成 7 項考驗的其中 4 項後，經區會確認及推薦，地域審批，總會確認及簽發獎章證書。
       </P>
-      <h4 className="pgh">貝登堡獎章</h4>
+      <Bilingual as="h4" className="pgh" zh="貝登堡獎章" en="Baden-Powell Award" />
       <P en="After completing all the seven components, District Commissioner and Regional Commissioner should interview the member concerned and make recommendations. The Headquarters will endorse and issue the Baden Powell Award and certificate.">
         貝登堡獎章是由所屬團長負責安排訓練及由所屬總部總監（樂行童軍）負責考核，樂行童軍在完成全部 7 個項目後，經區總監及地域總監接見及推薦，總會審批及簽發獎章證書。
       </P>
@@ -230,12 +232,12 @@ export function Dedication() {
   return (
     <Page id="dedication" className="p-items">
       <H no="(1)" en="DEDICATION" progress={['L3-LEADER-01', 'L3-LEADER-02']}>準領袖培訓</H>
-      <p className="pglead">完成下列所有項目：<em>Complete the following items</em></p>
+      <Bilingual as="p" className="pglead" zh="完成下列所有項目：" en="Complete the following items" />
       <div className="itemhead itemhead--4">
-        <span>項目 <em>Items</em></span>
-        <span>證書編號 <em>Certificate Number</em></span>
-        <span>日期 <em>Date</em></span>
-        <span>審核員</span>
+        <Bilingual zh="項目" en="Items" />
+        <Bilingual zh="證書編號" en="Certificate Number" />
+        <Bilingual zh="日期" en="Date" />
+        <Bilingual zh="審核員" en="Assessor" />
       </div>
       <ProgressRow label="1 · 完成木章訓練系統第一階段（1A）" en="Complete Wood Badge Framework Stage 1" ids={['L3-LEADER-01']} />
       <ProgressRow label="1 · 完成木章訓練系統第一階段（1B）" en="Complete Wood Badge Framework Stage 1" ids={['L3-LEADER-01']} />
@@ -254,7 +256,7 @@ export function Scoutcraft() {
     <Page id="scoutcraft" className="p-items">
       <H no="(2)" en="SCOUTCRAFT" progress={['L3-SCOUT-01', 'L3-SCOUT-02', 'L3-SCOUT-03']}>童軍技能</H>
 
-      <h4 className="pgh">2.1 傳統童軍技能 <em>Traditional Skills</em></h4>
+      <Bilingual as="h4" className="pgh" zh="2.1 傳統童軍技能" en="Traditional Skills" />
       <Check
         label="選擇項目 Selected Item"
         path="pages.scoutcraft.traditional"
@@ -270,13 +272,13 @@ export function Scoutcraft() {
         <ProgressRow label="證書及日期" en="" ids={['L3-SCOUT-01']} />
       </div>
 
-      <h4 className="pgh">2.2 教練員或導師訓練班 <em>Instructor / Assessor course</em></h4>
+      <Bilingual as="h4" className="pgh" zh="2.2 教練員或導師訓練班" en="Instructor / Assessor course" />
       <div className="fduo">
         <Line label="所選之訓練班 Selected Course" path="pages.scoutcraft.course2" placeholder="教練員訓練班" />
         <ProgressRow label="證書及日期" en="" ids={['L3-SCOUT-02']} />
       </div>
 
-      <h4 className="pgh">2.3 隊列訓練（第五版新增） <em>Footdrill</em></h4>
+      <Bilingual as="h4" className="pgh" zh="2.3 隊列訓練（第五版新增）" en="Footdrill" />
       <ProgressRow label="完成隊列訓練工作坊及步操訓練班" en="Footdrill workshop and drill course" ids={['L3-SCOUT-03']} />
 
       <Comment page="scoutcraft" />
@@ -290,7 +292,7 @@ export function Volunteerism() {
   return (
     <Page id="volunteerism" className="p-items">
       <H no="(3)" en="VOLUNTEERISM" progress={['L3-SERVICE-01', 'L3-SERVICE-02', 'L3-SERVICE-03']}>服務</H>
-      <p className="pglead">完成下列所有項目：<em>Complete the following items</em></p>
+      <Bilingual as="p" className="pglead" zh="完成下列所有項目：" en="Complete the following items" />
       <ProgressRow label="3.1 持有急救證書" en="Hold the First Aid Certificate" ids={['L3-SERVICE-01']} />
       <ProgressRow label="3.2 完成寰宇童軍計劃「探索」課程" en="Complete the SWA “Discovery” Section" ids={['L3-SERVICE-02']} />
       <ProgressRow label="3.3 完成寰宇童軍計劃「自願服務」或同等服務" en="Complete the SWA “Voluntary Service” or the equivalent service" ids={['L3-SERVICE-03']} />
@@ -320,7 +322,7 @@ export function GlobalVision() {
       </div>
       <Area label="內容簡述 Summary of Activity" path="pages.global-vision.summary" rows={3} />
       <div className="fduo">
-        <ProgressRow label="完成並經審核" en="" ids={['L3-INTL-01', 'L3-INTL-02']} />
+        <ProgressRow label="完成並經審核" en="Completed and assessed" ids={['L3-INTL-01', 'L3-INTL-02']} />
       </div>
       <Comment page="global-vision" />
     </Page>
@@ -350,7 +352,7 @@ export function Wellness1() {
   return (
     <Page id="wellness-1" className="p-items">
       <H no="(6)" en="MENTAL AND PHYSICAL WELLNESS" progress={['L3-HEALTH-01']}>身心健康（一）</H>
-      <p className="pglead">精神健康 <em>Mental Health</em></p>
+      <Bilingual as="p" className="pglead" zh="精神健康" en="Mental Health" />
       <Rows
         path="pages.wellness-1.certs"
         min={2}
@@ -363,7 +365,7 @@ export function Wellness1() {
         ]}
       />
       <div className="fduo">
-        <ProgressRow label="SOUL Keeper / 精神健康課程（訓練＋服務 50 小時以上）" en="" ids={['L3-HEALTH-01']} />
+        <ProgressRow label="SOUL Keeper / 精神健康課程（訓練＋服務 50 小時以上）" en="SOUL Keeper / Mental Health course (50+ hours of training and service)" ids={['L3-HEALTH-01']} />
         <Line label="服務時數 Service Hours" path="pages.wellness-1.serviceHours" />
       </div>
       <Area label="服務簡述 Summary of Service" path="pages.wellness-1.summary" rows={2} />
@@ -408,7 +410,7 @@ export function Intrepidity() {
         <Line label="活動日期 Duration" path="pages.intrepidity.duration" />
       </div>
       <Area label="內容簡述 Summary of Activity" path="pages.intrepidity.summary" rows={3} />
-      <ProgressRow label="完成並經審核" en="" ids={['L3-CHALLENGE-01', 'L3-CHALLENGE-02']} />
+      <ProgressRow label="完成並經審核" en="Completed and assessed" ids={['L3-CHALLENGE-01', 'L3-CHALLENGE-02']} />
       <Comment page="intrepidity" />
     </Page>
   );
@@ -429,6 +431,7 @@ export function RsaPresented() {
 /* ------------------------------------------------------------- 31–32 會面 */
 
 export function Interview({ kind }) {
+  const { isEn } = useLang();
   const isDistrict = kind === 'district';
   const page = isDistrict ? 'interview-district' : 'interview-region';
   return (
@@ -436,10 +439,12 @@ export function Interview({ kind }) {
       <H no={isDistrict ? '(I)' : '(II)'} en={`Interview with ${isDistrict ? 'District' : 'Regional'} Commissioner`}>
         {isDistrict ? '貝登堡獎章申請前會面（一）' : '貝登堡獎章申請前會面（二）'}
       </H>
-      <p className="pglead">
-        {isDistrict ? '與區總監會面' : '與地域總監會面'}
-        <em>{isDistrict ? 'Interview with District Commissioner' : 'Interview with Regional Commissioner'}</em>
-      </p>
+      <Bilingual
+        as="p"
+        className="pglead"
+        zh={isDistrict ? '與區總監會面' : '與地域總監會面'}
+        en={isDistrict ? 'Interview with District Commissioner' : 'Interview with Regional Commissioner'}
+      />
 
       <Area label="評語 Comment" path={`pages.${page}.comment`} rows={6} />
       <div className="sigspace">

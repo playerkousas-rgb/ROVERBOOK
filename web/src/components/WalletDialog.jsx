@@ -126,7 +126,7 @@ export default function WalletDialog({ open, onClose, share, setShare }) {
           <span className="walletcard__crew">{book.member.crew || '樂行童軍團'}</span>
           <div className="walletcard__row">
             <span>會員編號</span>
-            <strong>{book.member.memberNo || book.member.ymis || '—'}</strong>
+            <strong>{book.member.scoutId || book.member.memberNo || '—'}</strong>
           </div>
           <div className="walletcard__row">
             <span>會籍</span>

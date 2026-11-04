@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { Icon } from '../ui.jsx';
+import { useLang } from '../i18n.jsx';
 import Write from './Write.jsx';
 
 export function Field({
@@ -44,6 +45,7 @@ export function InlineField({ value, onChange, placeholder = '', type = 'text', 
 
 export function PhotoPicker({ value, onChange }) {
   const ref = useRef(null);
+  const { isEn } = useLang();
   const upload = (file) => {
     if (!file) return;
     const img = new Image();
@@ -66,10 +68,10 @@ export function PhotoPicker({ value, onChange }) {
       <button type="button" className="photo__frame" onClick={() => ref.current?.click()} title="上載相片">
         {value ? <img src={value} alt="相片" /> : <Icon name="camera" size={22} />}
       </button>
-      <span className="photo__hint">相片（請加蓋旅印）</span>
+      <span className="photo__hint">{isEn ? 'Photo (stamped by Group)' : '相片（請加蓋旅印）'}</span>
       {value && (
         <button type="button" className="linkbtn linkbtn--small" onClick={() => onChange(null)}>
-          移除
+          {isEn ? 'Remove' : '移除'}
         </button>
       )}
       <input

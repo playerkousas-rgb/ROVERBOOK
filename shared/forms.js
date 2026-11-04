@@ -205,6 +205,10 @@ export function formStatus(book) {
         personalMissing.length === 0
           ? '個人資料已備妥；考試計劃的日期會由紀錄冊自動帶入。'
           : `還欠：${personalMissing.join('、')}`,
+      noteEn:
+        personalMissing.length === 0
+          ? 'Personal particulars are complete; assessment dates are filled in automatically.'
+          : `Still missing: ${personalMissing.length} item(s)`,
     },
     pt21: {
       id: 'pt21',
@@ -214,6 +218,10 @@ export function formStatus(book) {
         done.length >= 4
           ? `已自動揀出 4 個完成項目（${done.slice(0, 4).map((c) => c.zh).join('、')}）。`
           : `已完成 ${done.length} / 4 項，完成後一按即生成整份表格。`,
+      noteEn:
+        done.length >= 4
+          ? `Four completed components selected automatically (${done.slice(0, 4).map((c) => c.en || c.zh).join(', ')}).`
+          : `${done.length} / 4 components done — the whole form is generated in one tap once complete.`,
     },
     pt22: {
       id: 'pt22',
@@ -223,6 +231,10 @@ export function formStatus(book) {
         done.length >= 7
           ? '七項全部完成，可一鍵生成貝登堡獎章申請表。'
           : `已完成 ${done.length} / 7 項。`,
+      noteEn:
+        done.length >= 7
+          ? 'All seven components complete — the Baden-Powell Award form can be generated in one tap.'
+          : `${done.length} / 7 components done.`,
     },
   };
 }

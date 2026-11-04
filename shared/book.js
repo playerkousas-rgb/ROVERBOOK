@@ -1,5 +1,5 @@
 // ROVERBOOK — 紀錄冊資料模型（存在瀏覽器本機，毋須登入）
-// 與 ROVERBADGE 互通的進度格式：{ [ymis]: { [itemId]: 'YYYY-MM-DD' } }
+// 與 ROVERBADGE 互通的進度格式：{ [scoutId]: { [itemId]: 'YYYY-MM-DD' } }
 
 import { BADGE_SYLLABUS, SYLLABUS_ITEMS, ITEM_INDEX, TOTAL_ITEMS, SYLLABUS_META } from './syllabus.js';
 
@@ -15,15 +15,34 @@ export function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** 紀錄冊編號 ＝ 童軍成員編號 SCOUT ID（同一個號碼；ROVERBADGE 亦已統一叫 SCOUT ID）。 */
+export function scoutId(bookOrMember) {
+  const m = bookOrMember?.member || bookOrMember || {};
+  return String(m.scoutId || m.memberNo || m.ymis || '').trim();
+}
+
+/** 各處（紀錄冊、成員編號、ROVERBADGE）永遠保持一致，只保留一個真相。 */
+export function syncIdentity(member) {
+  if (!member) return member;
+  const id = scoutId(member);
+  if (id) {
+    member.scoutId = id;
+    member.memberNo = id;
+  }
+  delete member.ymis; // 舊欄位（v11 之前叫 YMIS）用完即棄
+  return member;
+}
+
 export function newBook(partial = {}) {
   const now = new Date().toISOString();
-  return {
+  const { member: partialMember, meta: partialMeta, ...rest } = partial;
+  const book = {
     version: 2,
     member: {
       nameZh: '',
       nameEn: '',
+      scoutId: '',
       memberNo: '',
-      ymis: '',
       photo: null,
       crew: '',
       group: '',
@@ -45,7 +64,7 @@ export function newBook(partial = {}) {
       meetingPlace: '',
       dateJoined: '',
       dateScoutMovement: '',
-      ...(partial.member || {}),
+      ...(partialMember || {}),
     },
     scouting: [],
     service: [],
@@ -62,9 +81,11 @@ export function newBook(partial = {}) {
     forms: {},
     holderSignature: null,
     endorsement: null,
-    meta: { createdAt: now, updatedAt: now, ...(partial.meta || {}) },
-    ...partial,
+    ...rest,
+    meta: { createdAt: now, updatedAt: now, ...(partialMeta || {}) },
   };
+  syncIdentity(book.member);
+  return book;
 }
 
 // ---------------------------------------------------------------- statistics
@@ -193,7 +214,7 @@ export function shareUrlOf(id) {
 // ------------------------------------------------- ROVERBADGE 互通（雙向）
 
 export function exportForRoverBadge(book, troopId = '') {
-  const ymis = book.member.ymis || '';
+  const sid = scoutId(book.member);
   const progress = {};
   Object.entries(book.progress || {}).forEach(([itemId, state]) => {
     if (state?.date) progress[itemId] = state.date;
@@ -204,7 +225,8 @@ export function exportForRoverBadge(book, troopId = '') {
     exportedAt: new Date().toISOString(),
     members: [
       {
-        ymis,
+        scoutId: sid,
+        ymis: sid, // 舊欄位，ROVERBADGE 已改名為 scoutId
         name: book.member.nameZh,
         role: 'member',
         joinDate: book.member.dateJoined || '',
@@ -212,8 +234,8 @@ export function exportForRoverBadge(book, troopId = '') {
         group: book.member.group,
       },
     ],
-    progress: { [ymis]: progress },
-    progress_mock: { 說明: 'ROVERBOOK 匯出進度', [ymis]: progress },
+    progress: { [sid]: progress },
+    progress_mock: { 說明: 'ROVERBOOK 匯出進度', [sid]: progress },
     badges: Object.fromEntries(
       Object.entries(book.badges || {})
         .filter(([, v]) => v?.date)
@@ -241,14 +263,16 @@ export function importFromRoverBadge(json, book) {
       matchedBy = '直接進度表';
       break;
     }
-    const ymis = member.ymis && candidate[member.ymis];
-    if (ymis && typeof ymis === 'object') {
-      progressMap = ymis;
-      matchedBy = `YMIS ${member.ymis}`;
+    const sid = scoutId(member);
+    if (sid && candidate[sid] && typeof candidate[sid] === 'object') {
+      progressMap = candidate[sid];
+      matchedBy = `SCOUT ID ${sid}`;
       break;
     }
     const byName = keys.find((k) => {
-      const m = Array.isArray(json.members) ? json.members.find((x) => String(x.ymis) === String(k)) : null;
+      const m = Array.isArray(json.members)
+        ? json.members.find((x) => String(x.scoutId || x.ymis) === String(k))
+        : null;
       return m && m.name === member.nameZh;
     });
     if (byName && candidate[byName]) {
@@ -289,9 +313,12 @@ export function importFromRoverBadge(json, book) {
   });
 
   // 成員基本資料：只在空白時填入
-  const srcMember = Array.isArray(json.members) ? json.members.find((m) => m.ymis === member.ymis) || json.members[0] : null;
+  const srcMember = Array.isArray(json.members)
+    ? json.members.find((m) => String(m.scoutId || m.ymis) === scoutId(member)) || json.members[0]
+    : null;
   if (srcMember) {
-    if (!member.ymis && srcMember.ymis) member.ymis = String(srcMember.ymis);
+    const sid = srcMember.scoutId || srcMember.ymis;
+    if (!scoutId(member) && sid) member.scoutId = String(sid);
     if (!member.nameZh && srcMember.name) member.nameZh = srcMember.name;
     if (!member.dateJoined && srcMember.joinDate) member.dateJoined = srcMember.joinDate;
     if (!member.crew && srcMember.crew) member.crew = srcMember.crew;
@@ -386,12 +413,11 @@ export function demoBook() {
     member: {
       nameZh: '林卓瑤',
       nameEn: 'Lam Cheuk-yiu',
-      memberNo: 'RS-2401',
-      ymis: '24010001',
+      scoutId: '24010001',
       crew: '九龍第 145 旅樂行童軍團',
       group: '九龍第 145 旅',
-      district: '紅磡區',
-      region: '九龍地域',
+      district: '九龍城',
+      region: '九龍',
       issueDate: '2024-09-08',
       dob: '2003-05-14',
       placeOfBirth: '香港',

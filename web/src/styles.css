@@ -4757,14 +4757,14 @@ textarea.zoomfield {
 
 /* -------------------------------------------------------------- 訓練計劃 */
 
-.stages {
+.pstages {
   display: flex;
   flex-direction: column;
   gap: 5px;
   margin: 6px 0;
 }
 
-.stage {
+.pstage {
   display: grid;
   grid-template-columns: 22px 1fr 150px;
   gap: 10px;
@@ -4774,14 +4774,14 @@ textarea.zoomfield {
   background: rgba(255, 255, 255, 0.35);
 }
 
-.stage__no {
+.pstage__no {
   font-family: var(--serif);
   font-size: 17px;
   color: var(--gold-3);
   text-align: center;
 }
 
-.stage__body h4 {
+.pstage__body h4 {
   display: flex;
   align-items: baseline;
   gap: 6px;
@@ -4791,7 +4791,7 @@ textarea.zoomfield {
   color: var(--navy);
 }
 
-.stage__body h4 em {
+.pstage__body h4 em {
   font-style: normal;
   font-family: var(--sans);
   font-size: 7px;
@@ -4800,21 +4800,21 @@ textarea.zoomfield {
   color: #a0947c;
 }
 
-.stage__req {
+.pstage__req {
   margin: 0;
   font-family: var(--sans);
   font-size: 8.5px;
   color: var(--ink-soft);
 }
 
-.stage__req-en {
+.pstage__req-en {
   margin: 0;
   font-family: var(--sans);
   font-size: 7px;
   color: #a0947c;
 }
 
-.stage__time {
+.pstage__time {
   font-family: var(--sans);
   font-size: 8px;
   line-height: 1.4;
@@ -4822,7 +4822,7 @@ textarea.zoomfield {
   text-align: right;
 }
 
-.stage__time em {
+.pstage__time em {
   display: block;
   font-style: normal;
   font-size: 6.8px;
@@ -5575,27 +5575,27 @@ textarea.zoomfield {
     font-size: 10px;
   }
 
-  .stage {
+  .pstage {
     width: 100%;
   }
 
-  .stages {
+  .pstages {
     gap: 8px;
   }
 
-  .stage {
+  .pstage {
     grid-template-columns: 26px 1fr;
     gap: 10px;
     padding: 10px;
   }
 
-  .stage__time {
+  .pstage__time {
     grid-column: 2;
     text-align: left;
   }
 
-  .stage__req,
-  .stage__req-en {
+  .pstage__req,
+  .pstage__req-en {
     font-size: 10px;
   }
 
@@ -7935,4 +7935,98 @@ body.preview-print .formdoc {
     font-size: 12px;
     padding: 7px 14px;
   }
+}
+
+/* ============================================================ v11 · 語言切換 */
+
+.chipbtn--lang {
+  border-color: rgba(216, 184, 113, 0.5);
+  background: rgba(216, 184, 113, 0.14);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  min-width: 52px;
+  justify-content: center;
+}
+
+.chipbtn--lang:hover {
+  background: rgba(216, 184, 113, 0.28);
+}
+
+/* 靜態句子（個人資料頁：地域 · 區 · 旅） */
+.sentence--static {
+  margin: 12px 0 10px;
+  font-family: var(--serif);
+  font-size: 12px;
+  line-height: 2;
+  color: var(--ink-soft);
+}
+
+.sentence--static b {
+  display: inline-block;
+  min-width: 68px;
+  padding: 0 6px 1px;
+  border-bottom: 1px solid var(--rule);
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+}
+
+/* 英文模式：正文用原本的 serif 閱讀節奏，行距略收 */
+html[data-lang='en'] .pgpara p,
+html[data-lang='en'] .pgpara--en p {
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+html[data-lang='en'] .pghead__title {
+  letter-spacing: 0.04em;
+}
+
+html[data-lang='en'] .sheet__titlebar h1 {
+  letter-spacing: 0.02em;
+}
+
+html[data-lang='en'] .frow__label,
+html[data-lang='en'] .fareas .frow__label {
+  letter-spacing: 0.03em;
+}
+
+/* ============================================================ v12 · 版權聲明 */
+
+.legal {
+  margin: 16px 0 6px;
+  padding: 10px 12px;
+  border-left: 2px solid rgba(216, 184, 113, 0.55);
+  background: rgba(28, 60, 105, 0.04);
+  font-family: var(--sans);
+  font-size: 9px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.legal p {
+  margin: 0 0 3px;
+}
+
+.legal p:last-child {
+  margin-bottom: 0;
+}
+
+.legal strong {
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.legal__copy {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--navy);
+}
+
+.legal--compact {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  font-size: 8.5px;
+  background: rgba(28, 60, 105, 0.035);
 }

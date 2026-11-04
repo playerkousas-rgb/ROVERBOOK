@@ -2,9 +2,11 @@ import React from 'react';
 import { SECTIONS, PAGE_TOTAL } from '@shared/book.js';
 import { Crest, cx } from '../ui.jsx';
 import { Link } from '../router.jsx';
+import { useLang } from '../i18n.jsx';
 
 /** A single printed page of the record book. */
 export function Sheet({ id, no, title, en, children, className = '', dense = false, badge }) {
+  const { isEn } = useLang();
   return (
     <article className={cx('sheet', dense && 'sheet--dense', className)} data-page={id} data-badge={badge || undefined}>
       <span className="sheet__gutter" aria-hidden="true" />
@@ -14,14 +16,14 @@ export function Sheet({ id, no, title, en, children, className = '', dense = fal
       <span className="sheet__corner" aria-hidden="true" />
       <header className="sheet__head">
         <span className="sheet__run">
-          樂行童軍紀錄冊 <em>ROVER SCOUT RECORD BOOK</em>
+          {isEn ? 'ROVER SCOUT RECORD BOOK' : <>樂行童軍紀錄冊 <em>ROVER SCOUT RECORD BOOK</em></>}
         </span>
-        {no !== '—' && <span className="sheet__pageno">第 {no} 頁</span>}
+        {no !== '—' && <span className="sheet__pageno">{isEn ? `PAGE ${no}` : `第 ${no} 頁`}</span>}
       </header>
       <div className="sheet__titlebar">
         <h1>
-          {title}
-          {en && <em>{en}</em>}
+          {isEn && en ? en : title}
+          {!isEn && en && <em>{en}</em>}
         </h1>
         <span className="sheet__rule" aria-hidden="true" />
       </div>
@@ -90,6 +92,7 @@ export function Tabs({ current }) {
 const pages = () => SECTIONS.filter((s) => s.id !== 'contents');
 
 export function Pager({ current }) {
+  const { isEn } = useLang();
   const list = pages();
   const index = Math.max(0, list.findIndex((s) => s.id === current));
   const prev = list[index - 1];
@@ -98,27 +101,27 @@ export function Pager({ current }) {
     <div className="pager">
       {prev ? (
         <Link to={`/p/${prev.id}`} className="pager__link">
-          <span className="pager__dir">上一頁</span>
-          <span className="pager__title">{prev.label}</span>
+          <span className="pager__dir">{isEn ? 'PREVIOUS' : '上一頁'}</span>
+          <span className="pager__title">{isEn ? prev.en || prev.label : prev.label}</span>
         </Link>
       ) : (
         <Link to="/" className="pager__link">
-          <span className="pager__dir">封面</span>
-          <span className="pager__title">樂行童軍紀錄冊</span>
+          <span className="pager__dir">{isEn ? 'COVER' : '封面'}</span>
+          <span className="pager__title">{isEn ? 'Rover Scout Record Book' : '樂行童軍紀錄冊'}</span>
         </Link>
       )}
       <span className="pager__count">
-        {list[index]?.page === '—' ? '附錄' : `${list[index]?.page} / ${PAGE_TOTAL}`}
+        {list[index]?.page === '—' ? (isEn ? 'APPENDIX' : '附錄') : `${list[index]?.page} / ${PAGE_TOTAL}`}
       </span>
       {next ? (
         <Link to={`/p/${next.id}`} className="pager__link pager__link--next">
-          <span className="pager__dir">下一頁</span>
-          <span className="pager__title">{next.label}</span>
+          <span className="pager__dir">{isEn ? 'NEXT' : '下一頁'}</span>
+          <span className="pager__title">{isEn ? next.en || next.label : next.label}</span>
         </Link>
       ) : (
         <Link to="/" className="pager__link pager__link--next">
-          <span className="pager__dir">完</span>
-          <span className="pager__title">返回封面</span>
+          <span className="pager__dir">{isEn ? 'END' : '完'}</span>
+          <span className="pager__title">{isEn ? 'Back to cover' : '返回封面'}</span>
         </Link>
       )}
     </div>
@@ -127,6 +130,7 @@ export function Pager({ current }) {
 
 /** Full-bleed blue cover — the whole screen is the book. */
 export function CoverPage({ book, onOpen, last, onContinue, hint }) {
+  const { isEn } = useLang();
   const m = book?.member || {};
   return (
     <div className="coverart">
@@ -138,8 +142,8 @@ export function CoverPage({ book, onOpen, last, onContinue, hint }) {
       <div className="coverart__top">
         <Crest size={62} />
         <div>
-          <strong>香港童軍總會</strong>
-          <em>SCOUT ASSOCIATION OF HONG KONG</em>
+          <strong>{isEn ? 'SCOUT ASSOCIATION OF HONG KONG' : '香港童軍總會'}</strong>
+          {!isEn && <em>SCOUT ASSOCIATION OF HONG KONG</em>}
         </div>
       </div>
 
@@ -151,10 +155,10 @@ export function CoverPage({ book, onOpen, last, onContinue, hint }) {
       </div>
 
       <div className="coverart__plate">
-        <span className="coverart__plate-label">持有人 HOLDER</span>
-        <strong>{m.nameZh || '你的名字'}</strong>
+        <span className="coverart__plate-label">{isEn ? 'HOLDER' : '持有人 HOLDER'}</span>
+        <strong>{m.nameZh || (isEn ? 'Your name' : '你的名字')}</strong>
         <span className="coverart__plate-sub">
-          {[m.crew, m.group].filter(Boolean).join(' · ') || '樂行童軍團'}
+          {[m.crew, m.group].filter(Boolean).join(' · ') || (isEn ? 'Rover Scout Crew' : '樂行童軍團')}
         </span>
         {m.memberNo && <span className="coverart__plate-no">No. {m.memberNo}</span>}
         {hint && <span className="coverart__hint">{hint}</span>}
@@ -182,14 +186,14 @@ export function CoverPage({ book, onOpen, last, onContinue, hint }) {
       <div className="coverart__foot">
         <span className="coverart__year">{new Date().getFullYear()}</span>
         <button className="coverart__open" onClick={onOpen}>
-          打開紀錄冊
+          {isEn ? 'Open the record book' : '打開紀錄冊'}
         </button>
         {last && (
           <button className="coverart__resume" onClick={onContinue}>
-            繼續上次 · 第 {last.page} 頁 <span>{last.label}</span>
+            {isEn ? `Continue · page ${last.page}` : `繼續上次 · 第 ${last.page} 頁`} <span>{isEn ? last.en || last.label : last.label}</span>
           </button>
         )}
-        <span className="coverart__edition">第五版綱要</span>
+        <span className="coverart__edition">{isEn ? 'Edition V' : '第五版綱要'}</span>
       </div>
     </div>
   );

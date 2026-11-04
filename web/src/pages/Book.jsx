@@ -1,13 +1,16 @@
 import React from 'react';
 import { useBook, useField } from '../bookContext.js';
-import { Page, H, P, Note, Line, Area, Grid, Rows, Sig, Comment, Present, Check } from '../components/Form.jsx';
+import { Page, H, P, Note, Line, Area, Grid, Rows, Sig, Comment, Present, Check , Bilingual } from '../components/Form.jsx';
 import Write from '../components/Write.jsx';
 import { PhotoPicker } from '../components/Edit.jsx';
 import { Crest } from '../ui.jsx';
+import { useLang } from '../i18n.jsx';
+import { LegalNote } from '../components/Legal.jsx';
 
 /* ---------------------------------------------------------------- 出版資料 */
 
 export function Colophon() {
+  const { isEn } = useLang();
   return (
     <Page id="colophon" className="colophon">
       <div className="colophon__crest">
@@ -25,9 +28,11 @@ export function Colophon() {
         請小心保存並更新有關資料，在考取樂行童軍肩章、樂行童軍獎章或貝登堡獎章時，必須出示此紀錄冊。
       </P>
 
+      <LegalNote compact />
+
       <div className="colophon__foot">
-        <span>第五版 · 2026</span>
-        <span>ROVERBOOK 電子版</span>
+        <span>{isEn ? 'Edition V · 2026' : '第五版 · 2026'}</span>
+        <span>{isEn ? 'ROVERBOOK digital edition' : 'ROVERBOOK 電子版'}</span>
       </div>
     </Page>
   );
@@ -39,6 +44,8 @@ export function Particulars1() {
   const { book } = useBook();
   const m = book.member || {};
   const [photo, setPhoto] = useField('member.photo', null);
+  const { isEn } = useLang();
+  const slot = (v) => (v && String(v).trim() ? String(v).trim() : '＿＿＿＿＿＿');
 
   return (
     <Page id="particulars-1" className="p-particulars">
@@ -49,26 +56,37 @@ export function Particulars1() {
           <PhotoPicker value={photo} onChange={setPhoto} />
         </div>
         <div className="ptop__id">
-          <Line label="編號 No." path="member.memberNo" placeholder="RS-2401" />
-          <Line label="姓名（中文）Name (Chinese)" path="member.nameZh" placeholder="林卓瑤" />
-          <Line label="（英文）(English)" path="member.nameEn" placeholder="Lam Cheuk-yiu" />
+          <Line
+            label="紀錄冊編號"
+            en="Record Book No. · SCOUT ID"
+            path="member.scoutId"
+            placeholder="24010001"
+            hint={isEn ? 'Same number used in ROVERBADGE' : '＝童軍成員編號 SCOUT ID（ROVERBADGE 用同一個號碼）'}
+          />
+          <Line label="姓名（中文）" en="Name (Chinese)" path="member.nameZh" placeholder="林卓瑤" />
+          <Line label="（英文）" en="Name (English)" path="member.nameEn" placeholder="Lam Cheuk-yiu" />
         </div>
       </div>
 
-      <div className="sentence">
-        <span>為</span>
-        <InlineSlot field="region" placeholder="地域" />
-        <span>地域</span>
-        <InlineSlot field="district" placeholder="區" />
-        <span>區</span>
-        <InlineSlot field="group" placeholder="旅" />
-        <span>旅之樂行童軍團團員</span>
+      <Bilingual as="h4" className="pgh" zh="所屬地域 · 區 · 旅" en="Region · District · Group" />
+      <div className="ftrio">
+        <Line label="地域" en="Region" path="member.region" placeholder="九龍" />
+        <Line label="區" en="District" path="member.district" placeholder="九龍城" />
+        <Line label="旅" en="Group" path="member.group" placeholder="九龍第 145 旅" />
       </div>
-      <p className="sentence__en">is a Crew member of __________ Group, __________ District, __________ Region.</p>
+
+      <p className="sentence sentence--static">
+        {isEn ? 'is a Rover Scout member of ' : '為 '}
+        {isEn ? '' : <b>{slot(m.region)}</b>}
+        {isEn ? '' : ' 地域 '}
+        {isEn ? '' : <b>{slot(m.district)}</b>}
+        {isEn ? '' : ' 區 '}
+        <b>{slot(m.group)}</b>
+        {isEn ? ' Rover Scout Crew.' : ' 之樂行童軍團團員。'}
+      </p>
 
       <div className="fduo">
-        <Line label="簽發日期 Date of Issue" type="date" path="member.issueDate" />
-        <Line label="樂行童軍團 Crew" path="member.crew" placeholder="九龍第 145 旅樂行童軍團" />
+        <Line label="簽發日期" en="Date of Issue" type="date" path="member.issueDate" />
       </div>
     </Page>
   );
@@ -104,7 +122,7 @@ export function Particulars2() {
         <Line label="電郵 Email" path="member.email" placeholder="you@example.org" />
       </div>
 
-      <h4 className="pgh">緊急事故聯絡人 <em>Emergency Contact Person</em></h4>
+      <Bilingual as="h4" className="pgh" zh="緊急事故聯絡人" en="Emergency Contact Person" />
       <div className="fduo">
         <Line label="姓名 Name" path="member.emergencyName" placeholder="林美珍（母親）" />
         <Line label="聯絡電話 Telephone No." path="member.emergencyPhone" placeholder="9012 3456" />
@@ -144,25 +162,26 @@ import { SCOUTING_UNITS as UNITS } from '@shared/book.js';
 
 export function Scouting() {
   const { book } = useBook();
+  const { isEn } = useLang();
   const map = Object.fromEntries((book.scouting || []).map((r) => [r.unit, r]));
   return (
     <Page id="scouting" className="p-wide">
       <H en="SCOUTING EXPERIENCE">童軍紀錄</H>
       <div className="pgtable pgtable--fixed">
         <div className="pgtable__head pgtable__row pgtable__row--5">
-          <span>期間 Period · 旅／單位 Group / Unit</span>
-          <span>崗位／職位 Post / Rank</span>
-          <span>獲取之最高奬章 Highest Award Achieved</span>
-          <span>由 From</span>
-          <span>至 To</span>
+          <Bilingual zh="期間 · 旅／單位" en="Period · Group / Unit" />
+          <Bilingual zh="崗位／職位" en="Post / Rank" />
+          <Bilingual zh="獲取之最高奬章" en="Highest Award Achieved" />
+          <Bilingual zh="由" en="From" />
+          <Bilingual zh="至" en="To" />
         </div>
         {UNITS.map((u) => {
           const index = (book.scouting || []).findIndex((r) => r.unit === u.key);
           return (
             <div className="pgtable__row pgtable__row--5" key={u.key}>
               <span className="pgtable__cell pgtable__unit">
-                <strong>{u.label}</strong>
-                <em>{u.en}</em>
+                <strong>{isEn ? u.en : u.label}</strong>
+                {!isEn && <em>{u.en}</em>}
               </span>
               <Cell unit={u.key} index={index} field="post" />
               <Cell unit={u.key} index={index} field="highestAward" />
@@ -203,13 +222,13 @@ export function Changes() {
     <Page id="changes">
       <H en="TRANSFER / CHANGE OF ADDRESS / CHANGE OF PARTICULARS">轉旅 · 遷移地址 · 更改摘要</H>
 
-      <h4 className="pgh">轉旅 <em>TRANSFER OF GROUP</em></h4>
+      <Bilingual as="h4" className="pgh" zh="轉旅" en="TRANSFER OF GROUP" />
       <Rows path="transfers" min={3} addLabel="加一次轉旅" cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'groupNo', label: '新旅旅號', en: 'Number of New Group' }]} />
 
-      <h4 className="pgh">遷移地址 <em>CHANGE OF ADDRESS</em></h4>
+      <Bilingual as="h4" className="pgh" zh="遷移地址" en="CHANGE OF ADDRESS" />
       <Rows path="addressChanges" min={3} addLabel="加一次搬遷" cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'address', label: '新地址', en: 'New Address', width: 2.4 }]} />
 
-      <h4 className="pgh">更改個人摘要 <em>CHANGE OF PERSONAL PARTICULARS</em></h4>
+      <Bilingual as="h4" className="pgh" zh="更改個人摘要" en="CHANGE OF PERSONAL PARTICULARS" />
       <Rows path="detailChanges" min={3} addLabel="加一次更改" cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'item', label: '項目', en: 'Item' }, { k: 'content', label: '內容', en: 'Content', width: 2 }]} />
     </Page>
   );
@@ -219,6 +238,7 @@ export function Changes() {
 
 export function Renewals({ part = 0 }) {
   const { book, update } = useBook();
+  const { isEn } = useLang();
   const list = book.renewals || [];
   const id = part === 0 ? 'renewals-1' : 'renewals-2';
   const start = part * 4;
@@ -237,9 +257,9 @@ export function Renewals({ part = 0 }) {
       <H en="RENEWAL OF MEMBERSHIP">會員資格</H>
       <div className="pgtable">
         <div className="pgtable__head pgtable__row pgtable__row--3">
-          <span>日期 <em>Date</em></span>
-          <span>有效日期至 <em>Valid Until</em></span>
-          <span>旅印及簽署 <em>Group Chop and Signature</em></span>
+          <Bilingual zh="日期" en="Date" />
+          <Bilingual zh="有效日期至" en="Valid Until" />
+          <Bilingual zh="旅印及簽署" en="Group Chop and Signature" />
         </div>
         {Array.from({ length: 4 }).map((_, i) => {
           const index = start + i;
@@ -253,7 +273,13 @@ export function Renewals({ part = 0 }) {
                 <Write value={row.validUntil || ''} onChange={(v) => setRow(index, 'validUntil', v)} type="date" compact label="有效期至" />
               </span>
               <span className="pgtable__cell pgtable__cell--sig" data-label="旅印及簽署">
-                <Sig path={`renewals.${index}.signature`} label={`${row.year || index + 1} 續會簽署`} compact title="樂行童軍團長" />
+                <Sig
+                  path={`renewals.${index}.signature`}
+                  label={`${row.year || index + 1} 續會簽署`}
+                  en={`Renewal signature ${row.year || index + 1}`}
+                  compact
+                  title="樂行童軍團長"
+                />
               </span>
             </div>
           );
@@ -261,7 +287,7 @@ export function Renewals({ part = 0 }) {
       </div>
       {part === 0 ? (
         <button type="button" className="addrow addrow--quiet" onClick={() => update((b) => ({ ...b, renewals: [...(b.renewals || []), { id: `rnw_${Math.random().toString(36).slice(2, 8)}`, year: '', validUntil: '', signature: null }] }))}>
-          + 加一年續會
+          + {isEn ? 'Add a renewal year' : '加一年續會'}
         </button>
       ) : (
         <Note en="Membership has to be renewed and confirmed by the Rover Scout Leader by signature and chop, valid from 1 January to 31 December each year.">
@@ -293,7 +319,7 @@ export function ServiceAwards() {
         此表格是樂行童軍成員在旅、團、學生會、會社或其他團體的服務紀錄。
       </Note>
 
-      <h4 className="pgh pgh--tight">獎章及獎勵記錄 <em>RECORD OF AWARD AND COMMENDATION</em></h4>
+      <Bilingual as="h4" className="pgh pgh--tight" zh="獎章及獎勵記錄" en="RECORD OF AWARD AND COMMENDATION" />
       <Rows
         path="awards"
         min={3}
@@ -315,17 +341,17 @@ export function Scheme() {
   return (
     <Page id="scheme">
       <H en="TRAINING SCHEME">訓練綱要</H>
-      <h4 className="pgh">目的 <em>AIM</em></h4>
+      <Bilingual as="h4" className="pgh" zh="目的" en="AIM" />
       <P en="Rover Scout Section aims to connect and provide opportunities and support to young people who care about our society and are devoted in services to serve the Scout Movement and the community. Through a challenging award scheme, young people are encouraged to make personal progress and develop their potentials so as to become responsible and useful citizens in society.">
         樂行童軍支部旨在維繫關懷社會、熱心服務之青年，給予他們機會及鼓勵，為童軍運動及社會服務；同時，通過一個具挑戰性的獎章計劃，激發他們的進取心、發展個人潛能、促進身心健康並拓展國際視野，使其成為有責任感及對社會有貢獻的公民。
       </P>
 
-      <h4 className="pgh">訓練方法 <em>METHOD</em></h4>
+      <Bilingual as="h4" className="pgh" zh="訓練方法" en="METHOD" />
       <P en="The method of training in the Rover Scout Section is based on self-governing and self-programming of Rover Scout Crew together with a challenging and progressive award scheme.">
         樂行童軍支部之訓練方法，以自治及自務的樂行童軍團為基礎，輔以具挑戰性及有進度性之獎章制度。
       </P>
 
-      <h4 className="pgh">銘言 <em>MOTTO</em></h4>
+      <Bilingual as="h4" className="pgh" zh="銘言" en="MOTTO" />
       <P en="BE PREPARED is the Scout Motto. SERVICE is the Motto of Rover Scouts.">
         童軍運動及樂行童軍支部的銘言分別為「準備」及「服務」。
       </P>
@@ -341,27 +367,28 @@ const STAGES = [
 ];
 
 export function Plan() {
+  const { isEn } = useLang();
   return (
     <Page id="plan">
       <H en="ROVER SCOUT TRAINING SCHEME">樂行童軍訓練計劃</H>
       <P en="The order of the progressive awards of Rover Scout Section is Membership Badge, Rover Scout Epaulettes, Rover Scout Award and Baden Powell Award.">
         樂行童軍訓練計劃共分為四個階段，分別為會員章、樂行童軍肩章、樂行童軍獎章及貝登堡獎章。
       </P>
-      <div className="stages">
+      <div className="pstages">
         {STAGES.map((s) => (
-          <div className="stage" key={s.no}>
-            <span className="stage__no">{s.no}</span>
-            <div className="stage__body">
+          <div className="pstage" key={s.no}>
+            <span className="pstage__no">{s.no}</span>
+            <div className="pstage__body">
               <h4>
-                {s.name}
-                <em>{s.en}</em>
+                {isEn ? s.en : s.name}
+                {!isEn && <em>{s.en}</em>}
               </h4>
-              <p className="stage__req">{s.req}</p>
-              <p className="stage__req-en">{s.enReq}</p>
+              <p className="pstage__req">{isEn ? s.enReq : s.req}</p>
+              {!isEn && <p className="pstage__req-en">{s.enReq}</p>}
             </div>
-            <div className="stage__time">
-              {s.time}
-              <em>{s.enTime}</em>
+            <div className="pstage__time">
+              {isEn ? s.enTime : s.time}
+              {!isEn && <em>{s.enTime}</em>}
             </div>
           </div>
         ))}
@@ -417,13 +444,14 @@ export function Experience({ id, title, en, path, lead, leadEn }) {
 /* ---------------------------------------------------------------- 制服頁 */
 
 export function Uniform() {
+  const { isEn } = useLang();
   return (
     <Page id="uniform" className="p-uniform">
       <H en="ROVER SCOUT UNIFORM">樂行童軍制服</H>
       <div className="uniform">
         <div className="uniform__art" aria-hidden="true">
           <Crest size={92} />
-          <span>制服圖見紙本第 41 頁</span>
+          <span>{isEn ? 'Uniform illustration: paper edition page 41' : '制服圖見紙本第 41 頁'}</span>
         </div>
         <div className="uniform__text">
           <P en="Refer to the Rover Scout uniform requirements in the current Association handbook. The uniform page of the printed record book is a reference plate.">
