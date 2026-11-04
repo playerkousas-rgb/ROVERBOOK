@@ -79,8 +79,8 @@ export default function MenuDialog({ open, onClose, onShowQr, onHome }) {
         >
           <Icon name="qr" size={18} />
           <span>
-            <strong>領袖模式：掃描成員紀錄冊</strong>
-            <em>用 Chrome 掃成員的二維碼，掃邊個睇邊個</em>
+            <strong>掃描二維碼</strong>
+            <em>領袖掃成員紀錄冊；成員掃領袖的核簽回傳碼</em>
           </span>
         </button>
         <button className="menu__item" onClick={() => onShowQr?.()}>

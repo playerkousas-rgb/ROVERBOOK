@@ -10,6 +10,7 @@
 export const TRANSFER_PREFIX = 'RB1';
 export const TRANSFER_VERSION = 1;
 export const KIND_MEMBER = 'roverbook/member';
+export const KIND_SIGNOFF = 'roverbook/signoff';
 
 /** 一隻 QR（version 40、L 級）最多 2,953 bytes；留些少餘裕方便鏡頭讀取。 */
 export const QR_LIMIT = 2400;
@@ -210,8 +211,7 @@ async function gunzip(bytes) {
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
-export async function encodeTransfer(book, selection) {
-  const payload = buildPayload(book, selection);
+export async function encodePayload(payload) {
   const json = JSON.stringify(payload);
   const raw = new TextEncoder().encode(json);
   let bytes = raw;
@@ -240,7 +240,36 @@ export async function encodeTransfer(book, selection) {
   };
 }
 
-export async function decodeTransfer(value) {
+export async function encodeTransfer(book, selection) {
+  return encodePayload(buildPayload(book, selection));
+}
+
+/** 領袖核簽單：一張簽名 + 一批項目，唔會傳整本紀錄冊。 */
+export async function encodeSignoff({ member, leader, items, note }) {
+  const payload = {
+    t: KIND_SIGNOFF,
+    v: TRANSFER_VERSION,
+    at: new Date().toISOString(),
+    seq: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+    member: { nameZh: member?.nameZh || '', memberNo: member?.memberNo || '' },
+    leader: {
+      name: leader?.name || '',
+      title: leader?.title || '樂行童軍團長',
+      at: leader?.at || new Date().toISOString().slice(0, 10),
+      png: leader?.png || null,
+    },
+    items: (items || []).map((it) => ({
+      id: it.id,
+      date: it.date || '',
+      assessor: it.assessor || leader?.name || '',
+      verified: true,
+    })),
+    note: note || '',
+  };
+  return encodePayload(payload);
+}
+
+export async function decodePayload(value) {
   const input = String(value || '').trim();
   const match = /^RB1(P?)\.([A-Za-z0-9_-]+)$/.exec(input);
   if (!match) throw new Error('這不是 ROVERBOOK 的二維碼');
@@ -255,10 +284,54 @@ export async function decodeTransfer(value) {
   } catch {
     throw new Error('二維碼內容損壞，請重新產生');
   }
-  if (payload?.t !== KIND_MEMBER || payload?.v !== TRANSFER_VERSION) {
+  if (payload?.v !== TRANSFER_VERSION || (payload.t !== KIND_MEMBER && payload.t !== KIND_SIGNOFF)) {
     throw new Error('二維碼版本未支援，請更新 ROVERBOOK');
   }
   return payload;
+}
+
+export async function decodeTransfer(value) {
+  const payload = await decodePayload(value);
+  if (payload.t !== KIND_MEMBER) throw new Error('這個二維碼不是成員紀錄冊');
+  return payload;
+}
+
+/** 把核簽單寫入成員的紀錄冊（只改有核簽的項目）。 */
+export function applySignoff(book, payload) {
+  if (!payload || payload.t !== KIND_SIGNOFF) throw new Error('這不是核簽單');
+  const next = structuredClone(book);
+  const changes = [];
+  (payload.items || []).forEach((item) => {
+    if (!item?.id || !item.verified) return;
+    const current = next.progress?.[item.id] || {};
+    const before = { date: current.date || '', assessor: current.assessor || '' };
+    next.progress = next.progress || {};
+    next.progress[item.id] = {
+      ...current,
+      date: item.date || current.date || '',
+      assessor: item.assessor || payload.leader?.name || current.assessor || '',
+      at: new Date().toISOString(),
+      signedAt: payload.at,
+      ...(payload.leader?.png
+        ? {
+            signature: {
+              png: payload.leader.png,
+              name: payload.leader.name,
+              title: payload.leader.title,
+              at: payload.leader.at,
+            },
+          }
+        : {}),
+    };
+    changes.push({
+      id: item.id,
+      before,
+      after: { date: next.progress[item.id].date, assessor: next.progress[item.id].assessor },
+      stamped: !!payload.leader?.png,
+    });
+  });
+  next.meta = { ...(next.meta || {}), updatedAt: new Date().toISOString() };
+  return { book: next, changes };
 }
 
 export function describeSelection(selection) {

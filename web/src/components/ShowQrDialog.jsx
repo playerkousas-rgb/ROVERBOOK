@@ -1,15 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import qrcode from 'qrcode-generator';
 import { useBook } from '../bookContext.js';
 import { Icon, Modal, useToast } from '../ui.jsx';
 import { QR_LIMIT, TRANSFER_OPTIONS, encodeTransfer } from '@shared/transfer.js';
-
-function qrSvg(text, { cell = 5, margin = 4 } = {}) {
-  const qr = qrcode(0, 'L');
-  qr.addData(text);
-  qr.make();
-  return qr.createSvgTag({ cellSize: cell, margin, scalable: true });
-}
+import { qrSvg } from '../qr.js';
 
 export function ShowQrButton({ className = 'btn btn--ghost btn--sm', label = '出示二維碼' }) {
   const [open, setOpen] = useState(false);

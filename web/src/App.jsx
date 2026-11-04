@@ -21,6 +21,7 @@ import WalletDialog from './components/WalletDialog.jsx';
 import MenuDialog from './components/MenuDialog.jsx';
 import { FormsIndex, FormDoc, FormsAll } from './pages/Forms.jsx';
 import Scan, { ScanView } from './pages/Scan.jsx';
+import Signoff from './pages/Signoff.jsx';
 import ShowQrDialog from './components/ShowQrDialog.jsx';
 
 const PAGES = {
@@ -164,7 +165,7 @@ function BookApp({ book }) {
 
   const section = path.startsWith('/p/') ? path.slice(3) : null;
   const formId = path.startsWith('/forms') ? path.split('/').filter(Boolean)[1] || 'index' : null;
-  const scanPath = path === '/scan' || path === '/scan/view' ? path : null;
+  const scanPath = ['/scan', '/scan/view', '/scan/signoff'].includes(path) ? path : null;
   const [lastSection, setLastSection] = useState(() => {
     try {
       return localStorage.getItem('roverbook.last') || '';
@@ -299,6 +300,8 @@ function BookApp({ book }) {
           {scanPath ? (
             scanPath === '/scan/view' ? (
               <ScanView />
+            ) : scanPath === '/scan/signoff' ? (
+              <Signoff />
             ) : (
               <Scan />
             )
