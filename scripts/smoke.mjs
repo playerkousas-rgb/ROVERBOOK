@@ -202,8 +202,8 @@ const PAGE_TEXT = {
   'expeditions-1': '遠足',
   'expeditions-2': '遠足',
   uniform: '制服',
-  'notes-1': null,
-  'notes-2': null,
+  'uniform-en': 'Group Badge',
+  crest: null,
   appendix: '數位附錄',
 };
 

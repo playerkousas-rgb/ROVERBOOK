@@ -8658,6 +8658,27 @@ html[data-lang='en'] .fareas .frow__label {
     font-size: 18px;
   }
 
+  /* 頁頂大標題同章節標題重複：手機只留章節標題 */
+  .sheet__titlebar {
+    display: none;
+  }
+
+  .sheet__body {
+    padding-top: 4px;
+  }
+
+  .write {
+    min-height: 26px;
+  }
+
+  .write--compact {
+    min-height: 22px;
+  }
+
+  .pgtable__cell {
+    padding: 1px 0;
+  }
+
   /* 訓練計劃：一欄直落 */
   .pstage {
     grid-template-columns: 1fr;
@@ -8675,8 +8696,16 @@ html[data-lang='en'] .fareas .frow__label {
   }
 
   .pstage__time {
+    grid-column: 1 !important;
     text-align: left;
     font-size: 10px;
+  }
+
+  .pstage__no,
+  .pstage__art,
+  .pstage__body {
+    grid-column: 1 !important;
+    width: auto;
   }
 
   /* 細項／進度列：項目在上，其餘逐項列出 */
@@ -8762,6 +8791,11 @@ html[data-lang='en'] .fareas .frow__label {
     caret-color: transparent;
   }
 
+  .write--date.is-empty .write__date::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    width: 0;
+  }
+
   .write--date.is-empty::after {
     content: '';
     position: absolute;
@@ -8782,4 +8816,19 @@ html[data-lang='en'] .fareas .frow__label {
   .p-cover .sheet__body {
     justify-content: center;
   }
+}
+
+/* -------------------------------------------- v15 第 43 頁：樂行童軍徽章圖 */
+.p-crest .sheet__body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crestpage__img {
+  display: block;
+  width: min(58%, 260px);
+  height: auto;
+  margin: 8% auto 0;
+  mix-blend-mode: multiply;
 }

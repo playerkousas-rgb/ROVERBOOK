@@ -528,24 +528,36 @@ const UNIFORM_LEGEND = [
   ['22', 'ATAS 標誌', 'ATAS emblem'],
 ];
 
-export function Uniform() {
+export function Uniform({ lang }) {
   const { isEn } = useLang();
+  const english = lang ? lang === 'en' : isEn;
   return (
-    <Page id="uniform" className="p-uniform">
-      <H en="ROVER SCOUT UNIFORM">樂行童軍制服</H>
+    <Page id={lang === 'en' ? 'uniform-en' : 'uniform'} className="p-uniform">
+      <H en="ROVER SCOUT UNIFORM">{english ? 'Rover Scout Uniform' : '樂行童軍制服'}</H>
       <img
         className="uniform__plate"
-        src={isEn ? '/img/uniform-en.png' : '/img/uniform-zh.png'}
-        alt={isEn ? 'Rover Scout uniform and epaulettes' : '樂行童軍制服及肩章佩戴位置'}
+        src={english ? '/img/uniform-en.png' : '/img/uniform-zh.png'}
+        alt={english ? 'Rover Scout uniform and epaulettes' : '樂行童軍制服及肩章佩戴位置'}
       />
       <div className="uniform__legend">
         {UNIFORM_LEGEND.map(([n, zh, en]) => (
           <p key={n} className="uniform__item">
             <span className="uniform__no">{n}</span>
-            {isEn ? en : zh}
+            {english ? en : zh}
           </p>
         ))}
       </div>
+    </Page>
+  );
+}
+
+/* ------------------------------------------------------------ 第 43 頁 · 徽章 */
+
+export function Emblem() {
+  const { isEn } = useLang();
+  return (
+    <Page id="crest" className="p-crest">
+      <img className="crestpage__img" src="/img/crest-rovers.png" alt={isEn ? 'Rover Scout emblem' : '樂行童軍徽章'} />
     </Page>
   );
 }

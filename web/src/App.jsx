@@ -6,7 +6,7 @@ import { ToastProvider, useToast, Crest, Icon, Modal, cx } from './ui.jsx';
 import { Pager, CoverPage } from './components/Paper.jsx';
 import { SECTIONS, PAGE_TOTAL, allStats, syncIdentity } from '@shared/book.js';
 import Contents from './pages/Contents.jsx';
-import { Cover, Colophon, Particulars1, Particulars2, GroupInfo, Scouting, Changes, Renewals, ServiceAwards, Scheme, Plan, BadgeTable, Experience, Uniform, Notes } from './pages/Book.jsx';
+import { Emblem, Cover, Colophon, Particulars1, Particulars2, GroupInfo, Scouting, Changes, Renewals, ServiceAwards, Scheme, Plan, BadgeTable, Experience, Uniform, Notes } from './pages/Book.jsx';
 import {
   MbIntro, MbActivities, MbUnderstanding, MbCommitment, MbPresented,
   EpIntro, EpPresented, RsaIntro, RsaAwards, Dedication, Scoutcraft, Volunteerism,
@@ -105,9 +105,9 @@ const PAGES = {
       leadEn="Record here any expeditions in Hong Kong or overseas or International Scouting activities undertaken abroad."
     />
   ),
-  uniform: Uniform,
-  'notes-1': () => <Notes id="notes-1" />,
-  'notes-2': () => <Notes id="notes-2" />,
+  uniform: () => <Uniform />,
+  'uniform-en': () => <Uniform lang="en" />,
+  crest: Emblem,
   appendix: Appendix,
 };
 
