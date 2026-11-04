@@ -17,7 +17,7 @@ function Sig({ sig, name, title }) {
   if (!sig) return null;
   return (
     <div className="ssig">
-      {sig.data && <img src={sig.data} alt="簽名" />}
+      {(sig.png || sig.data) && <img src={sig.png || sig.data} alt="簽名" />}
       <span>
         {sig.name || name || ''}
         {(sig.title || title) && <em>{sig.title || title}</em>}

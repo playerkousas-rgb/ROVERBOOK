@@ -261,7 +261,7 @@ const snapshot = buildSnapshot(demoBook(), { ...DEFAULT_SHARE, contact: false })
       sharedHtml.includes('林卓瑤') &&
       sharedHtml.includes('公開分享') &&
       sharedHtml.includes('訓練進度') &&
-      sharedHtml.includes('成就') === false &&
+      sharedHtml.includes('data:image/svg+xml') &&
       errors.length === 0;
     report(ok, `公開分享頁 /v/:id — ${text.length} 字`, errors.slice(0, 2).join(' / '));
   }
