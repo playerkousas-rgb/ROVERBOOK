@@ -1,0 +1,8 @@
+node_modules/
+dist/
+data/
+.DS_Store
+*.log
+
+# 下載回來的原始 PDF（版權文件，不入版控）
+google_drive/
