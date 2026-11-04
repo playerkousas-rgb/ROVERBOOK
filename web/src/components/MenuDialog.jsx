@@ -3,6 +3,7 @@ import { useBook } from '../bookContext.js';
 import { useToast, Icon, Modal } from '../ui.jsx';
 import { download, clearBook, slugify } from '../bookStore.js';
 import { demoBook, importFromRoverBadge, newBook, today } from '@shared/book.js';
+import { LegalNote } from './Legal.jsx';
 import { navigate } from '../router.jsx';
 
 export default function MenuDialog({ open, onClose, onShowQr, onHome }) {
@@ -167,9 +168,10 @@ export default function MenuDialog({ open, onClose, onShowQr, onHome }) {
               （localStorage），不會自動上載。只有你主動建立的分享連結會放到伺服器，並可隨時刪除。
             </p>
             <p>
-              非香港童軍總會官方產品。訓練綱要結構及項目編號對應 ROVERBADGE（第五版綱要），
-              可與該系統交換進度資料。正式使用前請自行核對綱要版本。
+              訓練綱要結構及項目編號對應 ROVERBADGE（第五版綱要），可與該系統交換進度資料。
+              正式使用前請自行核對綱要版本。
             </p>
+            <LegalNote compact />
           </div>
         )}
 

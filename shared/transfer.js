@@ -106,7 +106,7 @@ export function buildPayload(book, selection = []) {
   const m = book?.member || {};
 
   if (chosen.has('particulars')) {
-    payload.member = pick(m, ['nameZh', 'nameEn', 'memberNo', 'crew', 'group', 'district', 'region', 'issueDate', 'dateJoined']);
+    payload.member = pick(m, ['nameZh', 'nameEn', 'scoutId', 'memberNo', 'crew', 'group', 'district', 'region', 'issueDate', 'dateJoined']);
   }
   if (chosen.has('contact')) {
     payload.contact = pick(m, ['phone', 'email', 'address', 'emergencyName', 'emergencyPhone']);

@@ -9,7 +9,7 @@
  *       activate 時清走舊版本 cache。
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = `roverbook-${VERSION}`;
 const SHELL = [
   '/',
@@ -19,6 +19,8 @@ const SHELL = [
   '/icons/icon-512.png',
   '/icons/apple-touch-icon.png',
   '/icons/favicon.png',
+  '/favicon.svg',
+  '/favicon-32.png',
 ];
 
 self.addEventListener('install', (event) => {

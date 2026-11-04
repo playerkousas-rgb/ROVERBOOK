@@ -874,11 +874,14 @@ const snapshot = buildSnapshot(demoBook(), { ...DEFAULT_SHARE, contact: false })
 
 {
   const book = demoBook();
-  report(book.member.memberNo === book.member.ymis && book.member.memberNo === '24010001', '身份：紀錄冊編號 ＝ 童軍成員編號 ＝ YMIS');
+  report(
+    book.member.scoutId === '24010001' && book.member.memberNo === book.member.scoutId && !('ymis' in book.member),
+    '身份：紀錄冊編號 ＝ 童軍成員編號 SCOUT ID（舊 YMIS 欄位已淘汰）',
+  );
 }
 
 await screen({
-  name: '身份：改紀錄冊編號會同步 YMIS',
+  name: '身份：改紀錄冊編號會同步 SCOUT ID',
   path: '/p/particulars-1',
   expect: ['紀錄冊編號', 'SCOUT ID'],
   interact: async (doc) => {
@@ -894,7 +897,7 @@ await screen({
     await new Promise((r) => setTimeout(r, 500));
     const saved = JSON.parse(localStorage.getItem('roverbook.book.v3'));
     if (saved.member.memberNo !== '24019999') throw new Error(`紀錄冊編號未寫入（${saved.member.memberNo}）`);
-    if (saved.member.ymis !== '24019999') throw new Error(`YMIS 未同步（${saved.member.ymis}）`);
+    if (saved.member.scoutId !== '24019999') throw new Error(`SCOUT ID 未同步（${saved.member.scoutId}）`);
   },
 });
 
@@ -926,6 +929,33 @@ await screen({
   report(html.includes('PAGE 3') && html.includes('PERSONAL PARTICULARS'), '語言：重新載入後仍為英文');
   localStorage.removeItem('roverbook.lang');
 }
+
+// ------------------------------------------------------- v12 圖示 · 聲明 · 頂欄
+
+{
+  const html = await (await nativeFetch(`${BASE}/`)).text();
+  report(
+    html.includes('/favicon.svg') && html.includes('/favicon-32.png') && html.includes('apple-touch-icon'),
+    '網站圖示：favicon（SVG + PNG）及 apple-touch-icon 已設定',
+  );
+}
+
+await screen({
+  name: '版權聲明：非官方工具、內容版權屬總會',
+  path: '/p/appendix',
+  expect: ['非官方獨立工具', '與香港童軍總會無任何官方從屬關係', '版權歸香港童軍總會所有', '版權 © 2026 ROVERBOOK'],
+});
+
+await screen({
+  name: '頂欄：目錄只有一個入口（不重覆）',
+  path: '/p/particulars-1',
+  expect: ['PERSONAL PARTICULARS'],
+  interact: async (doc) => {
+    const dupes = [...doc.querySelectorAll('.chipbar .chipbtn')].filter((b) => (b.getAttribute('title') || '').includes('目錄'));
+    if (dupes.length) throw new Error(`頂欄仍有 ${dupes.length} 個重覆的目錄按鈕`);
+    if (!doc.querySelector('.chipbar__page')) throw new Error('找不到頁碼／目錄入口');
+  },
+});
 
 {
   const health = await api('/healthz');

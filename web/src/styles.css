@@ -7991,3 +7991,40 @@ html[data-lang='en'] .frow__label,
 html[data-lang='en'] .fareas .frow__label {
   letter-spacing: 0.03em;
 }
+
+/* ============================================================ v12 · 版權聲明 */
+
+.legal {
+  margin: 16px 0 6px;
+  padding: 10px 12px;
+  border-left: 2px solid rgba(216, 184, 113, 0.55);
+  background: rgba(28, 60, 105, 0.04);
+  font-family: var(--sans);
+  font-size: 9px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.legal p {
+  margin: 0 0 3px;
+}
+
+.legal p:last-child {
+  margin-bottom: 0;
+}
+
+.legal strong {
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.legal__app {
+  color: #8a8069;
+}
+
+.legal--compact {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  font-size: 8.5px;
+  background: rgba(28, 60, 105, 0.035);
+}

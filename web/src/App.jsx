@@ -281,9 +281,6 @@ function BookApp({ book, saveIssue }) {
           )}
           {section && (
             <>
-              <button className="chipbtn" onClick={() => setIndexOpen(true)} title={isEn ? 'Contents' : '目錄'}>
-                <Icon name="book" size={15} /> <span className="hide-sm">{isEn ? 'Contents' : '目錄'}</span>
-              </button>
               <button
                 className={cx('chipbtn', zoom > 1 && 'is-on')}
                 onClick={() => setZoom((z) => (z > 1 ? 1 : 1.4))}

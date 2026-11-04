@@ -9,8 +9,7 @@ export default function Welcome({ onReady }) {
   const [form, setForm] = useState({
     nameZh: '',
     nameEn: '',
-    ymis: '',
-    memberNo: '',
+    scoutId: '',
     crew: '',
     group: '',
     district: '',
@@ -28,7 +27,7 @@ export default function Welcome({ onReady }) {
   const create = (e) => {
     e.preventDefault();
     if (!form.nameZh.trim()) return;
-    start(newBook({ member: { ...form, ymis: form.memberNo } }), '/p/particulars-1');
+    start(newBook({ member: form }), '/p/particulars-1');
     push('紀錄冊已建立，開始填寫吧');
   };
 
@@ -106,12 +105,12 @@ export default function Welcome({ onReady }) {
           <div className="welcome__row">
             <label className="field">
               <span className="field__label">
-                紀錄冊編號 <em>＝ 童軍成員編號 SCOUT ID ＝ ROVERBADGE 的 YMIS</em>
+                紀錄冊編號 <em>＝ 童軍成員編號 SCOUT ID（ROVERBADGE 同一個號碼）</em>
               </span>
               <input
                 className="welcome__input"
-                value={form.memberNo}
-                onChange={(e) => setForm((f) => ({ ...f, memberNo: e.target.value, ymis: e.target.value }))}
+                value={form.scoutId}
+                onChange={(e) => setForm((f) => ({ ...f, scoutId: e.target.value }))}
                 placeholder="24010001"
               />
             </label>

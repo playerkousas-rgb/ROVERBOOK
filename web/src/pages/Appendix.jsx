@@ -15,9 +15,12 @@ import {
 import { FORM_META, FORM_ORDER, formStatus } from '@shared/forms.js';
 import { ShowQrButton } from '../components/ShowQrDialog.jsx';
 import { compressBookImages, imageSizeLabel, storageUsage, stripFieldInk } from '../storageHealth.js';
+import { LegalNote } from '../components/Legal.jsx';
+import { useLang } from '../i18n.jsx';
 
 export default function Appendix() {
   const { book, update, replace } = useBook();
+  const { isEn } = useLang();
   const { push } = useToast();
   const backupRef = useRef(null);
   const rbRef = useRef(null);
@@ -70,7 +73,7 @@ export default function Appendix() {
 
   const exportRb = () => {
     download(
-      `roverbadge-progress-${book.member.ymis || 'member'}-${today()}.json`,
+      `roverbadge-progress-${book.member.scoutId || book.member.memberNo || 'member'}-${today()}.json`,
       exportForRoverBadge(book, book.member.troopId || ''),
     );
     push('已匯出 ROVERBADGE 進度檔');
@@ -102,13 +105,14 @@ export default function Appendix() {
           <div className="appx-grid">
             <div className={`appendix-card appendix-card--storage${storage.ratio > 0.8 ? ' is-full' : ''}`}>
               <h4>
-                <Icon name="lock" size={13} /> 儲存健康
+                <Icon name="lock" size={13} /> {isEn ? 'Storage health' : '儲存健康'}
               </h4>
               <div className="storebar">
                 <i style={{ width: `${Math.max(2, Math.round(storage.ratio * 100))}%` }} />
               </div>
               <p className="tiny">
-                已用約 {((storage.bytes / 1024) / 1024).toFixed(2)} MB / 5 MB（{Math.round(storage.ratio * 100)}%）
+                {isEn ? 'About ' : '已用約 '}
+                {((storage.bytes / 1024) / 1024).toFixed(2)} MB / 5 MB（{Math.round(storage.ratio * 100)}%）
               </p>
               {storage.images.length > 0 ? (
                 <ul className="storelist">
@@ -120,14 +124,14 @@ export default function Appendix() {
                   ))}
                 </ul>
               ) : (
-                <p className="tiny">未有圖片資料，空間充足。</p>
+                <p className="tiny">{isEn ? 'No images stored yet — plenty of room.' : '未有圖片資料，空間充足。'}</p>
               )}
               <div className="aside-actions">
                 <button className="btn btn--ghost btn--sm" onClick={runCompress} disabled={compressing}>
-                  <Icon name="download" size={13} /> {compressing ? '壓縮中…' : '壓縮圖片／墨跡'}
+                  <Icon name="download" size={13} /> {isEn ? (compressing ? 'Compressing…' : 'Compress photos & ink') : compressing ? '壓縮中…' : '壓縮圖片／墨跡'}
                 </button>
                 <button className="btn btn--ghost btn--sm" onClick={exportJson}>
-                  <Icon name="download" size={13} /> 匯出備份
+                  <Icon name="download" size={13} /> {isEn ? 'Export backup' : '匯出備份'}
                 </button>
               </div>
               <button
@@ -140,64 +144,64 @@ export default function Appendix() {
                   push(`已清除 ${res.removed} 處手寫墨跡，簽名保留`);
                 }}
               >
-                只保留簽名（清除頁面手寫）
+                {isEn ? 'Signatures only (clear handwriting)' : '只保留簽名（清除頁面手寫）'}
               </button>
             </div>
 
             <div className="appendix-card appendix-card--forms">
               <h4>
-                <Icon name="seal" size={13} /> 三張官方表格
+                <Icon name="seal" size={13} /> {isEn ? 'Three official forms' : '三張官方表格'}
               </h4>
               <ul className="formshort">
                 {FORM_ORDER.map((id) => (
                   <li key={id} className={forms[id].ready ? 'is-ready' : ''}>
                     <button onClick={() => navigate(`/forms/${id}`)}>
                       <span>{FORM_META[id].code}</span>
-                      <em>{FORM_META[id].zh}</em>
-                      <b>{forms[id].ready ? '可生成' : '未齊'}</b>
+                      <em>{isEn ? FORM_META[id].en || FORM_META[id].zh : FORM_META[id].zh}</em>
+                      <b>{forms[id].ready ? (isEn ? 'Ready' : '可生成') : isEn ? 'Incomplete' : '未齊'}</b>
                     </button>
                   </li>
                 ))}
               </ul>
               <div className="aside-actions">
                 <button className="btn btn--gold btn--sm" onClick={() => navigate('/forms')}>
-                  <Icon name="seal" size={13} /> 一鍵生成
+                  <Icon name="seal" size={13} /> {isEn ? 'Generate' : '一鍵生成'}
                 </button>
               </div>
             </div>
 
             <div className="appendix-card">
               <h4>
-                <Icon name="book" size={13} /> 本機儲存
+                <Icon name="book" size={13} /> {isEn ? 'On this device' : '本機儲存'}
               </h4>
               <dl className="kv">
                 <div>
-                  <dt>持有人</dt>
-                  <dd>{book.member.nameZh || '未填姓名'}</dd>
+                  <dt>{isEn ? 'Holder' : '持有人'}</dt>
+                  <dd>{book.member.nameZh || (isEn ? 'No name yet' : '未填姓名')}</dd>
                 </div>
                 <div>
-                  <dt>建立日期</dt>
+                  <dt>{isEn ? 'Created' : '建立日期'}</dt>
                   <dd>{book.meta?.createdAt ? book.meta.createdAt.slice(0, 10) : '—'}</dd>
                 </div>
                 <div>
-                  <dt>最後更新</dt>
+                  <dt>{isEn ? 'Updated' : '最後更新'}</dt>
                   <dd>{book.meta?.updatedAt ? book.meta.updatedAt.slice(0, 16).replace('T', ' ') : '—'}</dd>
                 </div>
                 <div>
-                  <dt>已完成項目</dt>
+                  <dt>{isEn ? 'Items done' : '已完成項目'}</dt>
                   <dd>{progressedCount(book)} / 32</dd>
                 </div>
                 <div>
-                  <dt>資料大小</dt>
+                  <dt>{isEn ? 'Data size' : '資料大小'}</dt>
                   <dd>{(size / 1024).toFixed(1)} KB</dd>
                 </div>
               </dl>
               <div className="aside-actions">
                 <button className="btn btn--ghost btn--sm" onClick={exportJson}>
-                  <Icon name="download" size={13} /> 匯出備份
+                  <Icon name="download" size={13} /> {isEn ? 'Export backup' : '匯出備份'}
                 </button>
                 <button className="btn btn--ghost btn--sm" onClick={() => backupRef.current?.click()}>
-                  <Icon name="upload" size={13} /> 匯入備份
+                  <Icon name="upload" size={13} /> {isEn ? 'Import backup' : '匯入備份'}
                 </button>
                 <input ref={backupRef} type="file" accept="application/json,.json" hidden onChange={(e) => importJson(e.target.files?.[0])} />
               </div>
@@ -205,7 +209,7 @@ export default function Appendix() {
 
             <div className="appendix-card">
               <h4>
-                <Icon name="qr" size={13} /> 分享
+                <Icon name="qr" size={13} /> {isEn ? 'Share' : '分享'}
               </h4>
               {share ? (
                 <div className="appx-share">
@@ -216,16 +220,19 @@ export default function Appendix() {
                   </div>
                 </div>
               ) : (
-                <p className="tiny">尚未建立分享。用右上角「分享」即可產生二維碼及連結。</p>
+                <p className="tiny">{isEn ? 'No share link yet. Use “Share” at the top right to create a QR code and link.' : '尚未建立分享。用右上角「分享」即可產生二維碼及連結。'}</p>
               )}
               <div className="aside-actions">
-                <ShowQrButton label="出示二維碼（給領袖掃描）" className="btn btn--ghost btn--sm" />
+                <ShowQrButton
+                  label={isEn ? 'Show QR code for a leader' : '出示二維碼（給領袖掃描）'}
+                  className="btn btn--ghost btn--sm"
+                />
               </div>
             </div>
 
             <div className="appendix-card">
               <h4>
-                <Icon name="seam" size={13} /> ROVERBADGE 互通
+                <Icon name="seam" size={13} /> {isEn ? 'ROVERBADGE exchange' : 'ROVERBADGE 互通'}
               </h4>
               <Field
                 label="旅團編號"
@@ -235,19 +242,19 @@ export default function Appendix() {
               />
               <div className="aside-actions">
                 <button className="btn btn--ghost btn--sm" onClick={exportRb}>
-                  <Icon name="download" size={13} /> 匯出進度
+                  <Icon name="download" size={13} /> {isEn ? 'Export progress' : '匯出進度'}
                 </button>
                 <button className="btn btn--ghost btn--sm" onClick={() => rbRef.current?.click()}>
-                  <Icon name="upload" size={13} /> 匯入進度
+                  <Icon name="upload" size={13} /> {isEn ? 'Import progress' : '匯入進度'}
                 </button>
                 <input ref={rbRef} type="file" accept="application/json,.json" hidden onChange={(e) => importRb(e.target.files?.[0])} />
               </div>
-              <p className="tiny">只交換「項目編號 + 日期」，不交換簽名。</p>
+              <p className="tiny">{isEn ? 'Only item IDs and dates are exchanged — never signatures.' : '只交換「項目編號 + 日期」，不交換簽名。'}</p>
             </div>
 
             <div className="appendix-card appendix-card--dark">
               <h4>
-                <Icon name="wallet" size={13} /> 錢包
+                <Icon name="wallet" size={13} /> {isEn ? 'Wallet' : '錢包'}
               </h4>
               <p className="tiny">
                 Wallet 卡片由伺服器簽發，需要 Apple／Google 憑證。未設定時可按「加到主畫面」，效果一樣快。
@@ -255,10 +262,12 @@ export default function Appendix() {
             </div>
           </div>
 
+          <LegalNote />
+
           <div className="dangerline">
-            <span className="tiny">清除本機資料後無法復原（已建立的分享連結亦會失效）。</span>
+            <span className="tiny">{isEn ? 'Clearing is permanent and will also break any share links you created.' : '清除本機資料後無法復原（已建立的分享連結亦會失效）。'}</span>
             <button className="btn btn--danger btn--sm" onClick={() => setConfirmClear(true)}>
-              <Icon name="trash" size={13} /> 清除
+              <Icon name="trash" size={13} /> {isEn ? 'Clear' : '清除'}
             </button>
           </div>
 
