@@ -1,7 +1,7 @@
 import React from 'react';
 import { Page, H, P, Note, Line, Area, Grid, Check, ItemLine, ProgressRow, Comment, Present, Sig, Rows , Bilingual } from '../components/Form.jsx';
 import Write from '../components/Write.jsx';
-import { EpauletteArt } from './Book.jsx';
+import { EpauletteArt, AwardArt } from './Book.jsx';
 import { useBook, useField } from '../bookContext.js';
 import { navigate } from '../router.jsx';
 import { FORM_META, formStatus } from '@shared/forms.js';
@@ -207,26 +207,6 @@ export function EpPresented() {
 }
 
 /* --------------------------------------------------------- 20–21 獎章簡介 */
-
-export function AwardArt({ tone = 'green', label = 'RSA' }) {
-  const palette = {
-    red: ['#8f2f2a', '#a8342d'],
-    purple: ['#4b2c83', '#5d3a9b'],
-    green: ['#2f5c3a', '#3a6b47'],
-  };
-  const [ring, face] = palette[tone] || palette.green;
-  return (
-    <svg className="awardart__svg" viewBox="0 0 96 96" role="img" aria-label={label}>
-      <circle cx="48" cy="48" r="45" fill={face} />
-      <circle cx="48" cy="48" r="45" fill="none" stroke={ring} strokeWidth="3" />
-      <circle cx="48" cy="48" r="35" fill="none" stroke="#f0e3c2" strokeWidth="1.4" opacity="0.85" />
-      <path d="M48 24c6 8 13 11 13 19 0 6.4-6 10.8-13 10.8S35 49.4 35 43c0-8 7-11 13-19Z" fill="#f0e3c2" opacity="0.92" />
-      <path d="M34 68h28M38 74h20" stroke="#f0e3c2" strokeWidth="2.2" strokeLinecap="round" />
-      <text x="48" y="19" textAnchor="middle" fontSize="10" letterSpacing="1.6" fill="#f0e3c2" fontFamily="serif">ROVER</text>
-      <text x="48" y="88" textAnchor="middle" fontSize="8.4" letterSpacing="1.6" fill="#f0e3c2" fontFamily="serif">SCOUTS</text>
-    </svg>
-  );
-}
 
 
 export function RsaIntro() {

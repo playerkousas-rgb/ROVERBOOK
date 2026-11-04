@@ -116,7 +116,8 @@ export default function Write({
         style={multiline ? { '--rows': rows } : undefined}
         onClick={() => {
           if (editing) return;
-          if (isInkValue(value)) setZoom(true);
+          const touch = typeof window !== 'undefined' && window.matchMedia?.('(hover: none)').matches;
+          if (isInkValue(value) || touch) setZoom(true);
           else setEditing(true);
         }}
         onDoubleClick={openZoom}
@@ -171,11 +172,11 @@ export default function Write({
               title={plainText(value) || undefined}
               style={align ? { textAlign: align } : undefined}
             >
-              {plainText(value) || <em className="write__ph">{placeholder || '點擊填寫'}</em>}
+              {plainText(value) || <span className="write__dot" aria-hidden="true" />}
             </span>
           )
         )}
-        {!editing && (
+        {!editing && !!value && (
           <button
             type="button"
             className="write__zoom"

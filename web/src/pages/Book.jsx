@@ -3,7 +3,7 @@ import { useBook, useField } from '../bookContext.js';
 import { Page, H, P, Note, Line, Area, Grid, Rows, Sig, Comment, Present, Check , Bilingual } from '../components/Form.jsx';
 import Write from '../components/Write.jsx';
 import { PhotoPicker } from '../components/Edit.jsx';
-import { Crest } from '../ui.jsx';
+import { Crest, cx } from '../ui.jsx';
 import { useLang } from '../i18n.jsx';
 import { LegalNote, LegalLine } from '../components/Legal.jsx';
 
@@ -16,12 +16,7 @@ export function Cover() {
   return (
     <Page id="cover" className="p-cover">
       <div className="coverpage">
-        <svg className="coverpage__mark" viewBox="14 6 36 46" aria-hidden="true">
-          <path d="M32 11.5c5 6.6 11 9.2 11 15.8 0 5.4-5 9-11 9s-11-3.6-11-9c0-6.6 6-9.2 11-15.8Z" fill="currentColor" opacity="0.14" />
-          <path d="M32 11.5c5 6.6 11 9.2 11 15.8 0 5.4-5 9-11 9s-11-3.6-11-9c0-6.6 6-9.2 11-15.8Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
-          <path d="M32 21c2.6 3.4 5.4 4.9 5.4 8.1 0 2.6-2.4 4.4-5.4 4.4s-5.4-1.8-5.4-4.4C26.6 25.9 29.4 24.4 32 21Z" fill="none" stroke="currentColor" strokeWidth="1.2" />
-          <path d="M20.5 38h23M24 46h16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
+        <img className="coverpage__mark" src="/img/crest-rovers.png" alt="" aria-hidden="true" />
         <p className="coverpage__assoc">香港童軍總會</p>
         <h1 className="coverpage__title">樂行童軍紀錄冊</h1>
         <div className="coverpage__rule" />
@@ -394,34 +389,30 @@ export function Scheme() {
   );
 }
 
-function AwardArt({ tone = 'green', label = 'RSA' }) {
-  const palette = {
-    red: ['#8f2f2a', '#a8342d'],
-    purple: ['#4b2c83', '#5d3a9b'],
-    green: ['#2f5c3a', '#3a6b47'],
-  };
-  const [ring, face] = palette[tone] || palette.green;
+const BADGE_SRC = {
+  purple: '/img/badge-membership.png',
+  epaulette: '/img/badge-epaulettes.png',
+  green: '/img/badge-rsa.png',
+  red: '/img/badge-bpa.png',
+};
+
+export function AwardArt({ tone = 'green', label = 'RSA', small = false }) {
   return (
-    <svg className="awardart__svg awardart__svg--sm" viewBox="0 0 96 96" role="img" aria-label={label}>
-      <circle cx="48" cy="48" r="45" fill={face} />
-      <circle cx="48" cy="48" r="45" fill="none" stroke={ring} strokeWidth="3" />
-      <circle cx="48" cy="48" r="35" fill="none" stroke="#f0e3c2" strokeWidth="1.4" opacity="0.85" />
-      <path d="M48 24c6 8 13 11 13 19 0 6.4-6 10.8-13 10.8S35 49.4 35 43c0-8 7-11 13-19Z" fill="#f0e3c2" opacity="0.92" />
-      <path d="M34 68h28M38 74h20" stroke="#f0e3c2" strokeWidth="2.2" strokeLinecap="round" />
-      <text x="48" y="19" textAnchor="middle" fontSize="10" letterSpacing="1.6" fill="#f0e3c2" fontFamily="serif">ROVER</text>
-      <text x="48" y="88" textAnchor="middle" fontSize="8.4" letterSpacing="1.6" fill="#f0e3c2" fontFamily="serif">SCOUTS</text>
-    </svg>
+    <img
+      className={cx('awardart__img', small && 'awardart__img--sm')}
+      src={BADGE_SRC[tone] || BADGE_SRC.green}
+      alt={label}
+    />
   );
 }
 
-export function EpauletteArt() {
+export function EpauletteArt({ small = false }) {
   return (
-    <svg className="awardart__svg awardart__svg--sm" viewBox="0 0 96 96" role="img" aria-label="Rover Scout Epaulettes">
-      <path d="M24 26 h48 a8 8 0 0 1 8 8 v34 a8 8 0 0 1 -8 8 h-48 a8 8 0 0 1 -8 -8 v-34 a8 8 0 0 1 8 -8 Z" fill="#25452f" stroke="#1b3324" strokeWidth="2" />
-      <circle cx="48" cy="52" r="12" fill="none" stroke="#d8b871" strokeWidth="2" />
-      <circle cx="48" cy="52" r="4" fill="#d8b871" />
-      <path d="M32 74h32" stroke="#d8b871" strokeWidth="1.6" opacity="0.7" />
-    </svg>
+    <img
+      className={cx('awardart__img', 'awardart__img--ep', small && 'awardart__img--sm')}
+      src={BADGE_SRC.epaulette}
+      alt="Rover Scout Epaulettes"
+    />
   );
 }
 
@@ -445,7 +436,7 @@ export function Plan() {
           <div className="pstage" key={s.no}>
             <span className="pstage__no">{s.no}</span>
             <span className="pstage__art">
-              {s.tone === 'epaulette' ? <EpauletteArt /> : <AwardArt tone={s.tone} label={s.en} />}
+              {s.tone === 'epaulette' ? <EpauletteArt small /> : <AwardArt tone={s.tone} label={s.en} small />}
             </span>
             <div className="pstage__body">
               <h4>
@@ -537,98 +528,16 @@ const UNIFORM_LEGEND = [
   ['22', 'ATAS 標誌', 'ATAS emblem'],
 ];
 
-function PlateNo({ n, x, y, to }) {
-  return (
-    <g>
-      {to && <line x1={x} y1={y} x2={to[0]} y2={to[1]} stroke="#8d8672" strokeWidth="0.6" />}
-      <circle cx={x} cy={y} r="7.6" fill="#fff" stroke="#4a4a4a" strokeWidth="0.9" />
-      <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="8.4" fill="#2a2a2a" fontFamily="Helvetica, Arial, sans-serif">
-        {n}
-      </text>
-    </g>
-  );
-}
-
-function UniformPlate() {
-  return (
-    <svg className="uniform__plate" viewBox="0 0 520 356" role="img" aria-label="樂行童軍制服及肩章參考圖">
-      {/* 上衣 */}
-      <path
-        d="M200 40 L320 40 L354 50 L366 112 L352 118 L352 214 L168 214 L168 118 L154 112 L166 50 Z"
-        fill="#f3ecd8"
-        stroke="#8a8266"
-        strokeWidth="1"
-      />
-      <path d="M228 40 L260 78 L292 40" fill="none" stroke="#8a8266" strokeWidth="1" />
-      <path d="M244 52 L260 78 L276 52 L268 44 L252 44 Z" fill="#e7dfc8" stroke="#8a8266" strokeWidth="0.8" />
-      <path d="M252 62 L268 62 L264 70 L272 96 L260 104 L248 96 L256 70 Z" fill="#2f5c3a" opacity="0.85" />
-      <circle cx="260" cy="60" r="4" fill="#3a3630" />
-      {/* 口袋 */}
-      <rect x="180" y="126" width="54" height="50" rx="2" fill="none" stroke="#8a8266" strokeWidth="0.9" />
-      <rect x="286" y="126" width="54" height="50" rx="2" fill="none" stroke="#8a8266" strokeWidth="0.9" />
-      <line x1="180" y1="136" x2="234" y2="136" stroke="#8a8266" strokeWidth="0.9" />
-      <line x1="286" y1="136" x2="340" y2="136" stroke="#8a8266" strokeWidth="0.9" />
-      {/* 胸前徽章示意 */}
-      <circle cx="214" cy="96" r="6" fill="#b8352f" />
-      <rect x="300" y="88" width="26" height="8" rx="1" fill="#2f5c3a" />
-      <circle cx="207" cy="152" r="11" fill="#c0392b" opacity="0.85" />
-      <rect x="192" y="112" width="26" height="7" rx="1" fill="#2c3f8f" opacity="0.85" />
-      {/* 標示 */}
-      <PlateNo n="1" x="120" y="28" to={[257, 56]} />
-      <PlateNo n="2" x="104" y="66" to={[196, 88]} />
-      <PlateNo n="3" x="424" y="52" to={[326, 84]} />
-      <PlateNo n="4" x="100" y="100" to={[186, 112]} />
-      <PlateNo n="5" x="96" y="136" to={[182, 150]} />
-      <PlateNo n="6" x="104" y="172" to={[178, 176]} />
-      <PlateNo n="7" x="112" y="204" to={[176, 202]} />
-      <PlateNo n="8" x="424" y="96" to={[338, 122]} />
-      <PlateNo n="9" x="424" y="140" to={[344, 156]} />
-
-      {/* 肩章 */}
-      <text x="180" y="252" textAnchor="middle" fontSize="9" fill="#2a3040" fontFamily="sans-serif">右袖</text>
-      <text x="344" y="252" textAnchor="middle" fontSize="9" fill="#2a3040" fontFamily="sans-serif">左袖</text>
-      <path d="M116 262 h130 a6 6 0 0 1 6 6 v46 a6 6 0 0 1 -6 6 h-130 a6 6 0 0 1 -6 -6 v-46 a6 6 0 0 1 6 -6 Z" fill="#f3ecd8" stroke="#8a8266" strokeWidth="1" />
-      <path d="M280 262 h130 a6 6 0 0 1 6 6 v46 a6 6 0 0 1 -6 6 h-130 a6 6 0 0 1 -6 -6 v-46 a6 6 0 0 1 6 -6 Z" fill="#f3ecd8" stroke="#8a8266" strokeWidth="1" />
-      {/* 右袖 */}
-      <rect x="124" y="272" width="32" height="14" rx="2" fill="#1f3d6b" opacity="0.85" />
-      <rect x="162" y="272" width="30" height="14" rx="2" fill="#7b3f1d" opacity="0.85" />
-      <circle cx="130" cy="300" r="6" fill="#2b7fb8" />
-      <circle cx="148" cy="300" r="6" fill="#7b3f8f" />
-      <circle cx="166" cy="300" r="6" fill="#2f6f52" />
-      <circle cx="184" cy="300" r="6" fill="#5b3f8f" />
-      <rect x="124" y="308" width="80" height="8" rx="2" fill="#4aa3c7" opacity="0.8" />
-      <PlateNo n="10" x="180" y="240" to={[180, 262]} />
-      <PlateNo n="11" x="266" y="278" to={[246, 279]} />
-      <PlateNo n="12" x="266" y="296" to={[246, 296]} />
-      <PlateNo n="13" x="266" y="314" to={[246, 312]} />
-      <PlateNo n="14" x="112" y="316" to={[122, 312]} />
-      {/*
-      */}
-      {/* 左袖 */}
-      <rect x="298" y="270" width="22" height="22" rx="2" fill="#2c3f8f" opacity="0.85" />
-      <rect x="330" y="268" width="20" height="20" rx="2" fill="#1f5fa8" opacity="0.85" />
-      <rect x="298" y="298" width="20" height="20" rx="2" fill="#2f6f52" opacity="0.85" />
-      <rect x="326" y="296" width="26" height="18" rx="2" fill="#3b3f8f" opacity="0.85" />
-      <circle cx="368" cy="306" r="8" fill="#4b3f8f" opacity="0.85" />
-      <rect x="300" y="322" width="24" height="8" rx="2" fill="#6b3f8f" opacity="0.8" />
-      <PlateNo n="15" x="344" y="240" to={[344, 262]} />
-      <PlateNo n="16" x="404" y="272" to={[386, 278]} />
-      <PlateNo n="17" x="404" y="290" to={[378, 292]} />
-      <PlateNo n="18" x="404" y="306" to={[382, 306]} />
-      <PlateNo n="19" x="404" y="322" to={[370, 320]} />
-      <PlateNo n="20" x="272" y="336" to={[288, 326]} />
-      <PlateNo n="21" x="446" y="326" to={[330, 326]} />
-      <PlateNo n="22" x="446" y="344" to={[338, 330]} />
-    </svg>
-  );
-}
-
 export function Uniform() {
   const { isEn } = useLang();
   return (
     <Page id="uniform" className="p-uniform">
       <H en="ROVER SCOUT UNIFORM">樂行童軍制服</H>
-      <UniformPlate />
+      <img
+        className="uniform__plate"
+        src={isEn ? '/img/uniform-en.png' : '/img/uniform-zh.png'}
+        alt={isEn ? 'Rover Scout uniform and epaulettes' : '樂行童軍制服及肩章佩戴位置'}
+      />
       <div className="uniform__legend">
         {UNIFORM_LEGEND.map(([n, zh, en]) => (
           <p key={n} className="uniform__item">

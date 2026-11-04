@@ -166,7 +166,7 @@ export function Bilingual({ zh, en, as: Tag = 'span', className = '', children }
 
 /* -------------------------------------------------------------------- 表格 */
 
-export function Rows({ path, cols, min = 3, addLabel, del = true, dense = false, cap }) {
+export function Rows({ path, cols, min = 3, addLabel, del = false, dense = false, cap }) {
   const [stored, set] = useField(path, []);
   const { isEn } = useLang();
   const list = Array.isArray(stored) ? stored : [];
@@ -309,16 +309,16 @@ export function ProgressRow({ label, en, ids = [], certKey, note, cert = true, a
         {note && <small>{note}</small>}
       </span>
       {cert && (
-        <span className="prow__cell">
+        <span className="prow__cell" data-label={isEn ? 'Certificate No.' : '證書編號'}>
           <Write value={state.cert || ''} onChange={setCert} compact placeholder="證書編號" label="證書編號" />
         </span>
       )}
       {assessor && (
-        <span className="prow__cell">
+        <span className="prow__cell" data-label={isEn ? 'Assessor' : '審核員'}>
           <Write value={state.assessor || ''} onChange={(v) => write('assessor', v)} compact placeholder="審核員" label="審核員" />
         </span>
       )}
-      <span className="prow__cell">
+      <span className="prow__cell" data-label={isEn ? 'Date' : '日期'}>
         <Write value={state.date || ''} onChange={(v) => write('date', v)} type="date" compact label="日期" />
       </span>
     </div>
