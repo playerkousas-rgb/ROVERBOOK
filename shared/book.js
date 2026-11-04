@@ -15,9 +15,27 @@ export function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** 紀錄冊編號 ＝ 童軍成員編號 SCOUT ID ＝ ROVERBADGE 的 YMIS 編號（同一個號碼）。 */
+export function scoutId(bookOrMember) {
+  const m = bookOrMember?.member || bookOrMember || {};
+  return String(m.memberNo || m.ymis || '').trim();
+}
+
+/** 三處（紀錄冊、成員編號、YMIS）永遠保持一致，只保留一個真相。 */
+export function syncIdentity(member) {
+  if (!member) return member;
+  const id = scoutId(member);
+  if (id) {
+    member.memberNo = id;
+    member.ymis = id;
+  }
+  return member;
+}
+
 export function newBook(partial = {}) {
   const now = new Date().toISOString();
-  return {
+  const { member: partialMember, meta: partialMeta, ...rest } = partial;
+  const book = {
     version: 2,
     member: {
       nameZh: '',
@@ -45,7 +63,7 @@ export function newBook(partial = {}) {
       meetingPlace: '',
       dateJoined: '',
       dateScoutMovement: '',
-      ...(partial.member || {}),
+      ...(partialMember || {}),
     },
     scouting: [],
     service: [],
@@ -62,9 +80,11 @@ export function newBook(partial = {}) {
     forms: {},
     holderSignature: null,
     endorsement: null,
-    meta: { createdAt: now, updatedAt: now, ...(partial.meta || {}) },
-    ...partial,
+    ...rest,
+    meta: { createdAt: now, updatedAt: now, ...(partialMeta || {}) },
   };
+  syncIdentity(book.member);
+  return book;
 }
 
 // ---------------------------------------------------------------- statistics
@@ -386,12 +406,12 @@ export function demoBook() {
     member: {
       nameZh: '林卓瑤',
       nameEn: 'Lam Cheuk-yiu',
-      memberNo: 'RS-2401',
+      memberNo: '24010001',
       ymis: '24010001',
       crew: '九龍第 145 旅樂行童軍團',
       group: '九龍第 145 旅',
-      district: '紅磡區',
-      region: '九龍地域',
+      district: '九龍城',
+      region: '九龍',
       issueDate: '2024-09-08',
       dob: '2003-05-14',
       placeOfBirth: '香港',

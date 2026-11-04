@@ -4,7 +4,7 @@ import { BookCtx } from './bookContext.js';
 import { loadBook, persistBook, loadShares } from './bookStore.js';
 import { ToastProvider, useToast, Crest, Icon, Modal, cx } from './ui.jsx';
 import { Pager, CoverPage } from './components/Paper.jsx';
-import { SECTIONS, PAGE_TOTAL, allStats } from '@shared/book.js';
+import { SECTIONS, PAGE_TOTAL, allStats, syncIdentity } from '@shared/book.js';
 import Contents from './pages/Contents.jsx';
 import { Colophon, Particulars1, Particulars2, GroupInfo, Scouting, Changes, Renewals, ServiceAwards, Scheme, Plan, BadgeTable, Experience, Uniform } from './pages/Book.jsx';
 import {
@@ -24,6 +24,7 @@ import Scan, { ScanView } from './pages/Scan.jsx';
 import Signoff from './pages/Signoff.jsx';
 import ShowQrDialog from './components/ShowQrDialog.jsx';
 import { UPDATE_EVENT, applyPwaUpdate } from './pwa.js';
+import { LangProvider, useLang } from './i18n.jsx';
 
 const PAGES = {
   contents: Contents,
@@ -110,13 +111,20 @@ const bookPages = SECTIONS.filter((s) => s.id !== 'contents');
 const paperPages = SECTIONS.filter((s) => !s.digital);
 
 function IndexSheet({ open, onClose, current }) {
+  const { isEn } = useLang();
   if (!open) return null;
   return (
-    <Modal onClose={onClose} eyebrow="CONTENTS" title="目錄" subtitle={`紙本 41 頁，逐頁對應；另設數位附錄。`} wide>
+    <Modal
+      onClose={onClose}
+      eyebrow="CONTENTS"
+      title={isEn ? 'Contents' : '目錄'}
+      subtitle={isEn ? '41 printed pages, one to one; plus a digital appendix.' : '紙本 41 頁，逐頁對應；另設數位附錄。'}
+      wide
+    >
       <div className="indexlist">
         <Link to="/" className="indexrow indexrow--cover" onClick={onClose}>
-          <span className="indexrow__no">封面</span>
-          <span className="indexrow__title">樂行童軍紀錄冊</span>
+          <span className="indexrow__no">{isEn ? 'Cover' : '封面'}</span>
+          <span className="indexrow__title">{isEn ? 'Rover Scout Record Book' : '樂行童軍紀錄冊'}</span>
           <Icon name="book" size={14} />
         </Link>
         {bookPages.map((s) => (
@@ -126,17 +134,17 @@ function IndexSheet({ open, onClose, current }) {
             onClick={onClose}
             className={cx('indexrow', current === s.id && 'is-current')}
           >
-            <span className="indexrow__no">{s.page === '—' ? '附錄' : s.page}</span>
+            <span className="indexrow__no">{s.page === '—' ? (isEn ? 'App.' : '附錄') : s.page}</span>
             <span className="indexrow__title">
-              {s.label}
-              <em>{s.en}</em>
+              {isEn ? s.en || s.label : s.label}
+              {!isEn && <em>{s.en}</em>}
             </span>
-            {current === s.id ? <span className="indexrow__now">現在</span> : <Icon name="chevron" size={12} />}
+            {current === s.id ? <span className="indexrow__now">{isEn ? 'NOW' : '現在'}</span> : <Icon name="chevron" size={12} />}
           </Link>
         ))}
         <Link to="/p/contents" onClick={onClose} className="indexrow indexrow--cover">
-          <span className="indexrow__no">目錄</span>
-          <span className="indexrow__title">使用說明及進度摘要</span>
+          <span className="indexrow__no">{isEn ? 'Notes' : '目錄'}</span>
+          <span className="indexrow__title">{isEn ? 'How to use & progress summary' : '使用說明及進度摘要'}</span>
           <Icon name="info" size={14} />
         </Link>
       </div>
@@ -146,6 +154,7 @@ function IndexSheet({ open, onClose, current }) {
 
 function BookApp({ book, saveIssue }) {
   const path = useRoute();
+  const { isEn, toggle } = useLang();
   const { push } = useToast();
   const [shareOpen, setShareOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
@@ -245,7 +254,7 @@ function BookApp({ book, saveIssue }) {
           <Crest size={26} />
           <span>
             <strong>ROVERBOOK</strong>
-            <em>樂行童軍紀錄冊</em>
+            <em>{isEn ? 'Rover Scout Record Book' : '樂行童軍紀錄冊'}</em>
           </span>
         </Link>
 
@@ -258,8 +267,8 @@ function BookApp({ book, saveIssue }) {
 
         {section && (
           <button className="chipbar__page" onClick={() => setIndexOpen(true)}>
-            <span>{meta?.page === '—' ? '數位' : `第 ${meta?.page} 頁`}</span>
-            <strong>{meta?.label}</strong>
+            <span>{meta?.page === '—' ? (isEn ? 'Digital' : '數位') : isEn ? `Page ${meta?.page}` : `第 ${meta?.page} 頁`}</span>
+            <strong>{isEn ? meta?.en || meta?.label : meta?.label}</strong>
             <Icon name="down" size={12} />
           </button>
         )}
@@ -267,26 +276,34 @@ function BookApp({ book, saveIssue }) {
         <div className="chipbar__actions">
           {section && (
             <span className={cx('chipbar__save', saveIssue && 'is-error')}>
-              {saveIssue ? '未儲存' : savedAt ? '已儲存' : '本機'}
+              {saveIssue ? (isEn ? 'NOT SAVED' : '未儲存') : savedAt ? (isEn ? 'SAVED' : '已儲存') : isEn ? 'LOCAL' : '本機'}
             </span>
           )}
           {section && (
             <>
-              <button className="chipbtn" onClick={() => setIndexOpen(true)} title="目錄">
-                <Icon name="book" size={15} /> <span className="hide-sm">目錄</span>
+              <button className="chipbtn" onClick={() => setIndexOpen(true)} title={isEn ? 'Contents' : '目錄'}>
+                <Icon name="book" size={15} /> <span className="hide-sm">{isEn ? 'Contents' : '目錄'}</span>
               </button>
               <button
                 className={cx('chipbtn', zoom > 1 && 'is-on')}
                 onClick={() => setZoom((z) => (z > 1 ? 1 : 1.4))}
-                title="放大／縮小"
+                title={isEn ? 'Zoom' : '放大／縮小'}
               >
-                <Icon name="zoom" size={15} /> <span className="hide-sm">{zoom > 1 ? '還原' : '放大'}</span>
+                <Icon name="zoom" size={15} /> <span className="hide-sm">{zoom > 1 ? (isEn ? 'Reset' : '還原') : isEn ? 'Zoom' : '放大'}</span>
               </button>
               <button className="chipbtn chipbtn--gold" onClick={() => setShareOpen(true)}>
-                <Icon name="share" size={15} /> <span className="hide-sm">分享</span>
+                <Icon name="share" size={15} /> <span className="hide-sm">{isEn ? 'Share' : '分享'}</span>
               </button>
             </>
           )}
+          <button
+            className="chipbtn chipbtn--lang"
+            onClick={toggle}
+            title={isEn ? '切換中文／English' : 'Switch 中文／English'}
+            aria-label={isEn ? 'Switch to Chinese' : '切換到英文'}
+          >
+            <Icon name="globe" size={15} /> <span>{isEn ? 'EN' : '中'}</span>
+          </button>
           <button className="chipbtn chipbtn--icon" onClick={() => setMenuOpen(true)} aria-label="更多">
             <Icon name="menu" size={16} />
           </button>
@@ -296,7 +313,11 @@ function BookApp({ book, saveIssue }) {
       {!online && (
         <div className="offlinebar" role="status">
           <Icon name="lock" size={14} />
-          <span>離線模式：紀錄冊全部在這部手機，照樣可以填寫、簽名、生成表格及列印。</span>
+          <span>
+            {isEn
+              ? 'Offline: the whole book lives on this phone — keep filling, signing, generating forms and printing.'
+              : '離線模式：紀錄冊全部在這部手機，照樣可以填寫、簽名、生成表格及列印。'}
+          </span>
         </div>
       )}
 
@@ -427,7 +448,7 @@ function BookApp({ book, saveIssue }) {
   );
 }
 
-export default function App() {
+function AppInner() {
   const path = useRoute();
   const [book, setBook] = useState(() => loadBook());
 
@@ -435,6 +456,7 @@ export default function App() {
     setBook((prev) => {
       if (!prev) return prev;
       const next = typeof updater === 'function' ? updater(structuredClone(prev)) : { ...prev, ...updater };
+      syncIdentity(next.member);
       next.meta = { ...(next.meta || {}), updatedAt: new Date().toISOString() };
       return next;
     });
@@ -477,5 +499,13 @@ export default function App() {
         <BookApp book={book} saveIssue={saveIssue} />
       </ToastProvider>
     </BookCtx.Provider>
+  );
+}
+
+export default function App() {
+  return (
+    <LangProvider>
+      <AppInner />
+    </LangProvider>
   );
 }

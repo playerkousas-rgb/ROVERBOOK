@@ -666,7 +666,7 @@ await screen({
   expect: ['放大填寫'],
   after: 600,
   interact: async (doc) => {
-    const target = doc.querySelector('.write[aria-label="姓名（中文）Name (Chinese)"]');
+    const target = doc.querySelector('.write[aria-label="姓名（中文）"]');
     const zoom = target && target.querySelector('.write__zoom');
     if (!zoom) throw new Error('找不到放大按鈕');
     zoom.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
@@ -856,6 +856,75 @@ const snapshot = buildSnapshot(demoBook(), { ...DEFAULT_SHARE, contact: false })
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ deleteToken: created.body.deleteToken }),
   });
+}
+
+// ------------------------------------------------------------- v11 版面 · 語言 · 身份
+
+{
+  // 主舞台曾被「訓練計劃」的 .stage 網格樣式搶走，整個紀錄冊壓成 20 餘 px 闊。
+  const css = await (await nativeFetch(`${BASE}/src/styles.css`)).text();
+  const shell = css.match(/\.stage\s*\{[^}]*\}/);
+  const plan = css.match(/\.pstage\s*\{[^}]*\}/);
+  report(
+    !!shell && /display:\s*flex/.test(shell[0]) && !/grid-template-columns/.test(shell[0]) && !!plan && /grid-template-columns/.test(plan[0]),
+    '版面：主舞台與訓練計劃樣式已分家（.stage / .pstage）',
+    shell ? shell[0].replace(/\s+/g, ' ').slice(0, 60) : '找不到 .stage',
+  );
+}
+
+{
+  const book = demoBook();
+  report(book.member.memberNo === book.member.ymis && book.member.memberNo === '24010001', '身份：紀錄冊編號 ＝ 童軍成員編號 ＝ YMIS');
+}
+
+await screen({
+  name: '身份：改紀錄冊編號會同步 YMIS',
+  path: '/p/particulars-1',
+  expect: ['紀錄冊編號', 'SCOUT ID'],
+  interact: async (doc) => {
+    const wrap = doc.querySelector('.write[aria-label="紀錄冊編號"]');
+    if (!wrap) throw new Error('找不到紀錄冊編號欄位');
+    wrap.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 200));
+    const input = wrap.querySelector('.write__input') || doc.querySelector('.write__input');
+    if (!input) throw new Error('找不到紀錄冊編號輸入框');
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setter.call(input, '24019999');
+    input.dispatchEvent(new window.Event('input', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 500));
+    const saved = JSON.parse(localStorage.getItem('roverbook.book.v3'));
+    if (saved.member.memberNo !== '24019999') throw new Error(`紀錄冊編號未寫入（${saved.member.memberNo}）`);
+    if (saved.member.ymis !== '24019999') throw new Error(`YMIS 未同步（${saved.member.ymis}）`);
+  },
+});
+
+await screen({
+  name: '語言：一按切換全英文',
+  path: '/p/particulars-1',
+  expect: ['PERSONAL PARTICULARS'],
+  interact: async (doc) => {
+    const btn = doc.querySelector('.chipbtn--lang');
+    if (!btn) throw new Error('找不到語言切換按鈕');
+    btn.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 350));
+    if (document.documentElement.dataset.lang !== 'en') throw new Error('html data-lang 沒有變成 en');
+    if (localStorage.getItem('roverbook.lang') !== 'en') throw new Error('語言選擇沒有記住');
+    const title = doc.querySelector('.pghead__title')?.textContent || '';
+    if (!title.includes('PERSONAL PARTICULARS')) throw new Error(`頁目標題沒有轉英文（${title}）`);
+    const label = doc.querySelector('.frow__label')?.textContent || '';
+    if (/[\u4e00-\u9fff]/.test(label)) throw new Error(`欄位標籤仍是中文（${label}）`);
+    if (!/Record Book No/.test(label)) throw new Error(`欄位標籤不是英文（${label}）`);
+  },
+});
+
+{
+  // 切換後重新載入仍然記得
+  reset();
+  seed(demoBook());
+  localStorage.setItem('roverbook.lang', 'en');
+  const html = await renderPath('/p/particulars-1', {});
+  report(html.includes('PAGE 3') && html.includes('PERSONAL PARTICULARS'), '語言：重新載入後仍為英文');
+  localStorage.removeItem('roverbook.lang');
 }
 
 {

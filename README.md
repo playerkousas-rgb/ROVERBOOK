@@ -194,13 +194,37 @@ PUBLIC_BASE_URL
 
 **驗證方法**：開一次網站 → DevTools → Network → 勾 Offline → 重新載入，應該照開、照填、照列印。
 
-## 11. 與 ROVERBADGE 互通（匯出／匯入）
+## 11. 全中／全英切換
+
+右上角地球圖示（手機顯示「中」／「EN」）一下切換，選擇會記住，重開仍然生效。
+
+| 切換後會轉語言的 | 說明 |
+| --- | --- |
+| 頁眉、頁碼 | 第 22 頁 ⇄ PAGE 22 |
+| 章節標題 | 個人資料 ⇄ PERSONAL PARTICULARS |
+| 正文 | 條文、備註、指示全部轉英文 |
+| 欄位標籤 | 紀錄冊編號 ⇄ Record Book No. · Scout ID (YMIS) |
+| 目錄、翻頁、上方跳頁、分享／表格介面 | 全部轉英文 |
+
+- 沒有官方英譯的句子**保留中文**，不會變成空白（寧願中英夾雜，也不會漏字）。
+- `<html lang>` 同步更新，瀏覽器翻譯與讀屏都跟得上。
+- 語言選擇存在 `localStorage` 的 `roverbook.lang`，不上傳。
+
+## 12. 版面與身份編號
+
+**版面（v11 修正）**：訓練計劃頁的行樣式用了 `.stage` 這個名字，跟主畫面的 `.stage` 撞名，結果整個紀錄冊被壓成 ~30px 闊的一條。現已把訓練計劃改名 `.pstage`，主畫面回復全寬、桌面置中；smoke test 有一項專門守住這個回歸。
+
+**身份編號**：紀錄冊編號 ＝ 童軍成員編號 SCOUT ID ＝ ROVERBADGE 的 YMIS，三處永遠是同一個號碼（`memberNo` 與 `ymis` 自動同步），不會再出現兩個號。
+
+**個人資料頁**：改回紙本的「地域 · 區 · 旅」三格，並在下面用一句話顯示所屬旅團，不再用「樂行童軍團」當作「旅」。
+
+## 13. 與 ROVERBADGE 互通（匯出／匯入）
 
 同一套 `L1…L4` 項目編號（32 細項，綱要第五版）。訓練頁或附錄可匯出 ROVERBADGE 相容 JSON；
 匯入時先配 YMIS、再配姓名，不會覆寫本機已有的日期與簽名。只交換「項目 + 日期」，不交換簽名。
 部分紙本細項（例如禮節 3.2）在綱要中併入同一項，電子版會同步標記同一組細項。
 
-## 12. 開始使用
+## 14. 開始使用
 
 ```bash
 npm install
@@ -220,19 +244,20 @@ repo 已附 `vercel.json`：`npm run build` → `dist`，所有路徑 rewrite �
 - 分享連結、QR、Apple/Google Wallet 需要 Node 伺服器（`npm start` 或自行部署 `server/`）先有 `/api`；靜態部署時呢幾粒掣會報錯，其餘功能不受影響。
 - 部署後建議即試：`/forms/pt21` →「預覽」→「列印」；`/scan`（相機需要 HTTPS，Vercel 已提供）；以及**離線測試**（第一次開完 → 開飛機模式 → 重新載入）。
 
-## 13. 結構
+## 15. 結構
 
 ```
 server/   index.js（Vite/靜態）、api.js（share/QR/wallet）、store.js、wallet.js
 shared/   book.js（模型、SECTIONS 41 頁、分享快照、ROVERBADGE、demoBook）、syllabus.js（32 項）
 web/src/  App.jsx（封面／翻頁／目錄／放大）
+          i18n.jsx（全中／全英切換、記住語言）
           components/Form.jsx（逐頁表單工具）、Write.jsx（就地輸入＋自動縮字）、Ink.jsx（簽名）
           pages/Book.jsx（2–12、34–41 頁）、Training.jsx（13–33 頁）、Contents、Appendix、Welcome
           styles.css（藍布封面、紙頁、表單線、A4 列印）
 scripts/  smoke.mjs、make-wallet-assets.mjs
 ```
 
-## 14. 已知限制
+## 16. 已知限制
 
 - 資料在 localStorage；清除瀏覽器資料會失去，請定期匯出備份。
 - 自動縮字是版面效果，不是無限容量：極長文字仍建議用放大輸入查看。

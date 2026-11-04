@@ -4,6 +4,7 @@ import { Page, H, P, Note, Line, Area, Grid, Rows, Sig, Comment, Present, Check 
 import Write from '../components/Write.jsx';
 import { PhotoPicker } from '../components/Edit.jsx';
 import { Crest } from '../ui.jsx';
+import { useLang } from '../i18n.jsx';
 
 /* ---------------------------------------------------------------- 出版資料 */
 
@@ -39,6 +40,8 @@ export function Particulars1() {
   const { book } = useBook();
   const m = book.member || {};
   const [photo, setPhoto] = useField('member.photo', null);
+  const { isEn } = useLang();
+  const slot = (v) => (v && String(v).trim() ? String(v).trim() : '＿＿＿＿＿＿');
 
   return (
     <Page id="particulars-1" className="p-particulars">
@@ -49,26 +52,39 @@ export function Particulars1() {
           <PhotoPicker value={photo} onChange={setPhoto} />
         </div>
         <div className="ptop__id">
-          <Line label="編號 No." path="member.memberNo" placeholder="RS-2401" />
-          <Line label="姓名（中文）Name (Chinese)" path="member.nameZh" placeholder="林卓瑤" />
-          <Line label="（英文）(English)" path="member.nameEn" placeholder="Lam Cheuk-yiu" />
+          <Line
+            label="紀錄冊編號"
+            en="Record Book No. · Scout ID (YMIS)"
+            path="member.memberNo"
+            placeholder="24010001"
+            hint={isEn ? 'Same number as your YMIS in ROVERBADGE' : '＝童軍成員編號 SCOUT ID ＝ ROVERBADGE 內的 YMIS 號碼'}
+          />
+          <Line label="姓名（中文）" en="Name (Chinese)" path="member.nameZh" placeholder="林卓瑤" />
+          <Line label="（英文）" en="Name (English)" path="member.nameEn" placeholder="Lam Cheuk-yiu" />
         </div>
       </div>
 
-      <div className="sentence">
-        <span>為</span>
-        <InlineSlot field="region" placeholder="地域" />
-        <span>地域</span>
-        <InlineSlot field="district" placeholder="區" />
-        <span>區</span>
-        <InlineSlot field="group" placeholder="旅" />
-        <span>旅之樂行童軍團團員</span>
+      <h4 className="pgh">
+        所屬地域 · 區 · 旅 <em>Region · District · Group</em>
+      </h4>
+      <div className="ftrio">
+        <Line label="地域" en="Region" path="member.region" placeholder="九龍" />
+        <Line label="區" en="District" path="member.district" placeholder="九龍城" />
+        <Line label="旅" en="Group" path="member.group" placeholder="九龍第 145 旅" />
       </div>
-      <p className="sentence__en">is a Crew member of __________ Group, __________ District, __________ Region.</p>
+
+      <p className="sentence sentence--static">
+        {isEn ? 'is a Rover Scout member of ' : '為 '}
+        {isEn ? '' : <b>{slot(m.region)}</b>}
+        {isEn ? '' : ' 地域 '}
+        {isEn ? '' : <b>{slot(m.district)}</b>}
+        {isEn ? '' : ' 區 '}
+        <b>{slot(m.group)}</b>
+        {isEn ? ' Rover Scout Crew.' : ' 之樂行童軍團團員。'}
+      </p>
 
       <div className="fduo">
-        <Line label="簽發日期 Date of Issue" type="date" path="member.issueDate" />
-        <Line label="樂行童軍團 Crew" path="member.crew" placeholder="九龍第 145 旅樂行童軍團" />
+        <Line label="簽發日期" en="Date of Issue" type="date" path="member.issueDate" />
       </div>
     </Page>
   );
@@ -347,19 +363,19 @@ export function Plan() {
       <P en="The order of the progressive awards of Rover Scout Section is Membership Badge, Rover Scout Epaulettes, Rover Scout Award and Baden Powell Award.">
         樂行童軍訓練計劃共分為四個階段，分別為會員章、樂行童軍肩章、樂行童軍獎章及貝登堡獎章。
       </P>
-      <div className="stages">
+      <div className="pstages">
         {STAGES.map((s) => (
-          <div className="stage" key={s.no}>
-            <span className="stage__no">{s.no}</span>
-            <div className="stage__body">
+          <div className="pstage" key={s.no}>
+            <span className="pstage__no">{s.no}</span>
+            <div className="pstage__body">
               <h4>
                 {s.name}
                 <em>{s.en}</em>
               </h4>
-              <p className="stage__req">{s.req}</p>
-              <p className="stage__req-en">{s.enReq}</p>
+              <p className="pstage__req">{s.req}</p>
+              <p className="pstage__req-en">{s.enReq}</p>
             </div>
-            <div className="stage__time">
+            <div className="pstage__time">
               {s.time}
               <em>{s.enTime}</em>
             </div>
