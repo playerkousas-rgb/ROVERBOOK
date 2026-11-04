@@ -275,7 +275,19 @@ button {
 }
 
 .stage__inner--page {
-  width: min(760px, calc((100dvh - 178px) * 0.72), 100%);
+  width: min(760px, calc((100vh - 178px) * 0.72), 100%);
+}
+
+@supports (height: 100dvh) {
+  .stage__inner--page {
+    width: min(760px, calc((100dvh - 178px) * 0.72), 100%);
+  }
+}
+
+.stage,
+.stage__inner,
+.stage__inner--page {
+  min-width: 0;
 }
 
 .turn {
@@ -537,6 +549,15 @@ button {
   box-shadow: 0 0 8px rgba(216, 184, 113, 0.8);
 }
 
+/* 中文模式：一律唔出英文，慳返版面（英文版本身只出英文） */
+html[data-lang='zh'] .sheet em,
+html[data-lang='zh'] .sheet .pgpara__en,
+html[data-lang='zh'] .sheet .pgnote__en,
+html[data-lang='zh'] .sheet .pstage__req-en,
+html[data-lang='zh'] .sheet .awardart__cap em {
+  display: none;
+}
+
 /* ------------------------------------------------------------------- sheet */
 
 .sheet {
@@ -626,7 +647,7 @@ button {
   gap: 8px;
   margin: 0;
   font-family: var(--serif);
-  font-size: clamp(17px, 2.4vh, 23px);
+  font-size: clamp(15px, 2.1vh, 19px);
   font-weight: 700;
   letter-spacing: 0.1em;
   line-height: 1.25;
@@ -849,6 +870,24 @@ button {
   color: #b9ac92;
 }
 
+.write__dot {
+  display: block;
+  width: 15px;
+  height: 15px;
+  border: 1px solid rgba(120, 108, 82, 0.5);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.write.is-empty {
+  border-bottom-color: transparent;
+  background: none;
+}
+
+.write.is-empty:hover {
+  background: rgba(28, 60, 105, 0.03);
+}
+
 .write__zoom {
   position: absolute;
   right: 0;
@@ -858,8 +897,8 @@ button {
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  border: 1px solid var(--rule);
-  background: var(--paper);
+  border: 1px solid rgba(120, 108, 82, 0.55);
+  background: transparent;
   color: #8a7c60;
   cursor: pointer;
   opacity: 0;
@@ -5472,11 +5511,7 @@ textarea.zoomfield {
   }
 
   .write__zoom {
-    width: 26px;
-    height: 26px;
-    top: -2px;
-    right: -2px;
-    opacity: 1;
+    display: none;
   }
 
   .pgtable {
@@ -5484,16 +5519,17 @@ textarea.zoomfield {
   }
 
   .pgtable__head {
-    display: none;
+    display: none !important;
   }
 
   .pgtable__row {
     display: block;
-    border: 1px solid var(--rule-soft);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.5);
-    padding: 8px 11px;
-    margin-bottom: 7px;
+    border: 0;
+    border-bottom: 1px solid var(--rule-soft);
+    border-radius: 0;
+    background: none;
+    padding: 6px 0 4px;
+    margin-bottom: 0;
     min-height: 0;
   }
 
@@ -8359,7 +8395,7 @@ html[data-lang='en'] .fareas .frow__label {
 }
 
 /* ---------------------------------------------------- v14 對頁：第 1 頁 封面 */
-.p-cover .sheet__body {
+.sheet__body:has(> .p-cover) {
   justify-content: center;
 }
 
@@ -8375,9 +8411,10 @@ html[data-lang='en'] .fareas .frow__label {
 }
 
 .coverpage__mark {
-  width: 96px;
-  height: 96px;
+  width: 118px;
+  height: auto;
   margin-bottom: 10px;
+  mix-blend-mode: multiply;
 }
 
 .coverpage__assoc {
@@ -8441,6 +8478,25 @@ html[data-lang='en'] .fareas .frow__label {
   height: 84px;
 }
 
+.awardart__img {
+  width: 78px;
+  height: auto;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.awardart__img--ep {
+  width: 44px;
+}
+
+.awardart__img--sm {
+  width: 32px;
+}
+
+.awardart__img--ep.awardart__img--sm {
+  width: 22px;
+}
+
 .awardart__cap {
   margin: 0 0 10px;
   text-align: center;
@@ -8459,7 +8515,7 @@ html[data-lang='en'] .fareas .frow__label {
 }
 
 /* ------------------------------------------------- v14 第 41 頁 制服參考圖 */
-.p-uniform .sheet__body {
+.sheet__body:has(> .p-uniform) {
   gap: 6px;
 }
 
@@ -8468,23 +8524,23 @@ html[data-lang='en'] .fareas .frow__label {
   max-width: 560px;
   align-self: center;
   height: auto;
+  mix-blend-mode: multiply;
 }
 
 .uniform__legend {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px 14px;
-  align-content: start;
+  columns: 3;
+  column-gap: 16px;
   font-family: var(--sans);
   font-size: 7.6px;
-  line-height: 1.35;
+  line-height: 1.45;
   color: #3a3630;
 }
 
 .uniform__item {
   display: flex;
   gap: 4px;
-  margin: 0;
+  margin: 0 0 2px;
+  break-inside: avoid;
 }
 
 .uniform__no {
@@ -8530,9 +8586,10 @@ html[data-lang='en'] .fareas .frow__label {
 }
 
 /* ------------------------------------------------ v14 封面頁底：一行版權聲明 */
-.p-cover .sheet__body {
+.sheet__body:has(> .p-cover) {
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .coverpage {
@@ -8561,4 +8618,217 @@ html[data-lang='en'] .fareas .frow__label {
   .coverpage__legal {
     color: #6f6a5c;
   }
+}
+
+/* ------------------------------------------- v15：螢幕用圓圈、列印用橫線 */
+@media print {
+  .write__dot,
+  .write__zoom {
+    display: none !important;
+  }
+
+  .write,
+  .write.is-empty,
+  .write--compact {
+    border-bottom: 1px solid var(--rule) !important;
+    background: none !important;
+  }
+}
+
+/* --------------------------------------- v15：螢幕上唔再出虛線／方框，只留圓圈 */
+@media screen {
+  .write,
+  .write--compact {
+    border-bottom-color: transparent;
+  }
+
+  .write.is-editing {
+    border-bottom-color: var(--gold-3);
+  }
+
+  .write--date,
+  .write--date input {
+    border-bottom-color: transparent;
+  }
+}
+
+/* ------------------------------------- v15：手機（≤740px）各頁專用排版微調 */
+@media screen and (max-width: 740px) {
+  .sheet__titlebar h1 {
+    font-size: 18px;
+  }
+
+  /* 頁頂大標題同章節標題重複：手機只留章節標題 */
+  .sheet__titlebar {
+    display: none;
+  }
+
+  .sheet__body {
+    padding-top: 4px;
+  }
+
+  .write {
+    min-height: 26px;
+  }
+
+  .write--compact {
+    min-height: 22px;
+  }
+
+  .pgtable__cell {
+    padding: 1px 0;
+  }
+
+  /* 訓練計劃：一欄直落 */
+  .pstage {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .pstage__no {
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .pstage__art {
+    justify-content: flex-start;
+  }
+
+  .pstage__time {
+    grid-column: 1 !important;
+    text-align: left;
+    font-size: 10px;
+  }
+
+  .pstage__no,
+  .pstage__art,
+  .pstage__body {
+    grid-column: 1 !important;
+    width: auto;
+  }
+
+  /* 細項／進度列：項目在上，其餘逐項列出 */
+  .itemhead,
+  .itemhead--3,
+  .itemhead--4 {
+    display: none !important;
+  }
+
+  .itemline,
+  .prow {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 9px 0;
+  }
+
+  .itemline__tick,
+  .itemline__assessor,
+  .itemline__date,
+  .itemline__label,
+  .prow__label,
+  .prow__cell {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
+  .prow__cell[data-label]::before,
+  .itemline [data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--sans);
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    color: #a0947c;
+  }
+
+  /* 童軍紀錄六欄 → 逐段列出 */
+  .scoutgrid__head,
+  .scoutgrid__sub {
+    display: none;
+  }
+
+  .scoutgrid__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    border: 0;
+    border-bottom: 1px solid var(--rule-soft);
+    padding: 9px 0;
+    min-height: 0;
+  }
+
+  .scoutgrid__unit {
+    grid-column: 1 / -1;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .scoutgrid__na {
+    display: none;
+  }
+
+  .cmt__foot {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .uniform__legend {
+    columns: 2;
+    column-gap: 14px;
+    font-size: 8.5px;
+  }
+
+  .uniform__plate {
+    max-width: 100%;
+  }
+}
+
+/* 空白日期格：螢幕上同樣只出圓圈 */
+@media screen {
+  .write--date.is-empty .write__date {
+    color: transparent;
+    caret-color: transparent;
+  }
+
+  .write--date.is-empty .write__date::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    width: 0;
+  }
+
+  .write--date.is-empty::after {
+    content: '';
+    position: absolute;
+    right: 2px;
+    width: 15px;
+    height: 15px;
+    border: 1px solid rgba(120, 108, 82, 0.5);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .write--date {
+    position: relative;
+  }
+}
+
+@media screen and (max-width: 740px) {
+  .sheet__body:has(> .p-cover) {
+    justify-content: center;
+  }
+}
+
+/* -------------------------------------------- v15 第 43 頁：樂行童軍徽章圖 */
+.sheet__body:has(> .p-crest) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crestpage__img {
+  display: block;
+  width: min(58%, 260px);
+  height: auto;
+  margin: 8% auto 0;
+  mix-blend-mode: multiply;
 }
