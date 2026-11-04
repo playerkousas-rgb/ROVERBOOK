@@ -1,19 +1,22 @@
 async function request(path, { method = 'GET', body } = {}) {
   const res = await fetch(`/api${path}`, {
     method,
-    credentials: 'same-origin',
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
   let data = null;
-  try {
-    data = await res.json();
-  } catch {
-    data = null;
+  const type = res.headers.get('content-type') || '';
+  if (type.includes('application/json')) {
+    try {
+      data = await res.json();
+    } catch {
+      data = null;
+    }
   }
   if (!res.ok) {
-    const err = new Error(data?.error || '網絡錯誤，請再試一次');
+    const err = new Error(data?.error || '未能連接伺服器，請稍後再試');
     err.status = res.status;
+    err.data = data;
     throw err;
   }
   return data;
@@ -22,9 +25,7 @@ async function request(path, { method = 'GET', body } = {}) {
 export const api = {
   get: (p) => request(p),
   post: (p, body) => request(p, { method: 'POST', body }),
-  put: (p, body) => request(p, { method: 'PUT', body }),
-  patch: (p, body) => request(p, { method: 'PATCH', body }),
-  del: (p) => request(p, { method: 'DELETE' }),
+  del: (p, body) => request(p, { method: 'DELETE', body }),
 };
 
 export const qrUrl = (data) => `/api/qr.svg?d=${encodeURIComponent(data)}`;

@@ -1,136 +1,186 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { api } from './api.js';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRoute, navigate, Link } from './router.jsx';
-import { Avatar, Crest, Icon, cx } from './ui.jsx';
-import Login from './pages/Login.jsx';
-import Home from './pages/Home.jsx';
-import RecordBook from './pages/RecordBook.jsx';
-import Privacy from './pages/Privacy.jsx';
-import Connections from './pages/Connections.jsx';
-import Crew from './pages/Crew.jsx';
-import MemberView from './pages/MemberView.jsx';
-import PublicCard from './pages/PublicCard.jsx';
+import { BookCtx } from './bookContext.js';
+import { loadBook, persistBook, loadShares } from './bookStore.js';
+import { ToastProvider, useToast, Crest, Icon } from './ui.jsx';
+import { Tabs, Pager, CoverPage } from './components/Paper.jsx';
+import Contents from './pages/Contents.jsx';
+import Particulars from './pages/Particulars.jsx';
+import GroupInfo from './pages/GroupInfo.jsx';
+import Scouting from './pages/Scouting.jsx';
+import Renewals from './pages/Renewals.jsx';
+import Service from './pages/Service.jsx';
+import Awards from './pages/Awards.jsx';
+import Training from './pages/Training.jsx';
+import Expeditions from './pages/Expeditions.jsx';
+import Additional from './pages/Additional.jsx';
+import Signatures from './pages/Signatures.jsx';
+import Appendix from './pages/Appendix.jsx';
+import Welcome from './pages/Welcome.jsx';
+import SharedBook from './pages/SharedBook.jsx';
+import ShareDialog from './components/ShareDialog.jsx';
+import WalletDialog from './components/WalletDialog.jsx';
+import MenuDialog from './components/MenuDialog.jsx';
 
-const SessionCtx = createContext({ user: null, refresh: async () => {} });
-export const useSession = () => useContext(SessionCtx);
+const PAGES = {
+  contents: Contents,
+  particulars: Particulars,
+  group: GroupInfo,
+  scouting: Scouting,
+  renewals: Renewals,
+  service: Service,
+  awards: Awards,
+  training: Training,
+  expeditions: Expeditions,
+  additional: Additional,
+  signatures: Signatures,
+  appendix: Appendix,
+};
 
-const NAV = [
-  { to: '/', label: '我的卡片', icon: 'card', exact: true },
-  { to: '/record', label: '紀錄冊', icon: 'medal' },
-  { to: '/privacy', label: '私隱', icon: 'shield' },
-  { to: '/connections', label: '連結', icon: 'users' },
-  { to: '/crew', label: '團隊', icon: 'compass', leaderOnly: true },
-];
+function Chrome({ book }) {
+  const path = useRoute();
+  const [shareOpen, setShareOpen] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [share, setShare] = useState(() => {
+    const all = Object.values(loadShares()).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return all[0] || null;
+  });
+  const [savedAt, setSavedAt] = useState(null);
+  const { push } = useToast();
 
-function Splash() {
+  const section = path.startsWith('/p/') ? path.slice(3) : null;
+  const Page = section ? PAGES[section] : null;
+
+  useEffect(() => {
+    if (!book) return;
+    const t = setTimeout(() => setSavedAt(new Date()), 400);
+    return () => clearTimeout(t);
+  }, [book]);
+
   return (
-    <div className="splash">
-      <Crest size={54} />
-      <span>ROVERBOOK</span>
-    </div>
-  );
-}
-
-function Shell({ user, path, children, onLogout }) {
-  const items = NAV.filter((n) => !n.leaderOnly || user.role === 'leader');
-  const isActive = (to, exact) => (exact ? path === to : path === to || path.startsWith(`${to}/`));
-  return (
-    <div className="shell">
-      <aside className="sidebar">
-        <Link to="/" className="brand">
-          <Crest size={34} />
-          <span className="brand__text">
+    <div className="app">
+      <header className="topbar">
+        <Link to="/" className="topbar__brand">
+          <Crest size={30} />
+          <span>
             <strong>ROVERBOOK</strong>
-            <em>樂行童軍紀錄卡</em>
+            <em>樂行童軍紀錄冊</em>
           </span>
         </Link>
-
-        <nav className="nav" aria-label="主導航">
-          {items.map((item) => (
-            <Link key={item.to} to={item.to} className={cx('nav__item', isActive(item.to, item.exact) && 'is-active')}>
-              <Icon name={item.icon} size={19} />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-
-        <div className="sidebar__foot">
-          <div className="sidebar__user">
-            <Avatar name={user.nameZh} photo={user.photo} size={36} />
-            <div>
-              <strong>{user.nameZh}</strong>
-              <span>{user.role === 'leader' ? user.leaderTitle || '領袖' : user.memberNo}</span>
-            </div>
-          </div>
-          <button className="icon-btn" onClick={onLogout} title="登出" aria-label="登出">
-            <Icon name="logout" size={18} />
+        <div className="topbar__doc" aria-hidden="true">
+          <span className="topbar__doc-label">持有人</span>
+          <span className="topbar__doc-name">{book.member.nameZh || '未填姓名'}</span>
+          <span className="topbar__doc-sub">{book.member.crew || '樂行童軍團'}</span>
+        </div>
+        <div className="topbar__actions">
+          <span className="save">
+            <i />
+            {savedAt ? `已儲存 ${savedAt.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' })}` : '本機儲存'}
+          </span>
+          <button className="btn btn--ghost btn--sm" onClick={() => window.print()}>
+            <Icon name="print" size={15} /> <span className="hide-sm">列印</span>
+          </button>
+          <button className="btn btn--ghost btn--sm" onClick={() => setWalletOpen(true)}>
+            <Icon name="wallet" size={15} /> <span className="hide-sm">錢包</span>
+          </button>
+          <button className="btn btn--primary btn--sm" onClick={() => setShareOpen(true)}>
+            <Icon name="share" size={15} /> 分享
+          </button>
+          <button className="icon-btn" onClick={() => setMenuOpen(true)} aria-label="更多">
+            <Icon name="menu" size={18} />
           </button>
         </div>
-      </aside>
+      </header>
 
-      <div className="mobilebar">
-        <Link to="/" className="mobilebar__brand">
-          <Crest size={26} />
-          <strong>ROVERBOOK</strong>
-        </Link>
-        <Avatar name={user.nameZh} photo={user.photo} size={30} />
-      </div>
+      <main className="desk">
+        <div className="bookwrap">
+          <Tabs current={section} />
+          <div className="bookstage">
+            {Page ? (
+              <Page />
+            ) : (
+              <CoverPage
+                book={book}
+                onOpen={() => {
+                  navigate('/p/contents');
+                  push('已打開你的紀錄冊');
+                }}
+              />
+            )}
+          </div>
+          {Page && <Pager current={section} />}
+        </div>
+      </main>
 
-      <main className="main">{children}</main>
+      {section && (
+        <div className="mobiletabs">
+          <Tabs current={section} />
+        </div>
+      )}
 
-      <nav className="tabbar" aria-label="底部導航">
-        {items.slice(0, 5).map((item) => (
-          <Link key={item.to} to={item.to} className={cx('tabbar__item', isActive(item.to, item.exact) && 'is-active')}>
-            <Icon name={item.icon} size={20} />
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </nav>
+      <ShareDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        share={share}
+        setShare={setShare}
+        onWallet={() => {
+          setShareOpen(false);
+          setWalletOpen(true);
+        }}
+      />
+      <WalletDialog open={walletOpen} onClose={() => setWalletOpen(false)} share={share} setShare={setShare} />
+      <MenuDialog open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>
   );
 }
 
 export default function App() {
   const path = useRoute();
-  const [state, setState] = useState({ loading: true, user: null });
+  const [book, setBook] = useState(() => loadBook());
 
-  const refresh = useCallback(async () => {
-    try {
-      const res = await api.get('/session');
-      setState({ loading: false, user: res.user });
-      return res.user;
-    } catch {
-      setState({ loading: false, user: null });
-      return null;
-    }
+  const update = useCallback((updater) => {
+    setBook((prev) => {
+      if (!prev) return prev;
+      const next = typeof updater === 'function' ? updater(structuredClone(prev)) : { ...prev, ...updater };
+      next.meta = { ...(next.meta || {}), updatedAt: new Date().toISOString() };
+      return next;
+    });
+  }, []);
+
+  const replace = useCallback((next) => {
+    setBook(next);
   }, []);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    if (!book) return;
+    const timer = setTimeout(() => persistBook(book), 250);
+    return () => clearTimeout(timer);
+  }, [book]);
 
-  const logout = async () => {
-    await api.post('/logout', {});
-    setState({ loading: false, user: null });
-    navigate('/login', { replace: true });
-  };
+  const ctx = useMemo(() => ({ book, update, replace }), [book, update, replace]);
 
-  if (path.startsWith('/c/')) return <PublicCard slug={path.slice(3)} />;
-  if (state.loading) return <Splash />;
-  if (!state.user) return <Login onDone={refresh} />;
+  if (path.startsWith('/v/')) {
+    return (
+      <ToastProvider>
+        <SharedBook id={path.slice(3)} />
+      </ToastProvider>
+    );
+  }
 
-  let page = <Home />;
-  if (path === '/record') page = <RecordBook />;
-  else if (path === '/privacy') page = <Privacy />;
-  else if (path === '/connections') page = <Connections />;
-  else if (path === '/crew') page = <Crew />;
-  else if (path.startsWith('/m/')) page = <MemberView id={path.slice(3)} />;
+  if (!book) {
+    return (
+      <ToastProvider>
+        <Welcome onReady={(next) => replace(next)} />
+      </ToastProvider>
+    );
+  }
 
   return (
-    <SessionCtx.Provider value={{ user: state.user, refresh }}>
-      <Shell user={state.user} path={path} onLogout={logout}>
-        {page}
-      </Shell>
-    </SessionCtx.Provider>
+    <BookCtx.Provider value={ctx}>
+      <ToastProvider>
+        <Chrome book={book} />
+      </ToastProvider>
+    </BookCtx.Provider>
   );
 }
