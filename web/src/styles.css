@@ -5288,6 +5288,7 @@ textarea.zoomfield {
     padding: 0 16px 18px;
     border-radius: 0;
     box-shadow: none;
+    overflow: visible;
   }
 
   .sheet__gutter,
@@ -5418,6 +5419,16 @@ textarea.zoomfield {
     display: flex;
     align-items: center;
     font-size: 16px;
+  }
+
+  .write--compact {
+    min-height: 26px;
+  }
+
+  .write__date,
+  .write--date input {
+    font-size: 16px;
+    min-height: 26px;
   }
 
   .write__input {
@@ -5841,5 +5852,21 @@ textarea.zoomfield {
 
   .sbadge strong {
     font-size: 10px;
+  }
+}
+
+.coverart__hint {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--sans);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: rgba(243, 221, 171, 0.62);
+}
+
+@media (max-width: 740px) {
+  .coverart__hint {
+    font-size: 10.5px;
+    line-height: 1.5;
   }
 }

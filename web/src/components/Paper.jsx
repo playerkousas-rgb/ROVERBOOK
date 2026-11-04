@@ -123,7 +123,7 @@ export function Pager({ current }) {
 }
 
 /** Full-bleed blue cover — the whole screen is the book. */
-export function CoverPage({ book, onOpen, last, onContinue }) {
+export function CoverPage({ book, onOpen, last, onContinue, hint }) {
   const m = book?.member || {};
   return (
     <div className="coverart">
@@ -154,6 +154,7 @@ export function CoverPage({ book, onOpen, last, onContinue }) {
           {[m.crew, m.group].filter(Boolean).join(' · ') || '樂行童軍團'}
         </span>
         {m.memberNo && <span className="coverart__plate-no">No. {m.memberNo}</span>}
+        {hint && <span className="coverart__hint">{hint}</span>}
         <div className="coverart__badges">
           {[
             { id: 'L1', label: '會員章', short: '會' },

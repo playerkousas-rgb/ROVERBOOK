@@ -4,7 +4,7 @@ import { BookCtx } from './bookContext.js';
 import { loadBook, persistBook, loadShares } from './bookStore.js';
 import { ToastProvider, useToast, Crest, Icon, Modal, cx } from './ui.jsx';
 import { Pager, CoverPage } from './components/Paper.jsx';
-import { SECTIONS, PAGE_TOTAL } from '@shared/book.js';
+import { SECTIONS, PAGE_TOTAL, allStats } from '@shared/book.js';
 import Contents from './pages/Contents.jsx';
 import { Colophon, Particulars1, Particulars2, GroupInfo, Scouting, Changes, Renewals, ServiceAwards, Scheme, Plan, BadgeTable, Experience, Uniform } from './pages/Book.jsx';
 import {
@@ -178,6 +178,12 @@ function BookApp({ book }) {
   }, [section]);
 
   const lastMeta = SECTIONS.find((s) => s.id === lastSection && !s.digital);
+  const stats = allStats(book);
+  const coverHint = !book.member.nameZh
+    ? '第一步：寫上你的名字'
+    : `已完成 ${stats.done} / ${stats.total} 項 · 下一步：${
+        stats.nextBadge?.badge?.name ? `完成${stats.nextBadge.badge.name}` : '全部完成，等領袖簽署'
+      }`;
   const Page = section ? PAGES[section] : null;
   const meta = SECTIONS.find((s) => s.id === section);
   const index = bookPages.findIndex((s) => s.id === section);
@@ -281,6 +287,7 @@ function BookApp({ book }) {
                 push('已打開你的紀錄冊');
               }}
               last={lastMeta}
+              hint={coverHint}
               onContinue={() => lastMeta && navigate(`/p/${lastMeta.id}`)}
             />
           )}
