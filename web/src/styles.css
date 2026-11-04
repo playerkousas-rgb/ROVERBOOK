@@ -5870,3 +5870,53 @@ textarea.zoomfield {
     line-height: 1.5;
   }
 }
+
+/* 紙頁浮水印 */
+.sheet__watermark {
+  position: absolute;
+  right: 14px;
+  bottom: 30px;
+  opacity: 0.05;
+  pointer-events: none;
+  color: var(--navy);
+}
+
+/* 頒發印章 */
+.present {
+  position: relative;
+}
+
+.present__stamp {
+  position: absolute;
+  right: 4px;
+  top: -6px;
+  padding: 4px 8px;
+  border: 2px solid rgba(163, 53, 43, 0.75);
+  border-radius: 4px;
+  font-family: var(--serif);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: rgba(163, 53, 43, 0.85);
+  transform: rotate(-6deg);
+  animation: stampIn 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+  pointer-events: none;
+}
+
+@media (max-width: 740px) {
+  .sheet__watermark {
+    opacity: 0.04;
+    right: 8px;
+    bottom: 18px;
+  }
+
+  .present__stamp {
+    font-size: 13px;
+    top: -2px;
+  }
+}
+
+@media print {
+  .sheet__watermark {
+    opacity: 0.06;
+  }
+}

@@ -317,8 +317,10 @@ export function Comment({ page, title = '審核員評語', en = "Assessor's Comm
 }
 
 export function Present({ page, signer = '樂行童軍團長', en = 'Rover Scout Leader', extra }) {
+  const [presentedOn] = useField(`pages.${page}.presentedOn`);
   return (
     <div className="present">
+      {presentedOn && <span className="present__stamp">已頒發</span>}
       <div className="present__grid">
         <Line label="頒發日期" en="Presented on" type="date" path={`pages.${page}.presentedOn`} />
         <Line label="地點" en="at" path={`pages.${page}.place`} />

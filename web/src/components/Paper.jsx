@@ -8,6 +8,9 @@ export function Sheet({ id, no, title, en, children, className = '', dense = fal
   return (
     <article className={cx('sheet', dense && 'sheet--dense', className)} data-page={id} data-badge={badge || undefined}>
       <span className="sheet__gutter" aria-hidden="true" />
+      <span className="sheet__watermark" aria-hidden="true">
+        <Crest size={130} />
+      </span>
       <span className="sheet__corner" aria-hidden="true" />
       <header className="sheet__head">
         <span className="sheet__run">
