@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useBook, useField, getPath } from '../bookContext.js';
 import { Spread } from './Paper.jsx';
 import Write from './Write.jsx';
 import { SignatureBlock } from './Ink.jsx';
 import { today } from '@shared/book.js';
 import { useLang, englishOf, addLabelFor, termFor } from '../i18n.jsx';
+import { cx } from '../ui.jsx';
 
 /* ---------------------------------------------------------------- 版面外框 */
 
@@ -265,17 +266,17 @@ export function ItemLine({ label, en, ids = [], page, extra, note }) {
         {!isEn && en && <em>{en}</em>}
         {note && <small>{note}</small>}
       </span>
-      <span className="itemline__date">
-        <Write value={state.date || ''} onChange={mark} type="date" compact label="日期" />
-      </span>
       <span className="itemline__assessor">
         <Write value={state.assessor || ''} onChange={(v) => setField('assessor', v)} compact placeholder="姓名" label="審核員" />
+      </span>
+      <span className="itemline__date">
+        <Write value={state.date || ''} onChange={mark} type="date" compact label="日期" />
       </span>
     </div>
   );
 }
 
-export function ProgressRow({ label, en, ids = [], certKey, note }) {
+export function ProgressRow({ label, en, ids = [], certKey, note, cert = true, assessor = true, sub }) {
   const { book, update } = useBook();
   const { isEn } = useLang();
   const primary = ids[0];
@@ -300,20 +301,25 @@ export function ProgressRow({ label, en, ids = [], certKey, note }) {
     });
   };
   return (
-    <div className={`prow${state.date ? ' is-done' : ''}`}>
+    <div className={`prow ${cert && assessor ? 'prow--4' : 'prow--3'}${state.date ? ' is-done' : ''}`}>
       <span className="prow__label">
+        {sub && <i className="prow__sub">{sub}</i>}
         {isEn ? en || englishOf(label) || termFor('en', label) : label}
         {!isEn && en && <em>{en}</em>}
         {note && <small>{note}</small>}
       </span>
-      <span className="prow__cell">
-        <Write value={state.cert || ''} onChange={setCert} compact placeholder="證書編號" label="證書編號" />
-      </span>
+      {cert && (
+        <span className="prow__cell">
+          <Write value={state.cert || ''} onChange={setCert} compact placeholder="證書編號" label="證書編號" />
+        </span>
+      )}
+      {assessor && (
+        <span className="prow__cell">
+          <Write value={state.assessor || ''} onChange={(v) => write('assessor', v)} compact placeholder="審核員" label="審核員" />
+        </span>
+      )}
       <span className="prow__cell">
         <Write value={state.date || ''} onChange={(v) => write('date', v)} type="date" compact label="日期" />
-      </span>
-      <span className="prow__cell">
-        <Write value={state.assessor || ''} onChange={(v) => write('assessor', v)} compact placeholder="審核員" label="審核員" />
       </span>
     </div>
   );
@@ -339,22 +345,49 @@ export function Sig({ path, title, en, name, label, compact = false }) {
   );
 }
 
-export function Comment({ page, title = '審核員評語', en = "Assessor's Comments" }) {
-  const [comment, setComment] = useField(`pages.${page}.comment`);
+export function Comment({ page, title = '審核員評語', en = "Assessor's Comments", compact = false, ids = [], datePath }) {
+  const [date] = useField(datePath || `pages.${page}.date`);
+  const { update } = useBook();
+  const key = ids.join(',');
+  useEffect(() => {
+    if (!key || !date) return;
+    update((b) => {
+      const progress = { ...(b.progress || {}) };
+      let changed = false;
+      ids.forEach((id) => {
+        const row = progress[id] || {};
+        if (row.date !== date) {
+          progress[id] = { ...row, date, at: new Date().toISOString() };
+          changed = true;
+        }
+      });
+      return changed ? { ...b, progress } : b;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, key]);
   return (
-    <div className="cmt">
-      <Area label={title} en={en} path={`pages.${page}.comment`} rows={2} placeholder="評語…" />
-      <div className="cmt__foot">
-        <Line label="審核員姓名及簽署" en="Name and Signature of Assessor" path={`pages.${page}.assessor`} />
-        <Line label="職位" en="Post" path={`pages.${page}.post`} />
-        <Line label="日期" en="Date" type="date" path={`pages.${page}.date`} />
-      </div>
-      <Sig path={`pages.${page}.sig`} title="審核員" label="審核員簽署" en="Assessor's signature" compact />
+    <div className={cx('cmt', compact && 'cmt--compact')}>
+      <Area label={title} en={en} path={`pages.${page}.comment`} rows={compact ? 2 : 3} placeholder="評語…" />
+      {!compact && (
+        <div className="cmt__foot">
+          <div className="cmt__sign">
+            <Sig
+              path={`pages.${page}.sig`}
+              title="審核員姓名及簽署"
+              label="審核員姓名及簽署"
+              en="Name and Signature of Assessor"
+              compact
+            />
+          </div>
+          <Line label="職位" en="Post" path={`pages.${page}.post`} />
+          <Line label="日期" en="Date" type="date" path={`pages.${page}.date`} />
+        </div>
+      )}
     </div>
   );
 }
 
-export function Present({ page, signer = '樂行童軍團長', en = 'Rover Scout Leader', extra }) {
+export function Present({ page, signer = '樂行童軍團長', en = 'Rover Scout Leader', extra, children }) {
   const [presentedOn] = useField(`pages.${page}.presentedOn`);
   const { isEn } = useLang();
   return (
@@ -366,6 +399,7 @@ export function Present({ page, signer = '樂行童軍團長', en = 'Rover Scout
         <Line label="頒發人" en="by" path={`pages.${page}.by`} />
       </div>
       {extra}
+      {children}
       <div className="present__sig">
         <Sig path={`pages.${page}.sig`} title={signer} label={signer} en={en} />
       </div>

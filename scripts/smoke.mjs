@@ -1,6 +1,6 @@
 // ROVERBOOK smoke test (v3 — one printed page per chapter)
 // Renders the cover, every page and the read-only share page inside jsdom
-// against the running dev server, then exercises the sharing / QR / wallet API.
+// against the running dev server, then exercises the sharing / QR API.
 //
 //   npm run dev      # in another terminal
 //   npm run smoke
@@ -160,6 +160,7 @@ await screen({
 // ------------------------------------------- 2. 逐頁掃描（紙本 41 頁 + 附錄）
 
 const PAGE_TEXT = {
+  cover: '樂行童軍紀錄冊',
   contents: '本電子版逐頁對應',
   colophon: '九龍柯士甸道',
   'particulars-1': '林卓瑤',
@@ -201,14 +202,16 @@ const PAGE_TEXT = {
   'expeditions-1': '遠足',
   'expeditions-2': '遠足',
   uniform: '制服',
+  'notes-1': null,
+  'notes-2': null,
   appendix: '數位附錄',
 };
 
 report(SECTIONS.length === Object.keys(PAGE_TEXT).length, `章節數目 ${SECTIONS.length}`, Object.keys(PAGE_TEXT).join(','));
 
 for (const section of SECTIONS) {
-  const expect = [PAGE_TEXT[section.id]];
-  if (typeof section.page === 'number') expect.push(`第 ${section.page} 頁`, `${section.page} / 41`);
+  const expect = [PAGE_TEXT[section.id]].filter(Boolean);
+  if (typeof section.page === 'number') expect.push(`第 ${section.page} 頁`, `${section.page} / 43`);
   await screen({ name: '頁面', path: `/p/${section.id}`, expect, wait: 340 });
 }
 
@@ -636,14 +639,32 @@ await screen({
 // ---------------------------------------------------------------- 3. 互動
 
 await screen({
-  name: '填寫：新增一項服務並自動儲存',
+  name: '紙本固定行數：表單不再提供「加一行」',
   path: '/p/service-awards',
   interact: async (doc) => {
-    const before = (JSON.parse(localStorage.getItem('roverbook.book.v3')).service || []).length;
-    doc.querySelector('.addrow').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    if (doc.querySelector('.addrow')) throw new Error('仍出現「加一行」按鈕（紙本表格行數固定）');
+  },
+});
+
+await screen({
+  name: '填寫：服務紀錄第一行即時儲存',
+  path: '/p/service-awards',
+  interact: async (doc) => {
+    const rows = [...doc.querySelectorAll('.pgtable__row')].slice(1);
+    const blank = rows[1] || rows[0];
+    if (!blank) throw new Error('找不到資料行');
+    const box = blank.querySelector('.write');
+    if (!box) throw new Error('找不到可填寫的表格欄位');
+    box.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 200));
+    const input = blank.querySelector('.write__input');
+    if (!input) throw new Error('點擊後未出現輸入框');
+    const setValue = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setValue.call(input, '副團長');
+    input.dispatchEvent(new window.Event('input', { bubbles: true }));
     await new Promise((r) => setTimeout(r, 400));
-    const after = (JSON.parse(localStorage.getItem('roverbook.book.v3')).service || []).length;
-    if (after !== before + 1) throw new Error(`服務由 ${before} 變成 ${after}`);
+    const after = JSON.parse(localStorage.getItem('roverbook.book.v3')).service || [];
+    if (!after.some((r) => r.post === '副團長')) throw new Error(`未寫入：${JSON.stringify(after)}`);
   },
 });
 
@@ -683,18 +704,18 @@ await screen({
 });
 
 await screen({
-  name: '訓練細項：勾選寫入本機',
-  path: '/p/mb-understanding',
-  expect: ['understanding'],
+  name: '訓練細項：填寫審核日期會寫入進度',
+  path: '/p/mb-commitment',
+  expect: ['Safe From Harm'],
   interact: async (doc) => {
-    const before = Object.values(JSON.parse(localStorage.getItem('roverbook.book.v3')).progress || {}).filter((p) => p?.date).length;
-    const box = doc.querySelector('.itemline__tick');
-    if (!box) throw new Error('找不到勾選框');
-    box.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    const field = doc.querySelector('.prow .write__date');
+    if (!field) throw new Error('找不到審核日期欄');
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setter.call(field, '2026-05-01');
+    field.dispatchEvent(new window.Event('input', { bubbles: true }));
     await new Promise((r) => setTimeout(r, 450));
-    const after = Object.values(JSON.parse(localStorage.getItem('roverbook.book.v3')).progress || {}).filter((p) => p?.date).length;
-    if (after === before) throw new Error(`進度項目數沒有改變（${before}）`);
-    if (window.document.querySelectorAll('.itemline.is-done').length === 0) throw new Error('勾選後未標記完成');
+    const progress = JSON.parse(localStorage.getItem('roverbook.book.v3')).progress || {};
+    if (!Object.values(progress).some((p) => p?.date === '2026-05-01')) throw new Error('審核日期未寫入進度');
   },
 });
 
@@ -810,46 +831,12 @@ const snapshot = buildSnapshot(demoBook(), { ...DEFAULT_SHARE, contact: false })
   const qr = await api('/api/qr.svg?d=' + encodeURIComponent(`${BASE}/v/abc`));
   report(qr.res.ok && qr.type.includes('svg') && qr.body.includes('<svg'), 'API /api/qr.svg 產生 SVG');
 
-  const status = await api('/api/wallet/status');
-  const apple = status.body.apple || {};
-  const google = status.body.google || {};
-  report(
-    status.res.ok && Array.isArray(apple.missing) && apple.configured === false && Array.isArray(google.missing),
-    'API /api/wallet/status',
-    `apple 缺 ${apple.missing?.length ?? '?'}、google 缺 ${google.missing?.length ?? '?'}`,
-  );
-
   const created = await api('/api/share', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ snapshot }),
   });
   const id = created.body.id;
-
-  const applePass = await api('/api/wallet/apple', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id }),
-  });
-  report(
-    applePass.res.status === 501 && (applePass.body.missing || []).includes('APPLE_PASS_TYPE_ID'),
-    'API Apple pass 未配置回 501 + 缺少清單',
-    applePass.res.status,
-  );
-
-  const googlePass = await api('/api/wallet/google', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id }),
-  });
-  report(
-    googlePass.res.status === 501 && (googlePass.body.missing || []).includes('GOOGLE_WALLET_ISSUER_ID'),
-    'API Google pass 未配置回 501 + 缺少清單',
-    googlePass.res.status,
-  );
-
-  const preview = await api(`/api/wallet/preview/${id}`);
-  report(preview.res.ok && preview.body.passJson?.generic?.primaryFields?.[0]?.value, 'API /api/wallet/preview/:id');
 
   await api(`/api/share/${id}`, {
     method: 'DELETE',
@@ -929,6 +916,18 @@ await screen({
   report(html.includes('PAGE 3') && html.includes('PERSONAL PARTICULARS'), '語言：重新載入後仍為英文');
   localStorage.removeItem('roverbook.lang');
 }
+
+// --------------------------------------------------------- v13 整本列印對頁
+
+await screen({
+  name: '整本列印：43 頁紙對 43 頁紀錄冊',
+  path: '/print',
+  expect: ['第 2 頁 · 共 43 頁', '第 43 頁 · 共 43 頁'],
+  interact: async (doc) => {
+    const n = doc.querySelectorAll('.printall__one .sheet').length;
+    if (n !== 43) throw new Error(`列印頁數 ${n}，應為 43`);
+  },
+});
 
 // ------------------------------------------------------- v12 圖示 · 聲明 · 頂欄
 

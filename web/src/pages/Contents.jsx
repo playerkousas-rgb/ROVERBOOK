@@ -114,7 +114,7 @@ export default function Contents() {
               <span className="tocfooter__v">{SYLLABUS_META.version}</span>
             </div>
             <Link to="/p/appendix" className="tocfooter__link">
-              {isEn ? 'Digital appendix: backup · share · wallet' : '數位附錄：備份 · 分享 · 錢包'}{' '}
+              {isEn ? 'Digital appendix: backup · share · print' : '數位附錄：備份 · 分享 · 列印'}{' '}
               <Icon name="chevron" size={12} />
             </Link>
           </div>

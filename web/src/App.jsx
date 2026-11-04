@@ -6,7 +6,7 @@ import { ToastProvider, useToast, Crest, Icon, Modal, cx } from './ui.jsx';
 import { Pager, CoverPage } from './components/Paper.jsx';
 import { SECTIONS, PAGE_TOTAL, allStats, syncIdentity } from '@shared/book.js';
 import Contents from './pages/Contents.jsx';
-import { Colophon, Particulars1, Particulars2, GroupInfo, Scouting, Changes, Renewals, ServiceAwards, Scheme, Plan, BadgeTable, Experience, Uniform } from './pages/Book.jsx';
+import { Cover, Colophon, Particulars1, Particulars2, GroupInfo, Scouting, Changes, Renewals, ServiceAwards, Scheme, Plan, BadgeTable, Experience, Uniform, Notes } from './pages/Book.jsx';
 import {
   MbIntro, MbActivities, MbUnderstanding, MbCommitment, MbPresented,
   EpIntro, EpPresented, RsaIntro, RsaAwards, Dedication, Scoutcraft, Volunteerism,
@@ -14,10 +14,10 @@ import {
   Interview, BpaPresented,
 } from './pages/Training.jsx';
 import Appendix from './pages/Appendix.jsx';
+import PrintBook from './pages/PrintBook.jsx';
 import Welcome from './pages/Welcome.jsx';
 import SharedBook from './pages/SharedBook.jsx';
 import ShareDialog from './components/ShareDialog.jsx';
-import WalletDialog from './components/WalletDialog.jsx';
 import MenuDialog from './components/MenuDialog.jsx';
 import { FormsIndex, FormDoc, FormsAll } from './pages/Forms.jsx';
 import Scan, { ScanView } from './pages/Scan.jsx';
@@ -27,6 +27,7 @@ import { UPDATE_EVENT, applyPwaUpdate } from './pwa.js';
 import { LangProvider, useLang } from './i18n.jsx';
 
 const PAGES = {
+  cover: Cover,
   contents: Contents,
   colophon: Colophon,
   'particulars-1': Particulars1,
@@ -79,8 +80,8 @@ const PAGES = {
       title="其他經驗（續）"
       en="ADDITIONAL EXPERIENCES"
       path="pages.additional-2.rows"
-      lead="續上頁。"
-      leadEn="Continued."
+      lead="在此紀錄你在樂行童軍支部所獲得之其他經驗，包括但不限於參加之活動、在樂行童軍團所負責之特別任務、在管理委員會所擔任之職位等。"
+      leadEn="Record here additional experiences gained and any qualifications obtained in this Section. These activities include but not limited to activities attempted, special responsibilities in the Crew and positions held in the Management Committee."
     />
   ),
   'expeditions-1': () => (
@@ -99,11 +100,14 @@ const PAGES = {
       title="遠足及海外活動（續）"
       en="EXPEDITIONS AND OVERSEAS ACTIVITIES"
       path="pages.expeditions-2.rows"
-      lead="續上頁。"
-      leadEn="Continued."
+      min={12}
+      lead="在此紀錄你在本港或海外進行遠足或參與國際童軍活動。"
+      leadEn="Record here any expeditions in Hong Kong or overseas or International Scouting activities undertaken abroad."
     />
   ),
   uniform: Uniform,
+  'notes-1': () => <Notes id="notes-1" />,
+  'notes-2': () => <Notes id="notes-2" />,
   appendix: Appendix,
 };
 
@@ -118,12 +122,12 @@ function IndexSheet({ open, onClose, current }) {
       onClose={onClose}
       eyebrow="CONTENTS"
       title={isEn ? 'Contents' : '目錄'}
-      subtitle={isEn ? '41 printed pages, one to one; plus a digital appendix.' : '紙本 41 頁，逐頁對應；另設數位附錄。'}
+      subtitle={isEn ? '43 printed pages, one to one; plus a digital appendix.' : '紙本 43 頁，逐頁對應；另設數位附錄。'}
       wide
     >
       <div className="indexlist">
-        <Link to="/" className="indexrow indexrow--cover" onClick={onClose}>
-          <span className="indexrow__no">{isEn ? 'Cover' : '封面'}</span>
+        <Link to="/p/cover" className="indexrow indexrow--cover" onClick={onClose}>
+          <span className="indexrow__no">1</span>
           <span className="indexrow__title">{isEn ? 'Rover Scout Record Book' : '樂行童軍紀錄冊'}</span>
           <Icon name="book" size={14} />
         </Link>
@@ -157,7 +161,6 @@ function BookApp({ book, saveIssue }) {
   const { isEn, toggle } = useLang();
   const { push } = useToast();
   const [shareOpen, setShareOpen] = useState(false);
-  const [walletOpen, setWalletOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
@@ -189,6 +192,7 @@ function BookApp({ book, saveIssue }) {
     return all[0] || null;
   });
 
+  const printAll = path === '/print';
   const section = path.startsWith('/p/') ? path.slice(3) : null;
   const formId = path.startsWith('/forms') ? path.split('/').filter(Boolean)[1] || 'index' : null;
   const scanPath = ['/scan', '/scan/view', '/scan/signoff'].includes(path) ? path : null;
@@ -248,7 +252,7 @@ function BookApp({ book, saveIssue }) {
   }, [go]);
 
   return (
-    <div className={cx('app', scanPath ? 'app--scan' : formId ? 'app--forms' : section ? 'app--book' : 'app--cover')}>
+    <div className={cx('app', printAll ? 'app--print' : scanPath ? 'app--scan' : formId ? 'app--forms' : section ? 'app--book' : 'app--cover')}>
       <header className={cx('chipbar', section && 'chipbar--page')}>
         <Link to="/" className="chipbar__brand">
           <Crest size={26} />
@@ -363,7 +367,9 @@ function BookApp({ book, saveIssue }) {
           )}
           style={{ zoom }}
         >
-          {scanPath ? (
+          {printAll ? (
+            <PrintBook pages={PAGES} />
+          ) : scanPath ? (
             scanPath === '/scan/view' ? (
               <ScanView />
             ) : scanPath === '/scan/signoff' ? (
@@ -394,7 +400,7 @@ function BookApp({ book, saveIssue }) {
         </div>
       </main>
 
-      {scanPath ? null : section ? (
+      {scanPath || printAll ? null : section ? (
         <Pager current={section} />
       ) : (
         <div className="coverhint">
@@ -409,12 +415,7 @@ function BookApp({ book, saveIssue }) {
         onClose={() => setShareOpen(false)}
         share={share}
         setShare={setShare}
-        onWallet={() => {
-          setShareOpen(false);
-          setWalletOpen(true);
-        }}
       />
-      <WalletDialog open={walletOpen} onClose={() => setWalletOpen(false)} share={share} setShare={setShare} />
       {updateReady && (
         <div className="updatebar" role="status">
           <span>有新版本</span>
@@ -436,10 +437,6 @@ function BookApp({ book, saveIssue }) {
           setQrOpen(true);
         }}
         onIndex={() => setIndexOpen(true)}
-        onHome={() => {
-          setMenuOpen(false);
-          setWalletOpen(true);
-        }}
       />
     </div>
   );

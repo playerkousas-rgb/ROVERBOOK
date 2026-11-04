@@ -18,7 +18,11 @@ export function Sheet({ id, no, title, en, children, className = '', dense = fal
         <span className="sheet__run">
           {isEn ? 'ROVER SCOUT RECORD BOOK' : <>樂行童軍紀錄冊 <em>ROVER SCOUT RECORD BOOK</em></>}
         </span>
-        {no !== '—' && <span className="sheet__pageno">{isEn ? `PAGE ${no}` : `第 ${no} 頁`}</span>}
+        {no !== '—' && (
+          <span className="sheet__pageno">
+            {isEn ? `PAGE ${no} / ${PAGE_TOTAL}` : `第 ${no} 頁 · 共 ${PAGE_TOTAL} 頁`}
+          </span>
+        )}
       </header>
       <div className="sheet__titlebar">
         <h1>

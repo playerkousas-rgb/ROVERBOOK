@@ -5,13 +5,16 @@ import { download, clearBook, slugify } from '../bookStore.js';
 import { demoBook, importFromRoverBadge, newBook, today } from '@shared/book.js';
 import { LegalNote } from './Legal.jsx';
 import { navigate } from '../router.jsx';
+import { useLang } from '../i18n.jsx';
 
-export default function MenuDialog({ open, onClose, onShowQr, onHome }) {
+export default function MenuDialog({ open, onClose, onShowQr }) {
   const { book, replace } = useBook();
+  const { isEn } = useLang();
   const { push } = useToast();
   const backupRef = useRef(null);
   const rbRef = useRef(null);
   const [showAbout, setShowAbout] = useState(false);
+  const [showHome, setShowHome] = useState(false);
 
   if (!open) return null;
 
@@ -61,14 +64,36 @@ export default function MenuDialog({ open, onClose, onShowQr, onHome }) {
   return (
     <Modal open={open} onClose={onClose} eyebrow="MENU" title="紀錄冊選項">
       <div className="menu">
-        {onHome && (
-          <button className="menu__item menu__item--accent" onClick={onHome}>
-            <Icon name="download" size={18} />
-            <span>
-              <strong>加到手機主畫面</strong>
-              <em>建議做法：一按即開，毋須憑證、毋須付費</em>
-            </span>
-          </button>
+        <button
+          className="menu__item menu__item--accent"
+          onClick={() => setShowHome((v) => !v)}
+        >
+          <Icon name={showHome ? 'down' : 'download'} size={18} />
+          <span>
+            <strong>{isEn ? 'Add to home screen' : '加到手機主畫面'}</strong>
+            <em>
+              {isEn
+                ? 'One tap to open; no certificate, no fee, no server.'
+                : '一按即開，毋須憑證、毋須付費、毋須伺服器'}
+            </em>
+          </span>
+        </button>
+        {showHome && (
+          <div className="menuguide">
+            <ol>
+              <li>
+                <b>iPhone</b>：用 <b>Safari</b> 開啟本頁 → 底部「分享」→「加入主畫面」→「新增」。
+              </li>
+              <li>
+                <b>Android</b>：用 <b>Chrome</b> 開啟本頁 → 右上三點 →「安裝應用程式」或「加到主畫面」。
+              </li>
+            </ol>
+            <p>
+              {isEn
+                ? 'Same as an app afterwards: full screen, no login, works offline. This is the only way recommended — no wallet pass, no developer account.'
+                : '之後同 App 一樣：全螢幕、毋須登入、離線照用。這是唯一建議的做法（不需要任何錢包或開發者帳戶）。'}
+            </p>
+          </div>
         )}
 
         <button
@@ -104,11 +129,21 @@ export default function MenuDialog({ open, onClose, onShowQr, onHome }) {
             <em>PT/69、PT/21、PT/22，個人資料及考核紀錄自動填入</em>
           </span>
         </button>
-        <button className="menu__item" onClick={() => window.print()}>
+        <button
+          className="menu__item"
+          onClick={() => {
+            onClose();
+            navigate('/print');
+          }}
+        >
           <Icon name="print" size={18} />
           <span>
-            <strong>列印整本 / 儲存 PDF</strong>
-            <em>每頁對應紙本一頁，已設 A4 分頁</em>
+            <strong>{isEn ? 'Print whole book / Save PDF' : '列印整本 / 儲存 PDF'}</strong>
+            <em>
+              {isEn
+                ? '40 sheets, one per record-book page; the page number is printed on each page.'
+                : '40 頁一次過，每頁對應紙本一頁（頁碼印在右上角，可直接對回 PDF）。'}
+            </em>
           </span>
         </button>
 

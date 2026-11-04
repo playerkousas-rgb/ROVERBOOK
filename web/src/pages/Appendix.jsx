@@ -251,15 +251,6 @@ export default function Appendix() {
               </div>
               <p className="tiny">{isEn ? 'Only item IDs and dates are exchanged — never signatures.' : '只交換「項目編號 + 日期」，不交換簽名。'}</p>
             </div>
-
-            <div className="appendix-card appendix-card--dark">
-              <h4>
-                <Icon name="wallet" size={13} /> {isEn ? 'Wallet' : '錢包'}
-              </h4>
-              <p className="tiny">
-                Wallet 卡片由伺服器簽發，需要 Apple／Google 憑證。未設定時可按「加到主畫面」，效果一樣快。
-              </p>
-            </div>
           </div>
 
           <LegalNote />

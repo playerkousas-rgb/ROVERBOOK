@@ -5,9 +5,33 @@ import Write from '../components/Write.jsx';
 import { PhotoPicker } from '../components/Edit.jsx';
 import { Crest } from '../ui.jsx';
 import { useLang } from '../i18n.jsx';
-import { LegalNote } from '../components/Legal.jsx';
+import { LegalNote, LegalLine } from '../components/Legal.jsx';
 
 /* ---------------------------------------------------------------- 出版資料 */
+
+/* ------------------------------------------------------------ 第 1 頁 · 封面 */
+
+export function Cover() {
+  const { isEn } = useLang();
+  return (
+    <Page id="cover" className="p-cover">
+      <div className="coverpage">
+        <svg className="coverpage__mark" viewBox="14 6 36 46" aria-hidden="true">
+          <path d="M32 11.5c5 6.6 11 9.2 11 15.8 0 5.4-5 9-11 9s-11-3.6-11-9c0-6.6 6-9.2 11-15.8Z" fill="currentColor" opacity="0.14" />
+          <path d="M32 11.5c5 6.6 11 9.2 11 15.8 0 5.4-5 9-11 9s-11-3.6-11-9c0-6.6 6-9.2 11-15.8Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M32 21c2.6 3.4 5.4 4.9 5.4 8.1 0 2.6-2.4 4.4-5.4 4.4s-5.4-1.8-5.4-4.4C26.6 25.9 29.4 24.4 32 21Z" fill="none" stroke="currentColor" strokeWidth="1.2" />
+          <path d="M20.5 38h23M24 46h16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+        <p className="coverpage__assoc">香港童軍總會</p>
+        <h1 className="coverpage__title">樂行童軍紀錄冊</h1>
+        <div className="coverpage__rule" />
+        <p className="coverpage__en">Scout Association of Hong Kong</p>
+        <p className="coverpage__en coverpage__en--sub">Rover Scout Record Book</p>
+        <LegalLine className="coverpage__legal" />
+      </div>
+    </Page>
+  );
+}
 
 export function Colophon() {
   const { isEn } = useLang();
@@ -28,12 +52,6 @@ export function Colophon() {
         請小心保存並更新有關資料，在考取樂行童軍肩章、樂行童軍獎章或貝登堡獎章時，必須出示此紀錄冊。
       </P>
 
-      <LegalNote compact />
-
-      <div className="colophon__foot">
-        <span>{isEn ? 'Edition V · 2026' : '第五版 · 2026'}</span>
-        <span>{isEn ? 'ROVERBOOK digital edition' : 'ROVERBOOK 電子版'}</span>
-      </div>
     </Page>
   );
 }
@@ -114,12 +132,11 @@ export function Particulars2() {
         <Line label="出生地點 Place of Birth" path="member.placeOfBirth" placeholder="香港" />
       </div>
 
-      <Area label="通訊地址 Correspondence Address" path="member.address" rows={2} placeholder="九龍紅磡…" />
+      <Area label="通訊地址 Correspondence Address" path="member.address" rows={3} placeholder="九龍紅磡…" />
 
-      <div className="ftrio">
+      <div className="fduo">
         <Line label="聯絡電話 Telephone No." path="member.phone" placeholder="9876 5432" />
         <Line label="血型 Blood Type" path="member.bloodType" placeholder="O+" />
-        <Line label="電郵 Email" path="member.email" placeholder="you@example.org" />
       </div>
 
       <Bilingual as="h4" className="pgh" zh="緊急事故聯絡人" en="Emergency Contact Person" />
@@ -167,26 +184,48 @@ export function Scouting() {
   return (
     <Page id="scouting" className="p-wide">
       <H en="SCOUTING EXPERIENCE">童軍紀錄</H>
-      <div className="pgtable pgtable--fixed">
-        <div className="pgtable__head pgtable__row pgtable__row--5">
-          <Bilingual zh="期間 · 旅／單位" en="Period · Group / Unit" />
-          <Bilingual zh="崗位／職位" en="Post / Rank" />
-          <Bilingual zh="獲取之最高奬章" en="Highest Award Achieved" />
-          <Bilingual zh="由" en="From" />
-          <Bilingual zh="至" en="To" />
+      <div className="pgtable pgtable--fixed scoutgrid">
+        <div className="scoutgrid__head">
+          <span className="scoutgrid__unit" />
+          <span className="scoutgrid__span">
+            <Bilingual zh="期間" en="Period" />
+          </span>
+          <span>
+            <Bilingual zh="旅／單位" en="Group / Unit" />
+          </span>
+          <span>
+            <Bilingual zh="崗位／職位" en="Post / Rank" />
+          </span>
+          <span>
+            <Bilingual zh="獲取之最高奬章" en="Highest Award Achieved" />
+          </span>
+        </div>
+        <div className="scoutgrid__sub">
+          <span className="scoutgrid__unit" />
+          <span>
+            <Bilingual zh="由" en="From" />
+          </span>
+          <span>
+            <Bilingual zh="至" en="To" />
+          </span>
+          <span />
+          <span />
+          <span />
         </div>
         {UNITS.map((u) => {
           const index = (book.scouting || []).findIndex((r) => r.unit === u.key);
+          const noAward = u.key === 'instructor' || u.key === 'leader';
           return (
-            <div className="pgtable__row pgtable__row--5" key={u.key}>
-              <span className="pgtable__cell pgtable__unit">
+            <div className="scoutgrid__row" key={u.key}>
+              <span className="scoutgrid__unit">
                 <strong>{isEn ? u.en : u.label}</strong>
                 {!isEn && <em>{u.en}</em>}
               </span>
-              <Cell unit={u.key} index={index} field="post" />
-              <Cell unit={u.key} index={index} field="highestAward" />
               <Cell unit={u.key} index={index} field="from" />
               <Cell unit={u.key} index={index} field="to" />
+              <Cell unit={u.key} index={index} field="group" />
+              <Cell unit={u.key} index={index} field="post" />
+              {noAward ? <span className="scoutgrid__na" /> : <Cell unit={u.key} index={index} field="highestAward" />}
             </div>
           );
         })}
@@ -195,7 +234,7 @@ export function Scouting() {
   );
 }
 
-const FIELD_LABELS = { post: '崗位／職位', highestAward: '最高奬章', from: '由', to: '至' };
+const FIELD_LABELS = { post: '崗位／職位', highestAward: '最高奬章', from: '由', to: '至', group: '旅／單位' };
 
 function Cell({ unit, index, field }) {
   const { book, update } = useBook();
@@ -223,13 +262,13 @@ export function Changes() {
       <H en="TRANSFER / CHANGE OF ADDRESS / CHANGE OF PARTICULARS">轉旅 · 遷移地址 · 更改摘要</H>
 
       <Bilingual as="h4" className="pgh" zh="轉旅" en="TRANSFER OF GROUP" />
-      <Rows path="transfers" min={3} addLabel="加一次轉旅" cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'groupNo', label: '新旅旅號', en: 'Number of New Group' }]} />
+      <Rows path="transfers" min={3} addLabel={null} cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'groupNo', label: '新旅旅號', en: 'Number of New Group' }]} />
 
       <Bilingual as="h4" className="pgh" zh="遷移地址" en="CHANGE OF ADDRESS" />
-      <Rows path="addressChanges" min={3} addLabel="加一次搬遷" cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'address', label: '新地址', en: 'New Address', width: 2.4 }]} />
+      <Rows path="addressChanges" min={3} addLabel={null} cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'address', label: '新地址', en: 'New Address', width: 2.4 }]} />
 
       <Bilingual as="h4" className="pgh" zh="更改個人摘要" en="CHANGE OF PERSONAL PARTICULARS" />
-      <Rows path="detailChanges" min={3} addLabel="加一次更改" cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'item', label: '項目', en: 'Item' }, { k: 'content', label: '內容', en: 'Content', width: 2 }]} />
+      <Rows path="detailChanges" min={3} addLabel={null} cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'item', label: '項目', en: 'Item' }, { k: 'content', label: '內容', en: 'Content', width: 2 }]} />
     </Page>
   );
 }
@@ -241,7 +280,7 @@ export function Renewals({ part = 0 }) {
   const { isEn } = useLang();
   const list = book.renewals || [];
   const id = part === 0 ? 'renewals-1' : 'renewals-2';
-  const start = part * 4;
+  const start = part * 5;
 
   const setRow = (index, key, value) => {
     update((b) => {
@@ -261,7 +300,7 @@ export function Renewals({ part = 0 }) {
           <Bilingual zh="有效日期至" en="Valid Until" />
           <Bilingual zh="旅印及簽署" en="Group Chop and Signature" />
         </div>
-        {Array.from({ length: 4 }).map((_, i) => {
+        {Array.from({ length: 5 }).map((_, i) => {
           const index = start + i;
           const row = list[index] || {};
           return (
@@ -285,11 +324,7 @@ export function Renewals({ part = 0 }) {
           );
         })}
       </div>
-      {part === 0 ? (
-        <button type="button" className="addrow addrow--quiet" onClick={() => update((b) => ({ ...b, renewals: [...(b.renewals || []), { id: `rnw_${Math.random().toString(36).slice(2, 8)}`, year: '', validUntil: '', signature: null }] }))}>
-          + {isEn ? 'Add a renewal year' : '加一年續會'}
-        </button>
-      ) : (
+      {part === 1 && (
         <Note en="Membership has to be renewed and confirmed by the Rover Scout Leader by signature and chop, valid from 1 January to 31 December each year.">
           更新成員資格應按年由團長簽署及蓋章確認，並由該年一月一日至十二月三十一日止。
         </Note>
@@ -306,8 +341,8 @@ export function ServiceAwards() {
       <H en="SERVICE RECORD">服務紀錄</H>
       <Rows
         path="service"
-        min={3}
-        addLabel="加一項服務"
+        min={7}
+        addLabel={null}
         cols={[
           { k: 'post', label: '崗位／職位', en: 'Post / Title', width: 1.6 },
           { k: 'from', label: '由', en: 'From' },
@@ -323,7 +358,7 @@ export function ServiceAwards() {
       <Rows
         path="awards"
         min={3}
-        addLabel="加一項獎章"
+        addLabel={null}
         cols={[
           { k: 'name', label: '獎章／獎勵名稱', en: 'Name of Award' },
           { k: 'summary', label: '內容簡述', en: 'Summary of Content', width: 1.5 },
@@ -359,11 +394,42 @@ export function Scheme() {
   );
 }
 
+function AwardArt({ tone = 'green', label = 'RSA' }) {
+  const palette = {
+    red: ['#8f2f2a', '#a8342d'],
+    purple: ['#4b2c83', '#5d3a9b'],
+    green: ['#2f5c3a', '#3a6b47'],
+  };
+  const [ring, face] = palette[tone] || palette.green;
+  return (
+    <svg className="awardart__svg awardart__svg--sm" viewBox="0 0 96 96" role="img" aria-label={label}>
+      <circle cx="48" cy="48" r="45" fill={face} />
+      <circle cx="48" cy="48" r="45" fill="none" stroke={ring} strokeWidth="3" />
+      <circle cx="48" cy="48" r="35" fill="none" stroke="#f0e3c2" strokeWidth="1.4" opacity="0.85" />
+      <path d="M48 24c6 8 13 11 13 19 0 6.4-6 10.8-13 10.8S35 49.4 35 43c0-8 7-11 13-19Z" fill="#f0e3c2" opacity="0.92" />
+      <path d="M34 68h28M38 74h20" stroke="#f0e3c2" strokeWidth="2.2" strokeLinecap="round" />
+      <text x="48" y="19" textAnchor="middle" fontSize="10" letterSpacing="1.6" fill="#f0e3c2" fontFamily="serif">ROVER</text>
+      <text x="48" y="88" textAnchor="middle" fontSize="8.4" letterSpacing="1.6" fill="#f0e3c2" fontFamily="serif">SCOUTS</text>
+    </svg>
+  );
+}
+
+export function EpauletteArt() {
+  return (
+    <svg className="awardart__svg awardart__svg--sm" viewBox="0 0 96 96" role="img" aria-label="Rover Scout Epaulettes">
+      <path d="M24 26 h48 a8 8 0 0 1 8 8 v34 a8 8 0 0 1 -8 8 h-48 a8 8 0 0 1 -8 -8 v-34 a8 8 0 0 1 8 -8 Z" fill="#25452f" stroke="#1b3324" strokeWidth="2" />
+      <circle cx="48" cy="52" r="12" fill="none" stroke="#d8b871" strokeWidth="2" />
+      <circle cx="48" cy="52" r="4" fill="#d8b871" />
+      <path d="M32 74h32" stroke="#d8b871" strokeWidth="1.6" opacity="0.7" />
+    </svg>
+  );
+}
+
 const STAGES = [
-  { no: '1', name: '會員章', en: 'Membership Badge', time: '平均於 3 個月內完成', enTime: 'To be completed within 3 months on average', req: '完成啟導班／等同項目／先修章', enReq: 'Introductory Course / Link Badge / Equivalent items' },
-  { no: '2', name: '樂行童軍肩章', en: 'Rover Scout Epaulettes', time: '平均於 3 至 6 個月內完成', enTime: 'To be completed within 3-6 months on average', req: '完成 7 項考驗中的其中 4 項', enReq: 'Complete 4 of the 7 Components' },
-  { no: '3', name: '樂行童軍獎章', en: 'Rover Scout Award', time: '平均於 12 至 18 個月內完成', enTime: 'To be completed within 12-18 months on average', req: '完成 7 項考驗中的其中 4 項', enReq: 'Complete 4 of the 7 Components' },
-  { no: '4', name: '貝登堡獎章', en: 'Baden Powell Award', time: '平均於 12 至 18 個月內完成', enTime: 'To be completed within 12-18 months on average', req: '完成所有 7 項考驗', enReq: 'Complete all the 7 Components' },
+  { no: '1', tone: 'purple', name: '會員章', en: 'Membership Badge', time: '平均於 3 個月內完成', enTime: 'To be completed within 3 months on average', req: '完成啟導班／等同項目／先修章', enReq: 'Introductory Course / Link Badge / Equivalent items' },
+  { no: '2', tone: 'epaulette', name: '樂行童軍肩章', en: 'Rover Scout Epaulettes', time: '平均於 3 至 6 個月內完成', enTime: 'To be completed within 3-6 months on average', req: '完成 7 項考驗中的其中 4 項', enReq: 'Complete 4 of the 7 Components' },
+  { no: '3', tone: 'green', name: '樂行童軍獎章', en: 'Rover Scout Award', time: '平均於 12 至 18 個月內完成', enTime: 'To be completed within 12-18 months on average', req: '完成所有 7 項考驗', enReq: 'Complete all the 7 Components' },
+  { no: '4', tone: 'red', name: '貝登堡獎章', en: 'Baden Powell Award', time: '平均於 12 至 18 個月內完成', enTime: 'To be completed within 12-18 months on average', req: '', enReq: '' },
 ];
 
 export function Plan() {
@@ -378,13 +444,16 @@ export function Plan() {
         {STAGES.map((s) => (
           <div className="pstage" key={s.no}>
             <span className="pstage__no">{s.no}</span>
+            <span className="pstage__art">
+              {s.tone === 'epaulette' ? <EpauletteArt /> : <AwardArt tone={s.tone} label={s.en} />}
+            </span>
             <div className="pstage__body">
               <h4>
                 {isEn ? s.en : s.name}
                 {!isEn && <em>{s.en}</em>}
               </h4>
-              <p className="pstage__req">{isEn ? s.enReq : s.req}</p>
-              {!isEn && <p className="pstage__req-en">{s.enReq}</p>}
+              {s.req && <p className="pstage__req">{isEn ? s.enReq : s.req}</p>}
+              {!isEn && s.enReq && <p className="pstage__req-en">{s.enReq}</p>}
             </div>
             <div className="pstage__time">
               {isEn ? s.enTime : s.time}
@@ -408,8 +477,8 @@ export function BadgeTable({ id, title, en, path }) {
       <H en={en}>{title}</H>
       <Rows
         path={path}
-        min={8}
-        addLabel="加一個獎章"
+        min={9}
+        addLabel={null}
         cols={[
           { k: 'name', label: '獎章', en: 'Badges', width: 2 },
           { k: 'cert', label: '證書編號', en: 'Certificate No.', width: 1.4 },
@@ -422,15 +491,15 @@ export function BadgeTable({ id, title, en, path }) {
 
 /* -------------------------------------------------------------- 經驗表格頁 */
 
-export function Experience({ id, title, en, path, lead, leadEn }) {
+export function Experience({ id, title, en, path, lead, leadEn, min = 11 }) {
   return (
     <Page id={id} className="p-exp">
       <H en={en}>{title}</H>
       <P en={leadEn}>{lead}</P>
       <Rows
         path={path}
-        min={9}
-        addLabel="加一項"
+        min={min}
+        addLabel={null}
         cols={[
           { k: 'period', label: '時段', en: 'Period', width: 1.1 },
           { k: 'item', label: '項目', en: 'Items', width: 1.2 },
@@ -443,34 +512,141 @@ export function Experience({ id, title, en, path, lead, leadEn }) {
 
 /* ---------------------------------------------------------------- 制服頁 */
 
+const UNIFORM_LEGEND = [
+  ['1', '黑色皮製巾圈（附有童軍徽號）／基維爾巾圈', 'Black leather woggle (with Scout emblem) / Gilwell woggle'],
+  ['2', '香港章', 'Hong Kong Badge'],
+  ['3', '飛行章／跳傘章', 'Air Activity Badge / Parachutist Badge'],
+  ['4', '服務年星', 'Service Star'],
+  ['5', '會員章／和平使者章（結合世界童軍會員章）', 'Membership Badge / Messenger of Peace Badge (with WOSM Membership Badge)'],
+  ['6', '宗教章／公教章', 'Religious Badge / Catholic Badge'],
+  ['7', '紀念章', 'Commemorative Badge'],
+  ['8', '金紫荊／總領袖／榮譽童軍獎章標誌／樂行童軍先修章', 'Golden Bauhinia / Chief Commissioner / Honours Scout Award emblem / Rover Scout preliminary badge'],
+  ['9', '樂行童軍獎章／貝登堡獎章', 'Rover Scout Award / Baden-Powell Award'],
+  ['10', '樂行童軍肩章', 'Rover Scout Epaulettes'],
+  ['11', '旅章', 'Group Badge'],
+  ['12', '區章', 'District Badge'],
+  ['13', '地域章', 'Region Badge'],
+  ['14', '世界童軍組織推出的獎章／積極公民獎章系列（最多佩戴合共四枚）', 'WOSM badges / Better World Framework (up to four in total)'],
+  ['15', '優異旅團章', 'Outstanding Group Badge'],
+  ['16', '香港青年獎勵計劃金／銀章', 'HKAYP Gold / Silver Award'],
+  ['17', '高級空勤員章', 'Senior Aircrew Badge'],
+  ['18', '舵手章', 'Helmsman Badge'],
+  ['19', '急救章', 'First Aid Badge'],
+  ['20', '童軍拯溺布章', 'Scout Life Saving Badge'],
+  ['21', '樂行童軍社區參與章', 'Rover Scout Community Service Badge'],
+  ['22', 'ATAS 標誌', 'ATAS emblem'],
+];
+
+function PlateNo({ n, x, y, to }) {
+  return (
+    <g>
+      {to && <line x1={x} y1={y} x2={to[0]} y2={to[1]} stroke="#8d8672" strokeWidth="0.6" />}
+      <circle cx={x} cy={y} r="7.6" fill="#fff" stroke="#4a4a4a" strokeWidth="0.9" />
+      <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="8.4" fill="#2a2a2a" fontFamily="Helvetica, Arial, sans-serif">
+        {n}
+      </text>
+    </g>
+  );
+}
+
+function UniformPlate() {
+  return (
+    <svg className="uniform__plate" viewBox="0 0 520 356" role="img" aria-label="樂行童軍制服及肩章參考圖">
+      {/* 上衣 */}
+      <path
+        d="M200 40 L320 40 L354 50 L366 112 L352 118 L352 214 L168 214 L168 118 L154 112 L166 50 Z"
+        fill="#f3ecd8"
+        stroke="#8a8266"
+        strokeWidth="1"
+      />
+      <path d="M228 40 L260 78 L292 40" fill="none" stroke="#8a8266" strokeWidth="1" />
+      <path d="M244 52 L260 78 L276 52 L268 44 L252 44 Z" fill="#e7dfc8" stroke="#8a8266" strokeWidth="0.8" />
+      <path d="M252 62 L268 62 L264 70 L272 96 L260 104 L248 96 L256 70 Z" fill="#2f5c3a" opacity="0.85" />
+      <circle cx="260" cy="60" r="4" fill="#3a3630" />
+      {/* 口袋 */}
+      <rect x="180" y="126" width="54" height="50" rx="2" fill="none" stroke="#8a8266" strokeWidth="0.9" />
+      <rect x="286" y="126" width="54" height="50" rx="2" fill="none" stroke="#8a8266" strokeWidth="0.9" />
+      <line x1="180" y1="136" x2="234" y2="136" stroke="#8a8266" strokeWidth="0.9" />
+      <line x1="286" y1="136" x2="340" y2="136" stroke="#8a8266" strokeWidth="0.9" />
+      {/* 胸前徽章示意 */}
+      <circle cx="214" cy="96" r="6" fill="#b8352f" />
+      <rect x="300" y="88" width="26" height="8" rx="1" fill="#2f5c3a" />
+      <circle cx="207" cy="152" r="11" fill="#c0392b" opacity="0.85" />
+      <rect x="192" y="112" width="26" height="7" rx="1" fill="#2c3f8f" opacity="0.85" />
+      {/* 標示 */}
+      <PlateNo n="1" x="120" y="28" to={[257, 56]} />
+      <PlateNo n="2" x="104" y="66" to={[196, 88]} />
+      <PlateNo n="3" x="424" y="52" to={[326, 84]} />
+      <PlateNo n="4" x="100" y="100" to={[186, 112]} />
+      <PlateNo n="5" x="96" y="136" to={[182, 150]} />
+      <PlateNo n="6" x="104" y="172" to={[178, 176]} />
+      <PlateNo n="7" x="112" y="204" to={[176, 202]} />
+      <PlateNo n="8" x="424" y="96" to={[338, 122]} />
+      <PlateNo n="9" x="424" y="140" to={[344, 156]} />
+
+      {/* 肩章 */}
+      <text x="180" y="252" textAnchor="middle" fontSize="9" fill="#2a3040" fontFamily="sans-serif">右袖</text>
+      <text x="344" y="252" textAnchor="middle" fontSize="9" fill="#2a3040" fontFamily="sans-serif">左袖</text>
+      <path d="M116 262 h130 a6 6 0 0 1 6 6 v46 a6 6 0 0 1 -6 6 h-130 a6 6 0 0 1 -6 -6 v-46 a6 6 0 0 1 6 -6 Z" fill="#f3ecd8" stroke="#8a8266" strokeWidth="1" />
+      <path d="M280 262 h130 a6 6 0 0 1 6 6 v46 a6 6 0 0 1 -6 6 h-130 a6 6 0 0 1 -6 -6 v-46 a6 6 0 0 1 6 -6 Z" fill="#f3ecd8" stroke="#8a8266" strokeWidth="1" />
+      {/* 右袖 */}
+      <rect x="124" y="272" width="32" height="14" rx="2" fill="#1f3d6b" opacity="0.85" />
+      <rect x="162" y="272" width="30" height="14" rx="2" fill="#7b3f1d" opacity="0.85" />
+      <circle cx="130" cy="300" r="6" fill="#2b7fb8" />
+      <circle cx="148" cy="300" r="6" fill="#7b3f8f" />
+      <circle cx="166" cy="300" r="6" fill="#2f6f52" />
+      <circle cx="184" cy="300" r="6" fill="#5b3f8f" />
+      <rect x="124" y="308" width="80" height="8" rx="2" fill="#4aa3c7" opacity="0.8" />
+      <PlateNo n="10" x="180" y="240" to={[180, 262]} />
+      <PlateNo n="11" x="266" y="278" to={[246, 279]} />
+      <PlateNo n="12" x="266" y="296" to={[246, 296]} />
+      <PlateNo n="13" x="266" y="314" to={[246, 312]} />
+      <PlateNo n="14" x="112" y="316" to={[122, 312]} />
+      {/*
+      */}
+      {/* 左袖 */}
+      <rect x="298" y="270" width="22" height="22" rx="2" fill="#2c3f8f" opacity="0.85" />
+      <rect x="330" y="268" width="20" height="20" rx="2" fill="#1f5fa8" opacity="0.85" />
+      <rect x="298" y="298" width="20" height="20" rx="2" fill="#2f6f52" opacity="0.85" />
+      <rect x="326" y="296" width="26" height="18" rx="2" fill="#3b3f8f" opacity="0.85" />
+      <circle cx="368" cy="306" r="8" fill="#4b3f8f" opacity="0.85" />
+      <rect x="300" y="322" width="24" height="8" rx="2" fill="#6b3f8f" opacity="0.8" />
+      <PlateNo n="15" x="344" y="240" to={[344, 262]} />
+      <PlateNo n="16" x="404" y="272" to={[386, 278]} />
+      <PlateNo n="17" x="404" y="290" to={[378, 292]} />
+      <PlateNo n="18" x="404" y="306" to={[382, 306]} />
+      <PlateNo n="19" x="404" y="322" to={[370, 320]} />
+      <PlateNo n="20" x="272" y="336" to={[288, 326]} />
+      <PlateNo n="21" x="446" y="326" to={[330, 326]} />
+      <PlateNo n="22" x="446" y="344" to={[338, 330]} />
+    </svg>
+  );
+}
+
 export function Uniform() {
   const { isEn } = useLang();
   return (
     <Page id="uniform" className="p-uniform">
       <H en="ROVER SCOUT UNIFORM">樂行童軍制服</H>
-      <div className="uniform">
-        <div className="uniform__art" aria-hidden="true">
-          <Crest size={92} />
-          <span>{isEn ? 'Uniform illustration: paper edition page 41' : '制服圖見紙本第 41 頁'}</span>
-        </div>
-        <div className="uniform__text">
-          <P en="Refer to the Rover Scout uniform requirements in the current Association handbook. The uniform page of the printed record book is a reference plate.">
-            樂行童軍制服式樣、徽章佩戴位置及旅巾，以香港童軍總會現行制服指引為準；紙本紀錄冊第 41 頁為參考圖版。
-          </P>
-          <Area label="備註 Notes" path="pages.uniform.notes" rows={4} placeholder="例如：旅巾、徽章位置、制服更新日期…" />
-        </div>
+      <UniformPlate />
+      <div className="uniform__legend">
+        {UNIFORM_LEGEND.map(([n, zh, en]) => (
+          <p key={n} className="uniform__item">
+            <span className="uniform__no">{n}</span>
+            {isEn ? en : zh}
+          </p>
+        ))}
       </div>
     </Page>
   );
 }
 
-/* ------------------------------------------------------------------ 筆記 */
+/* -------------------------------------------------------------- 空白頁 42／43 */
 
 export function Notes({ id }) {
   return (
     <Page id={id} className="p-notes">
-      <H en="NOTES">筆記</H>
-      <Area label="自由書寫" en="Free notes" path={`pages.${id}.body`} rows={14} placeholder="任何想記下的事…" />
+      <div className="blankpage" aria-hidden="true" />
     </Page>
   );
 }
