@@ -2,14 +2,22 @@ import React, { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
 import { Link, navigate } from '../router.jsx';
 import { Crest, Icon } from '../ui.jsx';
-import { TRANSFER_OPTIONS, decodeTransfer } from '@shared/transfer.js';
+import SignoffPanel from '../components/SignoffPanel.jsx';
+import { KIND_SIGNOFF, TRANSFER_OPTIONS, decodePayload } from '@shared/transfer.js';
 import { SnapshotView } from './SharedBook.jsx';
 
 const SCAN_KEY = 'roverbook.scan.v1';
+const SIGNOFF_KEY = 'roverbook.signoff.v1';
 
-const saveScan = (payload) => {
+const routePayload = (payload) => {
   try {
-    window.sessionStorage.setItem(SCAN_KEY, JSON.stringify(payload));
+    if (payload.t === KIND_SIGNOFF) {
+      window.sessionStorage.setItem(SIGNOFF_KEY, JSON.stringify(payload));
+      navigate('/scan/signoff');
+    } else {
+      window.sessionStorage.setItem(SCAN_KEY, JSON.stringify(payload));
+      navigate('/scan/view');
+    }
   } catch {
     /* private mode */
   }
@@ -47,11 +55,10 @@ export default function Scan() {
 
     const accept = async (raw) => {
       try {
-        const payload = await decodeTransfer(raw);
-        saveScan(payload);
+        const payload = await decodePayload(raw);
+        routePayload(payload);
         stop();
         setStatus('done');
-        navigate('/scan/view');
       } catch (e) {
         setError(e.message || '未能讀取這個二維碼');
         setStatus('error');
@@ -211,9 +218,8 @@ export default function Scan() {
             className="btn btn--primary"
             onClick={async () => {
               try {
-                const payload = await decodeTransfer(manual);
-                saveScan(payload);
-                navigate('/scan/view');
+                const payload = await decodePayload(manual);
+                routePayload(payload);
               } catch (e) {
                 setError(e.message || '未能讀取內容');
               }
@@ -322,6 +328,8 @@ export function ScanView() {
           </dl>
         </section>
       )}
+
+      <SignoffPanel payload={payload} />
 
       <SnapshotView
         snapshot={snapshot}

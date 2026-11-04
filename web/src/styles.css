@@ -7510,3 +7510,269 @@ body.preview-print .formdoc {
     font-size: 18px;
   }
 }
+
+/* ============================================================ 領袖核簽 v8 */
+
+.signpanel {
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--gold);
+  background: #fffdf7;
+  border-radius: 4px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.signpanel h2 {
+  font-family: var(--serif);
+  font-size: 17px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+}
+
+.signpanel__hint {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.signpanel__leader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signpanel__sig {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  border: 1px solid var(--rule);
+  background: #fff;
+  padding: 8px 10px;
+  border-radius: 3px;
+}
+
+.signpanel__sig img {
+  height: 42px;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+.signpanel__sig span {
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.signpanel__list {
+  border-top: 1px dashed var(--rule);
+  padding-top: 8px;
+}
+
+.signpanel__listhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.signpanel__listhead span {
+  margin-right: auto;
+}
+
+.signpanel__list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.signpanel__list li {
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 4px 6px;
+}
+
+.signpanel__list li.is-on {
+  background: #eef2e9;
+  border-color: #d8e1cf;
+}
+
+.signpanel__list label {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.signpanel__list input {
+  margin-top: 3px;
+  accent-color: var(--navy);
+}
+
+.signpanel__item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-family: var(--sans);
+}
+
+.signpanel__item strong {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.signpanel__item em {
+  font-style: normal;
+  font-size: 10px;
+  color: var(--ink-soft);
+}
+
+.signpanel__code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px dashed var(--rule);
+  padding-top: 12px;
+}
+
+.signpanel__withsig {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.signpanel .qrpanel__warn {
+  font-size: 11px;
+}
+
+/* 成員接收核簽 */
+.signoffsig {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  padding: 8px 10px;
+  border-radius: 3px;
+}
+
+.signoffsig img {
+  height: 40px;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+.signoffsig span {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  color: var(--ink-soft);
+}
+
+.signofflist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.signofflist li {
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: #fff;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.signofflist li.is-conflict {
+  border-color: #e6c7a8;
+  background: #fdf6ee;
+}
+
+.signofflist strong {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.signofflist__dates {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  color: var(--ink-soft);
+  flex-wrap: wrap;
+}
+
+.signofflist__dates b {
+  color: #2f6f56;
+  font-weight: 600;
+}
+
+.signofflist small {
+  font-family: var(--sans);
+  font-size: 10px;
+  color: #8a5a12;
+}
+
+.signoffactions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.signoffdone {
+  border: 1px solid var(--rule);
+  background: #f4f8f2;
+  border-radius: 4px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink);
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .signpanel {
+    padding: 12px;
+  }
+
+  .signpanel__list ul {
+    max-height: 220px;
+  }
+
+  .signpanel__item strong {
+    font-size: 12.5px;
+  }
+}

@@ -11,7 +11,14 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { demoBook, buildSnapshot, DEFAULT_SHARE, SECTIONS, PAGE_TOTAL } from '../shared/book.js';
-import { encodeTransfer, decodeTransfer, QR_LIMIT } from '../shared/transfer.js';
+import {
+  encodeTransfer,
+  decodeTransfer,
+  encodeSignoff,
+  decodePayload,
+  applySignoff,
+  QR_LIMIT,
+} from '../shared/transfer.js';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const BASE = process.env.BASE || 'http://127.0.0.1:3001';
@@ -299,6 +306,111 @@ await screen({
     html.includes('出示二維碼') && html.includes('qrpanel__code') && html.includes('<svg'),
     '成員出示二維碼：逐項剔選後即時產生 QR',
   );
+}
+
+// 領袖核簽單
+{
+  const book = demoBook();
+  const items = Object.entries(book.progress)
+    .filter(([, v]) => v.date)
+    .slice(0, 6)
+    .map(([id, v]) => ({ id, date: v.date }));
+  const signoff = await encodeSignoff({
+    member: book.member,
+    leader: { name: '馬啟明', title: '樂行童軍團長', at: '2026-11-04', png: book.endorsement.png },
+    items,
+  });
+  report(
+    signoff.chars < QR_LIMIT,
+    '核簽單：一張簽名＋項目清單放得入一隻 QR',
+    `${signoff.chars} 字元 / ${items.length} 項`,
+  );
+
+  const decoded = await decodePayload(signoff.value);
+  report(
+    decoded.t === 'roverbook/signoff' && decoded.items.length === items.length && !!decoded.leader.png,
+    '核簽單：可解碼，含簽名及項目',
+  );
+
+  const target = demoBook();
+  delete target.progress['L1-ACT-01'].assessor;
+  const { book: merged, changes } = applySignoff(target, decoded);
+  report(
+    changes.length === items.length &&
+      merged.progress['L1-ACT-01'].assessor === '馬啟明' &&
+      !!merged.progress['L1-ACT-01'].signature,
+    '核簽單：寫入紀錄冊後有審核員及簽名',
+  );
+  report(
+    merged.progress['L3-LEADER-01'].signature?.name === '馬啟明',
+    '核簽單：只改有核簽的項目',
+  );
+}
+
+await screen({
+  name: '未收到核簽單',
+  path: '/scan/signoff',
+  expect: ['未收到核簽單', '去掃描'],
+  wait: 420,
+});
+
+{
+  reset();
+  const book = demoBook();
+  delete book.progress['L1-ACT-01'].assessor;
+  seed(book);
+  const items = [{ id: 'L1-ACT-01', date: '2024-10-05' }];
+  const signoff = await encodeSignoff({
+    member: book.member,
+    leader: { name: '馬啟明', title: '樂行童軍團長', at: '2026-11-04', png: book.endorsement.png },
+    items,
+  });
+  window.sessionStorage.clear();
+  window.sessionStorage.setItem('roverbook.signoff.v1', JSON.stringify(signoff.payload));
+  const html = await renderPath('/scan/signoff', {
+    wait: 520,
+    interact: async (doc) => {
+      const btn = [...doc.querySelectorAll('button')].find((b) =>
+        b.textContent.includes('寫入我的紀錄冊'),
+      );
+      if (!btn) throw new Error('找不到寫入按鈕');
+      btn.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 700));
+    },
+  });
+  const storedBook = JSON.parse(localStorage.getItem('roverbook.book.v3'));
+  report(
+    html.includes('已寫入') && storedBook.progress['L1-ACT-01'].assessor === '馬啟明',
+    '成員端：掃入核簽單後寫入紀錄冊',
+  );
+  window.sessionStorage.clear();
+}
+
+{
+  reset();
+  seed(demoBook());
+  const memberPayload = (await encodeTransfer(demoBook(), ['particulars', 'progress'])).payload;
+  window.sessionStorage.setItem('roverbook.scan.v1', JSON.stringify(memberPayload));
+  const html = await renderPath('/scan/view', {
+    wait: 560,
+    interact: async (doc) => {
+      const btn = [...doc.querySelectorAll('button')].find((b) =>
+        b.textContent.includes('以領袖身分簽名'),
+      );
+      if (!btn) throw new Error('找不到核簽按鈕');
+      btn.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 350));
+      if (!doc.querySelector('.modal--sign')) throw new Error('簽名板沒有打開');
+      const close = doc.querySelector('.modal__head .icon-btn');
+      close?.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 200));
+    },
+  });
+  report(
+    html.includes('領袖核簽') && html.includes('待核簽'),
+    '領袖檢視：顯示核簽面板及待簽項目',
+  );
+  window.sessionStorage.clear();
 }
 
 // ---------------------------------------------------------------- 2b. 官方表格
