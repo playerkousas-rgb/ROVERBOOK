@@ -13,6 +13,7 @@ import {
   importFromRoverBadge,
 } from '@shared/book.js';
 import { FORM_META, FORM_ORDER, formStatus } from '@shared/forms.js';
+import { ShowQrButton } from '../components/ShowQrDialog.jsx';
 
 export default function Appendix() {
   const { book, update, replace } = useBook();
@@ -153,6 +154,9 @@ export default function Appendix() {
               ) : (
                 <p className="tiny">尚未建立分享。用右上角「分享」即可產生二維碼及連結。</p>
               )}
+              <div className="aside-actions">
+                <ShowQrButton label="出示二維碼（給領袖掃描）" className="btn btn--ghost btn--sm" />
+              </div>
             </div>
 
             <div className="appendix-card">

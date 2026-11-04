@@ -11,6 +11,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { demoBook, buildSnapshot, DEFAULT_SHARE, SECTIONS, PAGE_TOTAL } from '../shared/book.js';
+import { encodeTransfer, decodeTransfer, QR_LIMIT } from '../shared/transfer.js';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const BASE = process.env.BASE || 'http://127.0.0.1:3001';
@@ -201,6 +202,103 @@ for (const section of SECTIONS) {
   const expect = [PAGE_TEXT[section.id]];
   if (typeof section.page === 'number') expect.push(`第 ${section.page} 頁`, `${section.page} / 41`);
   await screen({ name: '頁面', path: `/p/${section.id}`, expect, wait: 340 });
+}
+
+// ---------------------------------------------------------------- 2a. 二維碼傳送
+
+const qrSample = await encodeTransfer(demoBook(), ['particulars', 'progress', 'summaries']);
+report(
+  qrSample.chars < QR_LIMIT && qrSample.compressed,
+  'QR：資料可壓縮至一隻二維碼',
+  `${qrSample.chars} 字元（上限 ${QR_LIMIT}）`,
+);
+const qrBack = await decodeTransfer(qrSample.value);
+report(
+  qrBack.member?.nameZh === '林卓瑤' && Object.keys(qrBack.progress || {}).length > 10,
+  'QR：內容可解碼還原',
+  `${Object.keys(qrBack.progress || {}).length} 項進度`,
+);
+const qrEmpty = await encodeTransfer(demoBook(), []);
+report(
+  !qrEmpty.payload.member && !qrEmpty.payload.contact && !qrEmpty.payload.progress,
+  'QR：預設不傳任何個人資料',
+);
+const qrAll = await encodeTransfer(
+  demoBook(),
+  ['particulars', 'progress', 'summaries', 'signatures', 'holderSignature', 'photo'],
+);
+report(qrAll.tooBig, 'QR：超出容量會標示 tooBig', `${qrAll.chars} 字元`);
+
+await screen({
+  name: '領袖掃描頁',
+  path: '/scan',
+  expect: ['掃描成員的紀錄冊', '貼上二維碼內容'],
+  wait: 520,
+});
+
+await screen({
+  name: '未收到紀錄冊',
+  path: '/scan/view',
+  expect: ['未收到紀錄冊', '去掃描'],
+  wait: 420,
+});
+
+{
+  reset();
+  seed(demoBook());
+  const html = await renderPath('/scan', {
+    wait: 520,
+    interact: async (doc) => {
+      const manualBtn = [...doc.querySelectorAll('button')].find((b) =>
+        b.textContent.includes('貼上二維碼內容'),
+      );
+      if (!manualBtn) throw new Error('找不到貼上按鈕');
+      manualBtn.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 220));
+      const area = doc.querySelector('.scanmanual textarea');
+      if (!area) throw new Error('找不到貼上欄');
+      Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set.call(
+        area,
+        qrSample.value,
+      );
+      area.dispatchEvent(new window.Event('input', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 200));
+      const read = [...doc.querySelectorAll('button')].find((b) => b.textContent.trim() === '讀取');
+      if (!read) throw new Error('找不到讀取按鈕');
+      read.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 900));
+    },
+  });
+  report(
+    html.includes('二維碼接收') && html.includes('林卓瑤'),
+    '掃描（貼上內容）→ 讀到成員的紀錄冊',
+  );
+}
+
+{
+  reset();
+  seed(demoBook());
+  const html = await renderPath('/p/particulars-1', {
+    wait: 520,
+    interact: async (doc) => {
+      const menu = doc.querySelector('button[aria-label="更多"]');
+      if (!menu) throw new Error('找不到選單');
+      menu.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 260));
+      const item = [...doc.querySelectorAll('button')].find((b) => b.textContent.includes('出示二維碼'));
+      if (!item) throw new Error('找不到出示二維碼');
+      item.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 300));
+      const box = doc.querySelector('.qropt input');
+      if (!box) throw new Error('找不到揀選項目');
+      box.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 700));
+    },
+  });
+  report(
+    html.includes('出示二維碼') && html.includes('qrpanel__code') && html.includes('<svg'),
+    '成員出示二維碼：逐項剔選後即時產生 QR',
+  );
 }
 
 // ---------------------------------------------------------------- 2b. 官方表格
