@@ -287,7 +287,7 @@ export function Renewals({ part = 0 }) {
   const { isEn } = useLang();
   const list = book.renewals || [];
   const id = part === 0 ? 'renewals-1' : 'renewals-2';
-  const start = part * 4;
+  const start = part * 5;
 
   const setRow = (index, key, value) => {
     update((b) => {
@@ -307,7 +307,7 @@ export function Renewals({ part = 0 }) {
           <Bilingual zh="有效日期至" en="Valid Until" />
           <Bilingual zh="旅印及簽署" en="Group Chop and Signature" />
         </div>
-        {Array.from({ length: 4 }).map((_, i) => {
+        {Array.from({ length: 5 }).map((_, i) => {
           const index = start + i;
           const row = list[index] || {};
           return (
@@ -348,7 +348,7 @@ export function ServiceAwards() {
       <H en="SERVICE RECORD">服務紀錄</H>
       <Rows
         path="service"
-        min={6}
+        min={7}
         addLabel={null}
         cols={[
           { k: 'post', label: '崗位／職位', en: 'Post / Title', width: 1.6 },
@@ -364,7 +364,7 @@ export function ServiceAwards() {
       <Bilingual as="h4" className="pgh pgh--tight" zh="獎章及獎勵記錄" en="RECORD OF AWARD AND COMMENDATION" />
       <Rows
         path="awards"
-        min={6}
+        min={3}
         addLabel={null}
         cols={[
           { k: 'name', label: '獎章／獎勵名稱', en: 'Name of Award' },
@@ -450,7 +450,7 @@ export function BadgeTable({ id, title, en, path }) {
       <H en={en}>{title}</H>
       <Rows
         path={path}
-        min={9}
+        min={11}
         addLabel={null}
         cols={[
           { k: 'name', label: '獎章', en: 'Badges', width: 2 },
@@ -471,7 +471,7 @@ export function Experience({ id, title, en, path, lead, leadEn }) {
       <P en={leadEn}>{lead}</P>
       <Rows
         path={path}
-        min={10}
+        min={11}
         addLabel={null}
         cols={[
           { k: 'period', label: '時段', en: 'Period', width: 1.1 },
@@ -485,22 +485,130 @@ export function Experience({ id, title, en, path, lead, leadEn }) {
 
 /* ---------------------------------------------------------------- 制服頁 */
 
+const UNIFORM_LEGEND = [
+  ['1', '黑色皮製巾圈（附有童軍徽號）／基維爾巾圈', 'Black leather woggle (with Scout emblem) / Gilwell woggle'],
+  ['2', '香港章', 'Hong Kong Badge'],
+  ['3', '飛行章／跳傘章', 'Air Activity Badge / Parachutist Badge'],
+  ['4', '服務年星', 'Service Star'],
+  ['5', '會員章／和平使者章（結合世界童軍會員章）', 'Membership Badge / Messenger of Peace Badge (with WOSM Membership Badge)'],
+  ['6', '宗教章／公教章', 'Religious Badge / Catholic Badge'],
+  ['7', '紀念章', 'Commemorative Badge'],
+  ['8', '金紫荊／總領袖／榮譽童軍獎章標誌／樂行童軍先修章', 'Golden Bauhinia / Chief Commissioner / Honours Scout Award emblem / Rover Scout preliminary badge'],
+  ['9', '樂行童軍獎章／貝登堡獎章', 'Rover Scout Award / Baden-Powell Award'],
+  ['10', '樂行童軍肩章', 'Rover Scout Epaulettes'],
+  ['11', '旅章', 'Group Badge'],
+  ['12', '區章', 'District Badge'],
+  ['13', '地域章', 'Region Badge'],
+  ['14', '世界童軍組織推出的獎章／積極公民獎章系列（最多佩戴合共四枚）', 'WOSM badges / Better World Framework (up to four in total)'],
+  ['15', '優異旅團章', 'Outstanding Group Badge'],
+  ['16', '香港青年獎勵計劃金／銀章', 'HKAYP Gold / Silver Award'],
+  ['17', '高級空勤員章', 'Senior Aircrew Badge'],
+  ['18', '舵手章', 'Helmsman Badge'],
+  ['19', '急救章', 'First Aid Badge'],
+  ['20', '童軍拯溺布章', 'Scout Life Saving Badge'],
+  ['21', '樂行童軍社區參與章', 'Rover Scout Community Service Badge'],
+  ['22', 'ATAS 標誌', 'ATAS emblem'],
+];
+
+function PlateNo({ n, x, y, to }) {
+  return (
+    <g>
+      {to && <line x1={x} y1={y} x2={to[0]} y2={to[1]} stroke="#8d8672" strokeWidth="0.6" />}
+      <circle cx={x} cy={y} r="7.6" fill="#fff" stroke="#4a4a4a" strokeWidth="0.9" />
+      <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="8.4" fill="#2a2a2a" fontFamily="Helvetica, Arial, sans-serif">
+        {n}
+      </text>
+    </g>
+  );
+}
+
+function UniformPlate() {
+  return (
+    <svg className="uniform__plate" viewBox="0 0 520 356" role="img" aria-label="樂行童軍制服及肩章參考圖">
+      {/* 上衣 */}
+      <path
+        d="M200 40 L320 40 L354 50 L366 112 L352 118 L352 214 L168 214 L168 118 L154 112 L166 50 Z"
+        fill="#f3ecd8"
+        stroke="#8a8266"
+        strokeWidth="1"
+      />
+      <path d="M228 40 L260 78 L292 40" fill="none" stroke="#8a8266" strokeWidth="1" />
+      <path d="M244 52 L260 78 L276 52 L268 44 L252 44 Z" fill="#e7dfc8" stroke="#8a8266" strokeWidth="0.8" />
+      <path d="M252 62 L268 62 L264 70 L272 96 L260 104 L248 96 L256 70 Z" fill="#2f5c3a" opacity="0.85" />
+      <circle cx="260" cy="60" r="4" fill="#3a3630" />
+      {/* 口袋 */}
+      <rect x="180" y="126" width="54" height="50" rx="2" fill="none" stroke="#8a8266" strokeWidth="0.9" />
+      <rect x="286" y="126" width="54" height="50" rx="2" fill="none" stroke="#8a8266" strokeWidth="0.9" />
+      <line x1="180" y1="136" x2="234" y2="136" stroke="#8a8266" strokeWidth="0.9" />
+      <line x1="286" y1="136" x2="340" y2="136" stroke="#8a8266" strokeWidth="0.9" />
+      {/* 胸前徽章示意 */}
+      <circle cx="214" cy="96" r="6" fill="#b8352f" />
+      <rect x="300" y="88" width="26" height="8" rx="1" fill="#2f5c3a" />
+      <circle cx="207" cy="152" r="11" fill="#c0392b" opacity="0.85" />
+      <rect x="192" y="112" width="26" height="7" rx="1" fill="#2c3f8f" opacity="0.85" />
+      {/* 標示 */}
+      <PlateNo n="1" x="120" y="28" to={[257, 56]} />
+      <PlateNo n="2" x="104" y="66" to={[196, 88]} />
+      <PlateNo n="3" x="424" y="52" to={[326, 84]} />
+      <PlateNo n="4" x="100" y="100" to={[186, 112]} />
+      <PlateNo n="5" x="96" y="136" to={[182, 150]} />
+      <PlateNo n="6" x="104" y="172" to={[178, 176]} />
+      <PlateNo n="7" x="112" y="204" to={[176, 202]} />
+      <PlateNo n="8" x="424" y="96" to={[338, 122]} />
+      <PlateNo n="9" x="424" y="140" to={[344, 156]} />
+
+      {/* 肩章 */}
+      <text x="180" y="252" textAnchor="middle" fontSize="9" fill="#2a3040" fontFamily="sans-serif">右袖</text>
+      <text x="344" y="252" textAnchor="middle" fontSize="9" fill="#2a3040" fontFamily="sans-serif">左袖</text>
+      <path d="M116 262 h130 a6 6 0 0 1 6 6 v46 a6 6 0 0 1 -6 6 h-130 a6 6 0 0 1 -6 -6 v-46 a6 6 0 0 1 6 -6 Z" fill="#f3ecd8" stroke="#8a8266" strokeWidth="1" />
+      <path d="M280 262 h130 a6 6 0 0 1 6 6 v46 a6 6 0 0 1 -6 6 h-130 a6 6 0 0 1 -6 -6 v-46 a6 6 0 0 1 6 -6 Z" fill="#f3ecd8" stroke="#8a8266" strokeWidth="1" />
+      {/* 右袖 */}
+      <rect x="124" y="272" width="32" height="14" rx="2" fill="#1f3d6b" opacity="0.85" />
+      <rect x="162" y="272" width="30" height="14" rx="2" fill="#7b3f1d" opacity="0.85" />
+      <circle cx="130" cy="300" r="6" fill="#2b7fb8" />
+      <circle cx="148" cy="300" r="6" fill="#7b3f8f" />
+      <circle cx="166" cy="300" r="6" fill="#2f6f52" />
+      <circle cx="184" cy="300" r="6" fill="#5b3f8f" />
+      <rect x="124" y="308" width="80" height="8" rx="2" fill="#4aa3c7" opacity="0.8" />
+      <PlateNo n="10" x="180" y="240" to={[180, 262]} />
+      <PlateNo n="11" x="266" y="278" to={[246, 279]} />
+      <PlateNo n="12" x="266" y="296" to={[246, 296]} />
+      <PlateNo n="13" x="266" y="314" to={[246, 312]} />
+      <PlateNo n="14" x="112" y="316" to={[122, 312]} />
+      {/*
+      */}
+      {/* 左袖 */}
+      <rect x="298" y="270" width="22" height="22" rx="2" fill="#2c3f8f" opacity="0.85" />
+      <rect x="330" y="268" width="20" height="20" rx="2" fill="#1f5fa8" opacity="0.85" />
+      <rect x="298" y="298" width="20" height="20" rx="2" fill="#2f6f52" opacity="0.85" />
+      <rect x="326" y="296" width="26" height="18" rx="2" fill="#3b3f8f" opacity="0.85" />
+      <circle cx="368" cy="306" r="8" fill="#4b3f8f" opacity="0.85" />
+      <rect x="300" y="322" width="24" height="8" rx="2" fill="#6b3f8f" opacity="0.8" />
+      <PlateNo n="15" x="344" y="240" to={[344, 262]} />
+      <PlateNo n="16" x="404" y="272" to={[386, 278]} />
+      <PlateNo n="17" x="404" y="290" to={[378, 292]} />
+      <PlateNo n="18" x="404" y="306" to={[382, 306]} />
+      <PlateNo n="19" x="404" y="322" to={[370, 320]} />
+      <PlateNo n="20" x="272" y="336" to={[288, 326]} />
+      <PlateNo n="21" x="446" y="326" to={[330, 326]} />
+      <PlateNo n="22" x="446" y="344" to={[338, 330]} />
+    </svg>
+  );
+}
+
 export function Uniform() {
   const { isEn } = useLang();
   return (
     <Page id="uniform" className="p-uniform">
       <H en="ROVER SCOUT UNIFORM">樂行童軍制服</H>
-      <div className="uniform">
-        <div className="uniform__art" aria-hidden="true">
-          <Crest size={92} />
-          <span>{isEn ? 'Uniform illustration: paper edition page 41' : '制服圖見紙本第 41 頁'}</span>
-        </div>
-        <div className="uniform__text">
-          <P en="Refer to the Rover Scout uniform requirements in the current Association handbook. The uniform page of the printed record book is a reference plate.">
-            樂行童軍制服式樣、徽章佩戴位置及旅巾，以香港童軍總會現行制服指引為準；紙本紀錄冊第 41 頁為參考圖版。
-          </P>
-          <Area label="備註 Notes" path="pages.uniform.notes" rows={4} placeholder="例如：旅巾、徽章位置、制服更新日期…" />
-        </div>
+      <UniformPlate />
+      <div className="uniform__legend">
+        {UNIFORM_LEGEND.map(([n, zh, en]) => (
+          <p key={n} className="uniform__item">
+            <span className="uniform__no">{n}</span>
+            {isEn ? en : zh}
+          </p>
+        ))}
       </div>
     </Page>
   );

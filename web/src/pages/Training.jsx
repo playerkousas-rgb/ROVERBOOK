@@ -32,22 +32,19 @@ export function MbIntro() {
   return (
     <Page id="mb-intro" className="p-intro">
       <H en="Membership Badge">會員章</H>
+      <div className="awardart awardart--one">
+        <AwardArt tone="purple" label="Membership Badge" />
+      </div>
+      <p className="awardart__cap">
+        會員章
+        <em>Membership Badge</em>
+      </p>
       <P en="Membership Badge is the initial stage of the progressive training in the Rover Scout Section. It aims to help new members to know the Scout Movement and the Rover Scout Section, to understand and to accept the Scout Promise and Scout Law.">
         會員章是樂行童軍支部有進度性訓練的初階，旨在讓新加入的成員透過參與團活動去認識童軍運動及樂行童軍支部，明瞭及接納童軍誓詞和規律。
       </P>
       <P en="The Management Committee is responsible for the arrangement of training and assessments. The badge has to be approved and presented by the Rover Scout Leader upon recommendation by the Chairperson of the Management Committee.">
         此章是由管理委員會安排訓練及考核，管理委員會主席推薦，經由團長批核和頒發。
       </P>
-      <div className="introstats">
-        <ItemLine label="參與最少三次團活動" en="Take part in the crew activities at least 3 times" ids={['L1-ACT-01']} />
-        <ItemLine label="理解：國旗、國徽、區旗、區徽、國歌及童軍運動" en="Understanding" ids={['L1-UND-01', 'L1-UND-02', 'L1-UND-03', 'L1-UND-04']} />
-        <ItemLine label="禮節：儀式、升旗、步操" en="Ceremonial" ids={['L1-ETQ-01', 'L1-ETQ-02', 'L1-ETQ-03', 'L1-ETQ-04', 'L1-ETQ-05', 'L1-ETQ-06']} />
-        <ItemLine label="許諾：誓詞及規律" en="Commitment" ids={['L1-PRM-01']} />
-        <ItemLine label="保護童軍成員免受傷害課程" en="Safe From Harm" ids={['L1-CP-01']} />
-      </div>
-      <Note en="This chapter is arranged, assessed and recommended by the Management Committee, then approved and presented by the Rover Scout Leader.">
-        填好細項後，請到第 17 頁填寫頒發紀錄，並由管理委員會主席及團長簽署。
-      </Note>
     </Page>
   );
 }
@@ -81,26 +78,24 @@ export function MbUnderstanding() {
   return (
     <Page id="mb-understanding" className="p-items">
       <H no="(2)" en="Understanding" progress={['L1-UND-01', 'L1-UND-02', 'L1-UND-03', 'L1-UND-04']}>理解</H>
-      <div className="itemhead">
+      <div className="itemhead itemhead--3">
         <Bilingual zh="項目" en="Items" />
-        <span />
         <Bilingual zh="審核員" en="Assessor" />
         <Bilingual zh="日期" en="Date" />
       </div>
-      <ItemLine label="(2.1) 對國旗、國徽、區旗、區徽和國歌的認識" en="Understand the National Flag and Emblem, Regional Flag and Emblem, and National Anthem" ids={['L1-UND-01', 'L1-UND-02', 'L1-UND-03']} />
-      <ItemLine label="(2.2) 對香港及世界童軍運動有普遍的認識" en="Understand Hong Kong and World Scout Movement" ids={['L1-UND-04']} />
+      <ProgressRow label="(2.1) 對國旗、國徽、區旗、區徽和國歌的認識" en="Understand the National Flag and Emblem, Regional Flag and Emblem, and National Anthem" ids={['L1-UND-01', 'L1-UND-02', 'L1-UND-03']} cert={false} />
+      <ProgressRow label="(2.2) 對香港及世界童軍運動有普遍的認識" en="Understand Hong Kong and World Scout Movement" ids={['L1-UND-04']} cert={false} />
 
       <H no="(3)" en="Ceremonial" progress={['L1-ETQ-01', 'L1-ETQ-02', 'L1-ETQ-03', 'L1-ETQ-04', 'L1-ETQ-05', 'L1-ETQ-06']}>禮節</H>
-      <div className="itemhead">
+      <div className="itemhead itemhead--3">
         <Bilingual zh="項目" en="Items" />
-        <span />
         <Bilingual zh="審核員" en="Assessor" />
         <Bilingual zh="日期" en="Date" />
       </div>
-      <ItemLine label="(3.1) 認識在國歌奏唱和升掛國旗、區旗時應有之禮儀" en="Know the rite to the National Flag and Emblem, Regional Flag and Emblem, and National Anthem" ids={['L1-ETQ-01']} />
-      <ItemLine label="(3.2) 認識升掛國旗、區旗及展示國徽、區徽時之注意事項及使用限制" en="Know the regulations for the use and display of the flags and emblems" ids={['L1-ETQ-01']} />
-      <ItemLine label="(3.3) 示範國旗和區旗的升掛方法" en="Demonstrate how to raise the National Flag and the Regional Flag" ids={['L1-ETQ-02']} />
-      <ItemLine label="(3.4) 認識童軍禮節及步操" en="Know the basic foot drill and ceremonial" ids={['L1-ETQ-03', 'L1-ETQ-04', 'L1-ETQ-05', 'L1-ETQ-06']} />
+      <ProgressRow label="(3.1) 認識在國歌奏唱和升掛國旗、區旗時應有之禮儀" en="Know the rite to the National Flag and Emblem, Regional Flag and Emblem, and National Anthem" ids={['L1-ETQ-01']} cert={false} />
+      <ProgressRow label="(3.2) 認識升掛國旗、區旗及展示國徽、區徽時之注意事項及使用限制" en="Know the regulations for the use and display of the flags and emblems" ids={['L1-ETQ-01']} cert={false} />
+      <ProgressRow label="(3.3) 示範國旗和區旗的升掛方法" en="Demonstrate how to raise the National Flag and the Regional Flag" ids={['L1-ETQ-02']} cert={false} />
+      <ProgressRow label="(3.4) 認識童軍禮節及步操" en="Know the basic foot drill and ceremonial" ids={['L1-ETQ-03', 'L1-ETQ-04', 'L1-ETQ-05', 'L1-ETQ-06']} cert={false} />
     </Page>
   );
 }
@@ -160,8 +155,13 @@ export function EpIntro() {
       </P>
 
       <Bilingual as="p" className="pglead" zh="內容：完成下列 (1) 或 (2) 項" en="Complete either (1) OR (2)" />
-      <ItemLine label="(1) 完成樂行童軍啟導班" en="Complete a Rover Scout Introductory Course" ids={['L2-INTRO-01']} />
-      <ItemLine label="(2) 完成同等項目" en="Complete the equivalent items" ids={['L2-INTRO-01']} />
+      <div className="itemhead itemhead--3">
+        <Bilingual zh="項目" en="Items" />
+        <Bilingual zh="審核員" en="Assessor" />
+        <Bilingual zh="日期" en="Date" />
+      </div>
+      <ProgressRow label="(1) 完成樂行童軍啟導班" en="Complete a Rover Scout Introductory Course" ids={['L2-INTRO-01']} cert={false} />
+      <ProgressRow label="(2) 完成同等項目" en="Complete the equivalent items" ids={['L2-INTRO-01']} cert={false} />
 
       <div className="sigspace">
         <Sig path="pages.ep-intro.chair" title="管理委員會主席" label="管理委員會主席簽署 Signature of MC Chairperson" />
@@ -194,10 +194,38 @@ export function EpPresented() {
 
 /* --------------------------------------------------------- 20–21 獎章簡介 */
 
+export function AwardArt({ tone = 'green', label = 'RSA' }) {
+  const palette = {
+    red: ['#8f2f2a', '#a8342d'],
+    purple: ['#4b2c83', '#5d3a9b'],
+    green: ['#2f5c3a', '#3a6b47'],
+  };
+  const [ring, face] = palette[tone] || palette.green;
+  return (
+    <svg className="awardart__svg" viewBox="0 0 96 96" role="img" aria-label={label}>
+      <circle cx="48" cy="48" r="45" fill={face} />
+      <circle cx="48" cy="48" r="45" fill="none" stroke={ring} strokeWidth="3" />
+      <circle cx="48" cy="48" r="35" fill="none" stroke="#f0e3c2" strokeWidth="1.4" opacity="0.85" />
+      <path d="M48 24c6 8 13 11 13 19 0 6.4-6 10.8-13 10.8S35 49.4 35 43c0-8 7-11 13-19Z" fill="#f0e3c2" opacity="0.92" />
+      <path d="M34 68h28M38 74h20" stroke="#f0e3c2" strokeWidth="2.2" strokeLinecap="round" />
+      <text x="48" y="19" textAnchor="middle" fontSize="10" letterSpacing="1.6" fill="#f0e3c2" fontFamily="serif">ROVER</text>
+      <text x="48" y="88" textAnchor="middle" fontSize="8.4" letterSpacing="1.6" fill="#f0e3c2" fontFamily="serif">SCOUTS</text>
+    </svg>
+  );
+}
+
+
 export function RsaIntro() {
   return (
     <Page id="rsa-intro" className="p-intro">
-      <H en="Rover Scout Award and Baden-Powell Award">樂行童軍獎章及貝登堡獎章</H>
+      <div className="awardart">
+        <AwardArt tone="green" label="RSA" />
+        <AwardArt tone="red" label="BPA" />
+      </div>
+      <p className="awardart__cap">
+        樂行童軍獎章及貝登堡獎章
+        <em>Rover Scout Award and Baden-Powell Award</em>
+      </p>
       <Bilingual as="h4" className="pgh" zh="簡介" en="Introduction" />
       <P en="The assessments of the two awards comprise seven components including “Dedication”, “Scoutcraft”, “Volunteerism”, “Global Vision”, “Tenacity”, “Mental and Physical Wellness”, and “Intrepidity”. Rover Scouts can carry out the assessments simultaneously. Rover Scout Award will be awarded when the member completed four components, while Baden-Powell Award will be awarded when the member completed all the components.">
         兩項獎章的考驗由 7 個項目組成，分別為「準領袖培訓」、「童軍技能」、「服務」、「國際視野」、「興趣及技能」、「身心健康」及「挑戰」。樂行童軍可同時進行這 7 項考驗，當完成其中任何 4 項後，成員可獲頒發「樂行童軍獎章」；而在完成所有考驗後，可獲頒發「貝登堡獎章」。
@@ -206,10 +234,6 @@ export function RsaIntro() {
       <P en="Rover Scouts must plan their personal progress and gain approval from the affiliated Headquarter Commissioner (Rover Scouts) by submitting the “Application for Assessment of the Rover Scout Award and Baden-Powell Award” before the initiation of the assessment.">
         樂行童軍須自行計劃其考驗內容和進程，並於展開考驗前提交「樂行童軍獎章及貝登堡獎章考驗申請」予所屬總部總監（樂行童軍）作批核，除另有註明外，所有考驗項目必須於「考驗申請」批核後完成。
       </P>
-      <div className="fduo">
-        <Line label="考驗申請提交日期 Application submitted" type="date" path="pages.rsa-intro.appliedOn" />
-        <Line label="批核日期 Approved on" type="date" path="pages.rsa-intro.approvedOn" />
-      </div>
     </Page>
   );
 }
@@ -218,17 +242,20 @@ export function RsaAwards() {
   return (
     <Page id="rsa-awards" className="p-intro">
       <H en="Rover Scout Award / Baden-Powell Award">樂行童軍獎章 · 貝登堡獎章</H>
+      <div className="awardart awardart--one">
+        <AwardArt tone="green" label="RSA" />
+      </div>
       <Bilingual as="h4" className="pgh" zh="樂行童軍獎章" en="Rover Scout Award" />
       <P en="The Respective Rover Scout Leader is responsible for the training while the Respective Regional Headquarters Commissioner (Rover Scouts) is responsible for the assessments of the Rover Scout Award. After completing four components, the Rover Scout Award will be endorsed and issued by the Region upon confirmation and recommendation by the District. The Headquarters will confirm and issue the certificate.">
         樂行童軍獎章是由所屬團長負責安排訓練及由所屬總部總監（樂行童軍）負責考核，樂行童軍在完成 7 項考驗的其中 4 項後，經區會確認及推薦，地域審批，總會確認及簽發獎章證書。
       </P>
+      <div className="awardart awardart--one">
+        <AwardArt tone="red" label="BPA" />
+      </div>
       <Bilingual as="h4" className="pgh" zh="貝登堡獎章" en="Baden-Powell Award" />
       <P en="After completing all the seven components, District Commissioner and Regional Commissioner should interview the member concerned and make recommendations. The Headquarters will endorse and issue the Baden Powell Award and certificate.">
         貝登堡獎章是由所屬團長負責安排訓練及由所屬總部總監（樂行童軍）負責考核，樂行童軍在完成全部 7 個項目後，經區總監及地域總監接見及推薦，總會審批及簽發獎章證書。
       </P>
-      <Note en="Seven components: Dedication, Scoutcraft, Volunteerism, Global Vision, Tenacity, Mental and Physical Wellness, Intrepidity.">
-        七項考驗：準領袖培訓、童軍技能、服務、國際視野、興趣及技能、身心健康、挑戰。
-      </Note>
     </Page>
   );
 }
@@ -302,6 +329,12 @@ export function Volunteerism() {
     <Page id="volunteerism" className="p-items">
       <H no="(3)" en="VOLUNTEERISM" progress={['L3-SERVICE-01', 'L3-SERVICE-02', 'L3-SERVICE-03']}>服務</H>
       <Bilingual as="p" className="pglead" zh="完成下列所有項目：" en="Complete the following items" />
+      <div className="itemhead itemhead--4">
+        <Bilingual zh="項目" en="Items" />
+        <Bilingual zh="證書編號" en="Certificate No." />
+        <Bilingual zh="審核員" en="Assessor" />
+        <Bilingual zh="日期" en="Date" />
+      </div>
       <ProgressRow label="3.1 持有急救證書" en="Hold the First Aid Certificate" ids={['L3-SERVICE-01']} />
       <ProgressRow label="3.2 完成寰宇童軍計劃「探索」課程" en="Complete the SWA “Discovery” Section" ids={['L3-SERVICE-02']} />
       <ProgressRow label="3.3 完成寰宇童軍計劃「自願服務」或同等服務" en="Complete the SWA “Voluntary Service” or the equivalent service" ids={['L3-SERVICE-03']} />
@@ -330,10 +363,7 @@ export function GlobalVision() {
         <Line label="活動日期 Duration" path="pages.global-vision.duration" placeholder="2025-07 至 2026-01" />
       </div>
       <Area label="內容簡述 Summary of Activity" path="pages.global-vision.summary" rows={3} />
-      <div className="fduo">
-        <ProgressRow label="完成並經審核" en="Completed and assessed" ids={['L3-INTL-01', 'L3-INTL-02']} />
-      </div>
-      <Comment page="global-vision" />
+      <Comment page="global-vision" ids={['L3-INTL-01', 'L3-INTL-02']} />
     </Page>
   );
 }
@@ -349,8 +379,7 @@ export function Tenacity() {
         <Line label="活動日期 Duration" path="pages.tenacity.duration" />
       </div>
       <Area label="內容簡述 Summary of Activity" path="pages.tenacity.summary" rows={3} />
-      <ProgressRow label="12 個月內持續進修／參與不少於 52 小時" en="52 hours within 12 months" ids={['L3-INT-01']} />
-      <Comment page="tenacity" />
+      <Comment page="tenacity" ids={['L3-INT-01']} />
     </Page>
   );
 }
@@ -364,7 +393,7 @@ export function Wellness1() {
       <Bilingual as="p" className="pglead" zh="精神健康" en="Mental Health" />
       <Rows
         path="pages.wellness-1.certs"
-        min={2}
+        min={4}
         addLabel={null}
         cols={[
           { k: 'item', label: '項目', en: 'Items', width: 2.2 },
@@ -373,12 +402,9 @@ export function Wellness1() {
           { k: 'date', label: '日期', en: 'Date', type: 'date' },
         ]}
       />
-      <div className="fduo">
-        <ProgressRow label="SOUL Keeper / 精神健康課程（訓練＋服務 50 小時以上）" en="SOUL Keeper / Mental Health course (50+ hours of training and service)" ids={['L3-HEALTH-01']} />
-        <Line label="服務時數 Service Hours" path="pages.wellness-1.serviceHours" />
-      </div>
+      <Line label="服務時數" en="Service Hours" path="pages.wellness-1.serviceHours" />
       <Area label="服務簡述 Summary of Service" path="pages.wellness-1.summary" rows={2} />
-      <Comment page="wellness-1" compact />
+      <Comment page="wellness-1" compact ids={['L3-HEALTH-01']} />
     </Page>
   );
 }
@@ -394,8 +420,7 @@ export function Wellness2() {
         <Line label="時數 Hours" path="pages.wellness-2.hours" />
       </div>
       <Area label="內容簡述 Summary of Activity" path="pages.wellness-2.summary" rows={3} />
-      <ProgressRow label="12 個月內累積 52 小時並有持續進步" en="52 hours accumulated in 12 months" ids={['L3-HEALTH-02']} />
-      <Comment page="wellness-2" />
+      <Comment page="wellness-2" ids={['L3-HEALTH-02']} />
     </Page>
   );
 }
@@ -419,8 +444,7 @@ export function Intrepidity() {
         <Line label="活動日期 Duration" path="pages.intrepidity.duration" />
       </div>
       <Area label="內容簡述 Summary of Activity" path="pages.intrepidity.summary" rows={3} />
-      <ProgressRow label="完成並經審核" en="Completed and assessed" ids={['L3-CHALLENGE-01', 'L3-CHALLENGE-02']} />
-      <Comment page="intrepidity" />
+      <Comment page="intrepidity" ids={['L3-CHALLENGE-01', 'L3-CHALLENGE-02']} />
     </Page>
   );
 }
@@ -431,6 +455,9 @@ export function RsaPresented() {
   return (
     <Page id="rsa-presented" className="p-presented">
       <H en="Rover Scout Award">樂行童軍獎章</H>
+      <div className="awardart awardart--one">
+        <AwardArt tone="green" label="RSA" />
+      </div>
       <Present page="rsa-presented" signer="樂行童軍團長" en="Rover Scout Leader" />
       <FormLink id="pt21" />
     </Page>
@@ -474,6 +501,9 @@ export function BpaPresented() {
   return (
     <Page id="bpa-presented" className="p-presented">
       <H en="Baden-Powell Award">貝登堡獎章</H>
+      <div className="awardart awardart--one">
+        <AwardArt tone="red" label="BPA" />
+      </div>
       <Present page="bpa-presented" signer="樂行童軍團長" en="Rover Scout Leader" />
       <FormLink id="pt22" />
     </Page>

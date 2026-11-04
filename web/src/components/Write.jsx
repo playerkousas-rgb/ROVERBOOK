@@ -84,7 +84,7 @@ export default function Write({
 
   if (type === 'date') {
     return (
-      <span className={cx('write write--date', className)}>
+      <span className={cx('write write--date', !value && 'is-empty', className)}>
         <input
           className="write__date"
           type="date"

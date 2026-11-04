@@ -8332,6 +8332,15 @@ html[data-lang='en'] .fareas .frow__label {
     color: #111 !important;
   }
 
+  /* 空白日期格印出嚟係一條橫線，唔要 mm/dd/yyyy 同日曆圖示 */
+  .write--date.is-empty .write__date {
+    color: transparent;
+  }
+
+  .write__date::-webkit-calendar-picker-indicator {
+    display: none;
+  }
+
   /* 「一鍵生成表格」屬數位功能，唔印 */
   .formlink {
     display: none !important;
@@ -8402,4 +8411,109 @@ html[data-lang='en'] .fareas .frow__label {
   font-family: var(--sans);
   font-size: 9px;
   color: #a0947c;
+}
+
+/* --------------------------------------------------- v14 第 20–21 頁 獎章圖示 */
+.awardart {
+  display: flex;
+  justify-content: center;
+  gap: 42px;
+  margin: 4px 0 10px;
+}
+
+.awardart--one {
+  margin: 6px 0 8px;
+}
+
+.awardart__svg {
+  width: 84px;
+  height: 84px;
+}
+
+.awardart__cap {
+  margin: 0 0 10px;
+  text-align: center;
+  font-family: var(--serif);
+  font-size: 11px;
+  color: #2a3040;
+}
+
+.awardart__cap em {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--sans);
+  font-style: normal;
+  font-size: 9px;
+  color: #6b6555;
+}
+
+/* ------------------------------------------------- v14 第 41 頁 制服參考圖 */
+.p-uniform .sheet__body {
+  gap: 6px;
+}
+
+.uniform__plate {
+  width: 100%;
+  max-width: 560px;
+  align-self: center;
+  height: auto;
+}
+
+.uniform__legend {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px 14px;
+  align-content: start;
+  font-family: var(--sans);
+  font-size: 7.6px;
+  line-height: 1.35;
+  color: #3a3630;
+}
+
+.uniform__item {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+}
+
+.uniform__no {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 11px;
+  height: 11px;
+  border: 0.8px solid #6b6555;
+  border-radius: 50%;
+  font-size: 6.4px;
+  line-height: 1;
+  color: #4a4a4a;
+}
+
+/* ------------------------------------------------------ v14 審核員評語區 */
+.cmt__foot {
+  display: grid;
+  grid-template-columns: 1.6fr 0.9fr 0.9fr;
+  gap: 10px;
+  align-items: end;
+}
+
+.cmt__sign {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cmt__sign-label {
+  font-family: var(--sans);
+  font-size: 7.4px;
+  color: #6b6555;
+}
+
+.cmt__sign .mini-sig {
+  margin-top: 0;
+}
+
+.cmt--compact .cmt__foot {
+  display: none;
 }

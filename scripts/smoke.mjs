@@ -705,8 +705,8 @@ await screen({
 
 await screen({
   name: '訓練細項：勾選寫入本機',
-  path: '/p/mb-understanding',
-  expect: ['understanding'],
+  path: '/p/mb-commitment',
+  expect: ['Safe From Harm'],
   interact: async (doc) => {
     const before = Object.values(JSON.parse(localStorage.getItem('roverbook.book.v3')).progress || {}).filter((p) => p?.date).length;
     const box = doc.querySelector('.itemline__tick');
