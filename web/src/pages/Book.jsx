@@ -52,12 +52,6 @@ export function Colophon() {
         請小心保存並更新有關資料，在考取樂行童軍肩章、樂行童軍獎章或貝登堡獎章時，必須出示此紀錄冊。
       </P>
 
-      <LegalNote compact />
-
-      <div className="colophon__foot">
-        <span>{isEn ? 'Edition V · 2026' : '第五版 · 2026'}</span>
-        <span>{isEn ? 'ROVERBOOK digital edition' : 'ROVERBOOK 電子版'}</span>
-      </div>
     </Page>
   );
 }
