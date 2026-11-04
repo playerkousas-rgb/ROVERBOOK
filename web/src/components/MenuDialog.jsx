@@ -6,9 +6,9 @@ import { demoBook, importFromRoverBadge, newBook, today } from '@shared/book.js'
 import { LegalNote } from './Legal.jsx';
 import { navigate } from '../router.jsx';
 import { useLang } from '../i18n.jsx';
-import { LEADER_ENABLED, exitLeaderMode } from '../leader.js';
+import { exitLeaderMode } from '../leader.js';
 
-export default function MenuDialog({ open, onClose, onShowQr, leader = false }) {
+export default function MenuDialog({ open, onClose, onShowQr, leader = false, leaderReady = null }) {
   const { book, replace } = useBook();
   const { isEn } = useLang();
   const { push } = useToast();
@@ -147,7 +147,7 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false }) 
               </em>
             </span>
           </button>
-        ) : LEADER_ENABLED ? (
+        ) : leaderReady ? (
           <button
             className="menu__item"
             onClick={() => {

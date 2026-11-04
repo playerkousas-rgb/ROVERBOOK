@@ -24,7 +24,7 @@ import Scan, { ScanView } from './pages/Scan.jsx';
 import Signoff from './pages/Signoff.jsx';
 import ShowQrDialog from './components/ShowQrDialog.jsx';
 import LeaderGate from './components/LeaderGate.jsx';
-import { LEADER_ENABLED, isLeader, exitLeaderMode, onLeaderChange } from './leader.js';
+import { isLeader, onLeaderChange, leaderAvailable } from './leader.js';
 import { UPDATE_EVENT, applyPwaUpdate } from './pwa.js';
 import { LangProvider, useLang } from './i18n.jsx';
 
@@ -182,7 +182,15 @@ function BookApp({ book, saveIssue }) {
     };
   }, []);
   const [leader, setLeader] = useState(() => isLeader());
+  const [leaderReady, setLeaderReady] = useState(null);
   useEffect(() => onLeaderChange(() => setLeader(isLeader())), []);
+  useEffect(() => {
+    let live = true;
+    leaderAvailable().then((v) => live && setLeaderReady(v));
+    return () => {
+      live = false;
+    };
+  }, []);
   const [indexOpen, setIndexOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [savedAt, setSavedAt] = useState(null);
@@ -430,7 +438,7 @@ function BookApp({ book, saveIssue }) {
               last={lastMeta}
               hint={coverHint}
               onContinue={() => lastMeta && navigate(`/p/${lastMeta.id}`)}
-              onLeader={LEADER_ENABLED && !leader ? () => navigate('/leader') : undefined}
+              onLeader={leaderReady && !leader ? () => navigate('/leader') : undefined}
             />
           )}
         </div>
@@ -468,6 +476,7 @@ function BookApp({ book, saveIssue }) {
       <MenuDialog
         open={menuOpen}
         leader={leader}
+        leaderReady={leaderReady}
         onClose={() => setMenuOpen(false)}
         onShowQr={() => {
           setMenuOpen(false);

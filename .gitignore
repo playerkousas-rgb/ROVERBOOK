@@ -7,7 +7,7 @@ data/
 # 下載回來的原始 PDF（版權文件，不入版控）
 google_drive/
 
-# 環境變數（領袖密碼在 Vercel → Environment Variables 設定；本機用 web/.env.local）
+# 環境變數（領袖密碼 LEADER_CODE 只在伺服器讀，唔會入前端 bundle）
 .env
 .env.*
 !.env.example

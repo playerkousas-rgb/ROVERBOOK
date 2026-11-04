@@ -227,17 +227,21 @@
 | 核對及簽署項目 | ✗ | ✓ |
 | 匯出備份 / 生成表格 / 列印 | ✓ | ✓ |
 
-**開啟方法**
+**密碼放邊度？放伺服器，唔放前端**
+
+密碼係環境變數 `LEADER_CODE`（**唔要 `VITE_` 前綴**）。Vercel 見到 `VITE_` 會警告「這個值會送到瀏覽器」，正是我們不想發生的事——用 `LEADER_CODE` 就唔會有警告，因為它只留在伺服器：
 
 1. Vercel → 你的 Project → **Settings → Environment Variables**；
-2. 新增 `VITE_LEADER_CODE`，值就是領袖密碼（建議 6 位數字），環境勾 **Production** 同 **Preview**；
-3. **Redeploy**（環境變數要重新 build 才會入到前端）。
+2. Name = `LEADER_CODE`，Value = 你揀的密碼（建議 6 位數字），環境勾 **Production**（同 **Preview**）；
+3. **Redeploy**。
+
+比對由 `api/leader.js`（Vercel Serverless Function）負責：`POST /api/leader` 收到密碼才回 `{ ok: true }`，前端只知道「對」或「唔對」，永遠拿不到密碼。自架版本由 `server/api.js` 提供同一個接口（本機 `npm run dev` 未設定時用 `1234` 方便測試，production 一定要自己設定）。
 
 之後成員開啟網址，只會見到「出示二維碼」；領袖在封面底部或 ☰ 選單按「**領袖模式**」，輸入密碼後，掃描與核簽才會出現，頂欄會亮起金色「領袖」章。同一部裝置按 ☰ →「退出領袖模式」就會還原。
 
-唔設定 `VITE_LEADER_CODE`（例如公開的成員版）就完全冇領袖模式入口，唔會有人誤闖。密碼只用作前端閘門，唔會上載到任何伺服器。
+唔設定 `LEADER_CODE`（例如公開的成員版）就完全冇領袖模式入口。進入領袖模式後 12 小時自動失效，需要再輸入。
 
-> 本機測試：在 `web/.env.local` 寫 `VITE_LEADER_CODE=1234` 再 `npm run dev`（此檔已列入 `.gitignore`）。
+> 本機測試：`npm run dev` 直接用 `1234`；要換密碼就 `LEADER_CODE=5678 npm run dev`。
 
 ## 14. 加入主畫面（PWA 全螢幕）的安全區（v16）
 

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { navigate } from '../router.jsx';
 import { Icon } from '../ui.jsx';
 import { useLang } from '../i18n.jsx';
-import { LEADER_ENABLED, enterLeaderMode } from '../leader.js';
+import { enterLeaderMode, leaderAvailable } from '../leader.js';
 
 /**
  * 領袖模式入口。可以當成一頁（/leader）用，亦可以在掃描頁前面當閘門。
@@ -15,10 +15,23 @@ export default function LeaderGate({ mode = 'page', onDone }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [show, setShow] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [available, setAvailable] = useState(null);
 
-  const submit = (e) => {
+  useEffect(() => {
+    let live = true;
+    leaderAvailable().then((v) => live && setAvailable(v));
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const submit = async (e) => {
     e.preventDefault();
-    const result = enterLeaderMode(code);
+    if (busy) return;
+    setBusy(true);
+    const result = await enterLeaderMode(code);
+    setBusy(false);
     if (result.ok) {
       setError('');
       if (onDone) onDone();
@@ -28,11 +41,15 @@ export default function LeaderGate({ mode = 'page', onDone }) {
     setError(
       result.reason === 'unset'
         ? isEn
-          ? 'This deployment has no leader code yet. Set VITE_LEADER_CODE in Vercel and redeploy.'
-          : '這個版本還未設定領袖密碼。請在 Vercel 加入環境變數 VITE_LEADER_CODE，然後重新部署。'
-        : isEn
-          ? 'Wrong code. Ask your Group Scout Leader for the current one.'
-          : '密碼不正確，請向團長或旅長查詢。',
+          ? 'This deployment has no leader code yet. Set LEADER_CODE in Vercel and redeploy.'
+          : '這個部署還未設定領袖密碼。請在 Vercel 加入環境變數 LEADER_CODE（唔要 VITE_ 前綴），然後重新部署。'
+        : result.reason === 'offline'
+          ? isEn
+            ? 'Cannot reach the server. Connect to the internet once to enter leader mode.'
+            : '連不到伺服器。請先連上網絡一次，才可進入領袖模式。'
+          : isEn
+            ? 'Wrong code. Ask your Group Scout Leader for the current one.'
+            : '密碼不正確，請向團長或旅長查詢。',
     );
   };
 
@@ -47,13 +64,13 @@ export default function LeaderGate({ mode = 'page', onDone }) {
             : '成員只可以出示自己的二維碼；掃描成員的紀錄冊、核對及簽署，都是領袖的功能。輸入領袖密碼即可使用。'}
         </p>
 
-        {!LEADER_ENABLED && (
+        {available === false && (
           <p className="leadergate__note">
             <Icon name="alert" size={14} />
             <span>
               {isEn
-                ? 'VITE_LEADER_CODE is not set for this deployment, so leader mode is closed.'
-                : '此部署未設定 VITE_LEADER_CODE，領袖模式暫時關閉。'}
+                ? 'LEADER_CODE is not set for this deployment, so leader mode is closed.'
+                : '此部署未設定 LEADER_CODE，領袖模式暫時關閉。'}
             </span>
           </p>
         )}
@@ -75,7 +92,7 @@ export default function LeaderGate({ mode = 'page', onDone }) {
                 setCode(e.target.value);
                 setError('');
               }}
-              disabled={!LEADER_ENABLED}
+              disabled={available === false || busy}
             />
             <button
               type="button"
@@ -91,9 +108,11 @@ export default function LeaderGate({ mode = 'page', onDone }) {
             className="btn btn--primary leadergate__go"
             type="button"
             onClick={submit}
-            disabled={!LEADER_ENABLED}
+            disabled={available === false || busy}
           >
-            {isEn ? 'Enter leader mode' : '進入領袖模式'}
+            {busy
+              ? isEn ? 'Checking…' : '核對中…'
+              : isEn ? 'Enter leader mode' : '進入領袖模式'}
           </button>
         </form>
 

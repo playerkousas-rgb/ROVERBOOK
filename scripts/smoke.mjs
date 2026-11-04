@@ -38,12 +38,7 @@ await build({
   logLevel: 'error',
   define: {
     'process.env.NODE_ENV': '"development"',
-    'import.meta.env': JSON.stringify({
-      MODE: 'test',
-      DEV: true,
-      PROD: false,
-      VITE_LEADER_CODE: LEADER_TEST_CODE,
-    }),
+    'import.meta.env': JSON.stringify({ MODE: 'test', DEV: true, PROD: false }),
   },
 });
 
@@ -120,7 +115,7 @@ const textOf = (html) =>
 async function screen({ name, path: route, expect = [], empty = false, leader = false, interact, after, wait = 480 }) {
   reset();
   if (!empty) seed(demoBook());
-  if (leader) localStorage.setItem('roverbook.leader.v1', 'on');
+  if (leader) localStorage.setItem('roverbook.leader.v1', String(Date.now()));
   errors.length = 0;
   let html = '';
   try {
@@ -269,7 +264,7 @@ await screen({
 {
   reset();
   seed(demoBook());
-  localStorage.setItem('roverbook.leader.v1', 'on');
+  localStorage.setItem('roverbook.leader.v1', String(Date.now()));
   const html = await renderPath('/scan', {
     wait: 520,
     interact: async (doc) => {
@@ -300,6 +295,26 @@ await screen({
 }
 
 // ---------------------------------------------------------------- 領袖模式
+
+{
+  const good = await fetch(`${BASE}/api/leader`);
+  const enabled = (await good.json()).enabled;
+  const ok = await fetch(`${BASE}/api/leader`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ code: process.env.LEADER_CODE || '1234' }),
+  });
+  const bad = await fetch(`${BASE}/api/leader`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ code: '000000' }),
+  });
+  report(
+    enabled === true && ok.ok && bad.status === 401,
+    '領袖密碼只在伺服器比對（GET 開關、POST 正確／錯誤）',
+    `enabled=${enabled} ok=${ok.status} wrong=${bad.status}`,
+  );
+}
 
 {
   reset();
@@ -348,7 +363,7 @@ await screen({
     },
   });
   report(
-    localStorage.getItem('roverbook.leader.v1') === 'on' && html.includes('掃描成員的紀錄冊'),
+    !!localStorage.getItem('roverbook.leader.v1') && html.includes('掃描成員的紀錄冊'),
     '領袖模式：輸入正確密碼後直接去掃描頁',
   );
 }
@@ -378,7 +393,7 @@ await screen({
 {
   reset();
   seed(demoBook());
-  localStorage.setItem('roverbook.leader.v1', 'on');
+  localStorage.setItem('roverbook.leader.v1', String(Date.now()));
   const html = await renderPath('/p/particulars-1', {
     wait: 480,
     interact: async (doc) => {
@@ -478,7 +493,7 @@ await screen({
   });
   window.sessionStorage.clear();
   window.sessionStorage.setItem('roverbook.signoff.v1', JSON.stringify(signoff.payload));
-  localStorage.setItem('roverbook.leader.v1', 'on');
+  localStorage.setItem('roverbook.leader.v1', String(Date.now()));
   const html = await renderPath('/scan/signoff', {
     wait: 520,
     interact: async (doc) => {
@@ -502,7 +517,7 @@ await screen({
   reset();
   seed(demoBook());
   const memberPayload = (await encodeTransfer(demoBook(), ['particulars', 'progress'])).payload;
-  localStorage.setItem('roverbook.leader.v1', 'on');
+  localStorage.setItem('roverbook.leader.v1', String(Date.now()));
   window.sessionStorage.setItem('roverbook.scan.v1', JSON.stringify(memberPayload));
   const html = await renderPath('/scan/view', {
     wait: 560,
