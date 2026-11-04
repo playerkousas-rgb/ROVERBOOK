@@ -8395,7 +8395,7 @@ html[data-lang='en'] .fareas .frow__label {
 }
 
 /* ---------------------------------------------------- v14 對頁：第 1 頁 封面 */
-.p-cover .sheet__body {
+.sheet__body:has(> .p-cover) {
   justify-content: center;
 }
 
@@ -8515,7 +8515,7 @@ html[data-lang='en'] .fareas .frow__label {
 }
 
 /* ------------------------------------------------- v14 第 41 頁 制服參考圖 */
-.p-uniform .sheet__body {
+.sheet__body:has(> .p-uniform) {
   gap: 6px;
 }
 
@@ -8586,7 +8586,7 @@ html[data-lang='en'] .fareas .frow__label {
 }
 
 /* ------------------------------------------------ v14 封面頁底：一行版權聲明 */
-.p-cover .sheet__body {
+.sheet__body:has(> .p-cover) {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -8813,13 +8813,13 @@ html[data-lang='en'] .fareas .frow__label {
 }
 
 @media screen and (max-width: 740px) {
-  .p-cover .sheet__body {
+  .sheet__body:has(> .p-cover) {
     justify-content: center;
   }
 }
 
 /* -------------------------------------------- v15 第 43 頁：樂行童軍徽章圖 */
-.p-crest .sheet__body {
+.sheet__body:has(> .p-crest) {
   display: flex;
   align-items: center;
   justify-content: center;
