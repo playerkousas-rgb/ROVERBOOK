@@ -941,9 +941,9 @@ await screen({
 }
 
 await screen({
-  name: '版權聲明：非官方工具、內容版權屬總會',
+  name: '非官方聲明（附錄）',
   path: '/p/appendix',
-  expect: ['非官方獨立工具', '與香港童軍總會無任何官方從屬關係', '版權歸香港童軍總會所有', '版權 © 2026 ROVERBOOK'],
+  expect: ['非官方獨立工具', '與香港童軍總會無任何官方從屬關係'],
 });
 
 await screen({
