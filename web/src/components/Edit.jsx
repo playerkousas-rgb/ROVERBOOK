@@ -1,46 +1,44 @@
 import React, { useRef } from 'react';
 import { Icon } from '../ui.jsx';
+import Write from './Write.jsx';
 
-export function Field({ label, en, value, onChange, type = 'text', placeholder = '', multiline = false, className = '', rows = 2 }) {
+export function Field({
+  label,
+  en,
+  value,
+  onChange,
+  type = 'text',
+  placeholder = '',
+  multiline = false,
+  className = '',
+  rows = 2,
+}) {
   return (
-    <label className={`field ${className}`}>
+    <div className={`field ${className}`}>
       {(label || en) && (
         <span className="field__label">
           {label}
           {en && <em>{en}</em>}
         </span>
       )}
-      {multiline ? (
-        <textarea
-          className="field__input field__input--area"
-          value={value || ''}
-          rows={rows}
-          placeholder={placeholder}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      ) : (
-        <input
-          className="field__input"
-          type={type}
-          value={value || ''}
-          placeholder={placeholder}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
-    </label>
+      <Write
+        value={value}
+        onChange={onChange}
+        type={type}
+        multiline={multiline}
+        rows={rows}
+        placeholder={placeholder}
+        label={label || en || placeholder}
+      />
+    </div>
   );
 }
 
-export function InlineField({ value, onChange, placeholder = '—', type = 'text', className = '', width }) {
+export function InlineField({ value, onChange, placeholder = '', type = 'text', className = '', width }) {
   return (
-    <input
-      className={`inline-field ${className}`}
-      style={width ? { width } : undefined}
-      type={type}
-      value={value || ''}
-      placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-    />
+    <span className={`inline-field ${className}`} style={width ? { width } : undefined}>
+      <Write value={value} onChange={onChange} type={type} compact placeholder={placeholder} max={12} />
+    </span>
   );
 }
 

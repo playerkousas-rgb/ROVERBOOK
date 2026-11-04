@@ -1,0 +1,232 @@
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Icon, Modal, cx } from '../ui.jsx';
+
+/**
+ * Write — a line/box on the page that you tap and type into (or write with a
+ * stylus). Text shrinks automatically to fit the printed space, and every field
+ * can be opened in a bigger "zoom" sheet for comfortable reading/typing.
+ */
+
+const MAX = 15.5;
+const MIN = 7;
+const STEP = 0.5;
+
+function fitText(el, max = MAX) {
+  if (!el) return;
+  let size = max;
+  el.style.fontSize = `${size}px`;
+  const overflow = () =>
+    el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1;
+  let guard = 40;
+  while (size > MIN && overflow() && guard-- > 0) {
+    size -= STEP;
+    el.style.fontSize = `${size}px`;
+  }
+}
+
+export default function Write({
+  value = '',
+  onChange,
+  multiline = false,
+  rows = 2,
+  type = 'text',
+  placeholder = '',
+  className = '',
+  label,
+  compact = false,
+  align,
+  max = MAX,
+}) {
+  const [editing, setEditing] = useState(false);
+  const [zoom, setZoom] = useState(false);
+  const hold = useRef(null);
+  const fieldRef = useRef(null);
+
+  const commit = useCallback(
+    (next) => {
+      onChange?.(next);
+    },
+    [onChange],
+  );
+
+  useLayoutEffect(() => {
+    if (!editing) fitText(fieldRef.current, max);
+  }, [value, editing, max, multiline, rows]);
+
+  useEffect(() => {
+    const el = fieldRef.current;
+    if (!el || editing) return;
+    const parent = el.parentElement;
+    if (!parent || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => fitText(el, max));
+    ro.observe(parent);
+    return () => ro.disconnect();
+  }, [editing, max]);
+
+  if (type === 'date') {
+    return (
+      <span className={cx('write write--date', className)}>
+        <input
+          className="write__date"
+          type="date"
+          value={value || ''}
+          onChange={(e) => commit(e.target.value)}
+          aria-label={label || placeholder || '日期'}
+        />
+      </span>
+    );
+  }
+
+  const openZoom = (e) => {
+    e.stopPropagation();
+    setEditing(false);
+    setZoom(true);
+  };
+
+  return (
+    <>
+      <span
+        className={cx(
+          'write',
+          multiline && 'write--multi',
+          compact && 'write--compact',
+          !value && 'is-empty',
+          editing && 'is-editing',
+          className,
+        )}
+        style={multiline ? { '--rows': rows } : undefined}
+        onClick={() => !editing && setEditing(true)}
+        onDoubleClick={openZoom}
+        role="button"
+        tabIndex={-1}
+        aria-label={label || placeholder || '填寫'}
+      >
+        {editing ? (
+          multiline ? (
+            <textarea
+              className="write__input write__fit"
+              autoFocus
+              defaultValue={value}
+              placeholder={placeholder}
+              onChange={(e) => {
+                commit(e.target.value);
+                fitText(e.target, max);
+              }}
+              onBlur={() => setEditing(false)}
+              ref={(el) => {
+                if (el) fitText(el, max);
+              }}
+            />
+          ) : (
+            <input
+              className="write__input write__fit"
+              autoFocus
+              defaultValue={value}
+              placeholder={placeholder}
+              onChange={(e) => {
+                commit(e.target.value);
+                fitText(e.target, max);
+              }}
+              onBlur={() => setEditing(false)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur();
+              }}
+              ref={(el) => {
+                if (el) fitText(el, max);
+              }}
+            />
+          )
+        ) : (
+          <span
+            className="write__fit write__text"
+            ref={fieldRef}
+            title={value || undefined}
+            style={align ? { textAlign: align } : undefined}
+          >
+            {value || <em className="write__ph">{placeholder || '點擊填寫'}</em>}
+          </span>
+        )}
+        {!editing && (
+          <button
+            type="button"
+            className="write__zoom"
+            onClick={openZoom}
+            aria-label="放大填寫"
+            title="放大填寫"
+          >
+            <Icon name="expand" size={11} />
+          </button>
+        )}
+      </span>
+
+      {zoom && (
+        <Modal
+          onClose={() => setZoom(false)}
+          eyebrow="WRITE"
+          title={label || '放大填寫'}
+          subtitle="字數多時會自動縮小；在這裡可以舒服地打字或手寫（手寫板適用於平板／觸控筆）。"
+          wide
+        >
+          <ZoomEditor
+            value={value}
+            multiline={multiline}
+            rows={multiline ? Math.max(rows, 6) : 1}
+            placeholder={placeholder}
+            onSave={(next) => {
+              commit(next);
+              setZoom(false);
+            }}
+            onCancel={() => setZoom(false)}
+            holdRef={hold}
+          />
+        </Modal>
+      )}
+    </>
+  );
+}
+
+function ZoomEditor({ value, multiline, rows, placeholder, onSave, onCancel }) {
+  const [draft, setDraft] = useState(value || '');
+  const areaRef = useRef(null);
+
+  return (
+    <>
+      {multiline ? (
+        <textarea
+          className="zoomfield"
+          autoFocus
+          rows={rows}
+          value={draft}
+          placeholder={placeholder}
+          onChange={(e) => setDraft(e.target.value)}
+          ref={areaRef}
+        />
+      ) : (
+        <input
+          className="zoomfield"
+          autoFocus
+          value={draft}
+          placeholder={placeholder}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') onSave(draft);
+            if (e.key === 'Escape') onCancel();
+          }}
+          ref={areaRef}
+        />
+      )}
+      <p className="zoomhint">
+        <Icon name="info" size={13} /> 在頁面上會自動縮放到格線內；這裡只是方便你輸入與核對。
+        <span className="zoomhint__count">{draft.length} 字</span>
+      </p>
+      <div className="modal__actions">
+        <button className="btn btn--ghost" onClick={onCancel}>
+          取消
+        </button>
+        <button className="btn btn--primary" onClick={() => onSave(draft)}>
+          <Icon name="check" size={15} /> 完成
+        </button>
+      </div>
+    </>
+  );
+}

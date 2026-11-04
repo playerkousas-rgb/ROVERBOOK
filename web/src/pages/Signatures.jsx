@@ -46,7 +46,18 @@ export default function Signatures() {
       }
       right={
         <>
-          <div className="formhead">
+          <div className="declaration declaration--page">
+            <p>
+              本人謹此聲明，以上各項資料均屬真實無訛，並同意本紀錄冊所載資料的真確性由本人負責。
+              本冊所載的技能、服務及獎章進度，均須由領袖或主考核實；如有虛報，有關資格可能被撤銷。
+            </p>
+            <p>
+              電子紀錄冊的資料儲存在本人裝置內，不會自動上載。本人可自行決定是否透過分享連結或二維碼，
+              向他人展示指定章節。
+            </p>
+          </div>
+
+          <div className="formhead formhead--sub">
             <h3>持有人</h3>
             <span>表格 J</span>
           </div>
@@ -81,10 +92,15 @@ export default function Signatures() {
             onClear={() => setEndorse({ signature: null })}
           />
 
-          <p className="footnote">
-            <Icon name="lock" size={12} /> 簽名以矢量筆跡儲存在本機，不會上載；只有你選擇分享「簽署及旅印」時，
-            簽名才會出現在分享頁面。
-          </p>
+          <div className="sigfoot">
+            <div className="sigfoot__seal">
+              <SealMark text={m.group || '樂行童軍'} sub="旅印" size={76} />
+            </div>
+            <p className="footnote">
+              <Icon name="lock" size={12} /> 簽名以筆跡圖像儲存在本機，不會上載；只有你選擇分享「簽署及旅印」時，
+              簽名及旅印才會出現在分享頁面。
+            </p>
+          </div>
         </>
       }
     />

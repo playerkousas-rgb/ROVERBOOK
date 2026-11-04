@@ -300,19 +300,25 @@ export function progressedCount(book) {
 }
 
 export const SECTIONS = [
-  { id: 'contents', label: '目錄', en: 'Contents', page: '1' },
-  { id: 'particulars', label: '個人資料', en: 'Personal Particulars', page: '2' },
-  { id: 'group', label: '旅部資料', en: 'Group Information', page: '4' },
-  { id: 'scouting', label: '童軍紀錄', en: 'Scouting Experience', page: '5' },
-  { id: 'renewals', label: '會員資格', en: 'Renewal of Membership', page: '6' },
-  { id: 'service', label: '服務紀錄', en: 'Service Record', page: '7' },
-  { id: 'awards', label: '獎章及獎勵', en: 'Awards & Commendations', page: '8' },
-  { id: 'training', label: '訓練計劃', en: 'Training Scheme', page: '9' },
-  { id: 'expeditions', label: '遠足及海外', en: 'Expeditions & Overseas', page: '15' },
-  { id: 'additional', label: '其他經驗', en: 'Additional Experiences', page: '16' },
-  { id: 'signatures', label: '簽署及聲明', en: 'Signatures', page: '17' },
-  { id: 'appendix', label: '數位附錄', en: 'Digital Appendix', page: '18' },
+  { id: 'contents', label: '目錄', en: 'Contents', page: '—' },
+  { id: 'particulars', label: '個人資料', en: 'Personal Particulars', page: '1' },
+  { id: 'group', label: '旅部資料', en: 'Group Information', page: '2' },
+  { id: 'scouting', label: '童軍紀錄', en: 'Scouting Experience', page: '3' },
+  { id: 'renewals', label: '會員資格', en: 'Renewal of Membership', page: '4' },
+  { id: 'service', label: '服務紀錄', en: 'Service Record', page: '5' },
+  { id: 'awards', label: '獎章及獎勵', en: 'Awards & Commendations', page: '6' },
+  { id: 'training-1', label: '會員章', en: 'Membership Badge', page: '7', badge: 'L1' },
+  { id: 'training-2', label: '樂行童軍肩章', en: 'Rover Scout Epaulettes', page: '8', badge: 'L2' },
+  { id: 'training-3', label: '樂行童軍獎章（一）', en: 'Rover Scout Award · I', page: '9', badge: 'L3', part: 0 },
+  { id: 'training-4', label: '樂行童軍獎章（二）', en: 'Rover Scout Award · II', page: '10', badge: 'L3', part: 1 },
+  { id: 'training-5', label: '貝登堡獎章', en: 'Baden-Powell Award', page: '11', badge: 'L4' },
+  { id: 'expeditions', label: '遠足及海外活動', en: 'Expeditions & Overseas', page: '12' },
+  { id: 'additional', label: '其他經驗', en: 'Additional Experiences', page: '13' },
+  { id: 'signatures', label: '簽署及聲明', en: 'Signatures & Declaration', page: '14' },
+  { id: 'appendix', label: '數位附錄', en: 'Digital Appendix', page: '15' },
 ];
+
+export const PAGE_TOTAL = 15;
 
 // ------------------------------------------------------------------ 示範資料
 
