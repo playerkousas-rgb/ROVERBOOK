@@ -9,6 +9,30 @@ import { LegalNote } from '../components/Legal.jsx';
 
 /* ---------------------------------------------------------------- 出版資料 */
 
+/* ------------------------------------------------------------ 第 1 頁 · 封面 */
+
+export function Cover() {
+  const { isEn } = useLang();
+  return (
+    <Page id="cover" className="p-cover">
+      <div className="coverpage">
+        <svg className="coverpage__mark" viewBox="14 6 36 46" aria-hidden="true">
+          <path d="M32 11.5c5 6.6 11 9.2 11 15.8 0 5.4-5 9-11 9s-11-3.6-11-9c0-6.6 6-9.2 11-15.8Z" fill="currentColor" opacity="0.14" />
+          <path d="M32 11.5c5 6.6 11 9.2 11 15.8 0 5.4-5 9-11 9s-11-3.6-11-9c0-6.6 6-9.2 11-15.8Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M32 21c2.6 3.4 5.4 4.9 5.4 8.1 0 2.6-2.4 4.4-5.4 4.4s-5.4-1.8-5.4-4.4C26.6 25.9 29.4 24.4 32 21Z" fill="none" stroke="currentColor" strokeWidth="1.2" />
+          <path d="M20.5 38h23M24 46h16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+        <p className="coverpage__assoc">香港童軍總會</p>
+        <h1 className="coverpage__title">樂行童軍紀錄冊</h1>
+        <div className="coverpage__rule" />
+        <p className="coverpage__en">Scout Association of Hong Kong</p>
+        <p className="coverpage__en coverpage__en--sub">Rover Scout Record Book</p>
+        {isEn && <p className="coverpage__note">Use the menu to jump to any page.</p>}
+      </div>
+    </Page>
+  );
+}
+
 export function Colophon() {
   const { isEn } = useLang();
   return (
@@ -167,26 +191,48 @@ export function Scouting() {
   return (
     <Page id="scouting" className="p-wide">
       <H en="SCOUTING EXPERIENCE">童軍紀錄</H>
-      <div className="pgtable pgtable--fixed">
-        <div className="pgtable__head pgtable__row pgtable__row--5">
-          <Bilingual zh="期間 · 旅／單位" en="Period · Group / Unit" />
-          <Bilingual zh="崗位／職位" en="Post / Rank" />
-          <Bilingual zh="獲取之最高奬章" en="Highest Award Achieved" />
-          <Bilingual zh="由" en="From" />
-          <Bilingual zh="至" en="To" />
+      <div className="pgtable pgtable--fixed scoutgrid">
+        <div className="scoutgrid__head">
+          <span className="scoutgrid__unit" />
+          <span className="scoutgrid__span">
+            <Bilingual zh="期間" en="Period" />
+          </span>
+          <span>
+            <Bilingual zh="旅／單位" en="Group / Unit" />
+          </span>
+          <span>
+            <Bilingual zh="崗位／職位" en="Post / Rank" />
+          </span>
+          <span>
+            <Bilingual zh="獲取之最高奬章" en="Highest Award Achieved" />
+          </span>
+        </div>
+        <div className="scoutgrid__sub">
+          <span className="scoutgrid__unit" />
+          <span>
+            <Bilingual zh="由" en="From" />
+          </span>
+          <span>
+            <Bilingual zh="至" en="To" />
+          </span>
+          <span />
+          <span />
+          <span />
         </div>
         {UNITS.map((u) => {
           const index = (book.scouting || []).findIndex((r) => r.unit === u.key);
+          const noAward = u.key === 'instructor' || u.key === 'leader';
           return (
-            <div className="pgtable__row pgtable__row--5" key={u.key}>
-              <span className="pgtable__cell pgtable__unit">
+            <div className="scoutgrid__row" key={u.key}>
+              <span className="scoutgrid__unit">
                 <strong>{isEn ? u.en : u.label}</strong>
                 {!isEn && <em>{u.en}</em>}
               </span>
-              <Cell unit={u.key} index={index} field="post" />
-              <Cell unit={u.key} index={index} field="highestAward" />
               <Cell unit={u.key} index={index} field="from" />
               <Cell unit={u.key} index={index} field="to" />
+              <Cell unit={u.key} index={index} field="group" />
+              <Cell unit={u.key} index={index} field="post" />
+              {noAward ? <span className="scoutgrid__na" /> : <Cell unit={u.key} index={index} field="highestAward" />}
             </div>
           );
         })}
@@ -195,7 +241,7 @@ export function Scouting() {
   );
 }
 
-const FIELD_LABELS = { post: '崗位／職位', highestAward: '最高奬章', from: '由', to: '至' };
+const FIELD_LABELS = { post: '崗位／職位', highestAward: '最高奬章', from: '由', to: '至', group: '旅／單位' };
 
 function Cell({ unit, index, field }) {
   const { book, update } = useBook();
@@ -302,7 +348,7 @@ export function ServiceAwards() {
       <H en="SERVICE RECORD">服務紀錄</H>
       <Rows
         path="service"
-        min={3}
+        min={6}
         addLabel={null}
         cols={[
           { k: 'post', label: '崗位／職位', en: 'Post / Title', width: 1.6 },
@@ -318,7 +364,7 @@ export function ServiceAwards() {
       <Bilingual as="h4" className="pgh pgh--tight" zh="獎章及獎勵記錄" en="RECORD OF AWARD AND COMMENDATION" />
       <Rows
         path="awards"
-        min={3}
+        min={6}
         addLabel={null}
         cols={[
           { k: 'name', label: '獎章／獎勵名稱', en: 'Name of Award' },
@@ -404,7 +450,7 @@ export function BadgeTable({ id, title, en, path }) {
       <H en={en}>{title}</H>
       <Rows
         path={path}
-        min={8}
+        min={9}
         addLabel={null}
         cols={[
           { k: 'name', label: '獎章', en: 'Badges', width: 2 },
@@ -425,7 +471,7 @@ export function Experience({ id, title, en, path, lead, leadEn }) {
       <P en={leadEn}>{lead}</P>
       <Rows
         path={path}
-        min={9}
+        min={10}
         addLabel={null}
         cols={[
           { k: 'period', label: '時段', en: 'Period', width: 1.1 },
@@ -460,13 +506,12 @@ export function Uniform() {
   );
 }
 
-/* ------------------------------------------------------------------ 筆記 */
+/* -------------------------------------------------------------- 空白頁 42／43 */
 
 export function Notes({ id }) {
   return (
     <Page id={id} className="p-notes">
-      <H en="NOTES">筆記</H>
-      <Area label="自由書寫" en="Free notes" path={`pages.${id}.body`} rows={14} placeholder="任何想記下的事…" />
+      <div className="blankpage" aria-hidden="true" />
     </Page>
   );
 }

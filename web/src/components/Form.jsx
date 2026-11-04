@@ -265,17 +265,17 @@ export function ItemLine({ label, en, ids = [], page, extra, note }) {
         {!isEn && en && <em>{en}</em>}
         {note && <small>{note}</small>}
       </span>
-      <span className="itemline__date">
-        <Write value={state.date || ''} onChange={mark} type="date" compact label="日期" />
-      </span>
       <span className="itemline__assessor">
         <Write value={state.assessor || ''} onChange={(v) => setField('assessor', v)} compact placeholder="姓名" label="審核員" />
+      </span>
+      <span className="itemline__date">
+        <Write value={state.date || ''} onChange={mark} type="date" compact label="日期" />
       </span>
     </div>
   );
 }
 
-export function ProgressRow({ label, en, ids = [], certKey, note }) {
+export function ProgressRow({ label, en, ids = [], certKey, note, assessor = true, sub }) {
   const { book, update } = useBook();
   const { isEn } = useLang();
   const primary = ids[0];
@@ -300,8 +300,9 @@ export function ProgressRow({ label, en, ids = [], certKey, note }) {
     });
   };
   return (
-    <div className={`prow${state.date ? ' is-done' : ''}`}>
+    <div className={`prow ${assessor ? 'prow--4' : 'prow--3'}${state.date ? ' is-done' : ''}`}>
       <span className="prow__label">
+        {sub && <i className="prow__sub">{sub}</i>}
         {isEn ? en || englishOf(label) || termFor('en', label) : label}
         {!isEn && en && <em>{en}</em>}
         {note && <small>{note}</small>}
@@ -309,11 +310,13 @@ export function ProgressRow({ label, en, ids = [], certKey, note }) {
       <span className="prow__cell">
         <Write value={state.cert || ''} onChange={setCert} compact placeholder="證書編號" label="證書編號" />
       </span>
+      {assessor && (
+        <span className="prow__cell">
+          <Write value={state.assessor || ''} onChange={(v) => write('assessor', v)} compact placeholder="審核員" label="審核員" />
+        </span>
+      )}
       <span className="prow__cell">
         <Write value={state.date || ''} onChange={(v) => write('date', v)} type="date" compact label="日期" />
-      </span>
-      <span className="prow__cell">
-        <Write value={state.assessor || ''} onChange={(v) => write('assessor', v)} compact placeholder="審核員" label="審核員" />
       </span>
     </div>
   );
@@ -354,7 +357,7 @@ export function Comment({ page, title = '審核員評語', en = "Assessor's Comm
   );
 }
 
-export function Present({ page, signer = '樂行童軍團長', en = 'Rover Scout Leader', extra }) {
+export function Present({ page, signer = '樂行童軍團長', en = 'Rover Scout Leader', extra, children }) {
   const [presentedOn] = useField(`pages.${page}.presentedOn`);
   const { isEn } = useLang();
   return (
@@ -366,6 +369,7 @@ export function Present({ page, signer = '樂行童軍團長', en = 'Rover Scout
         <Line label="頒發人" en="by" path={`pages.${page}.by`} />
       </div>
       {extra}
+      {children}
       <div className="present__sig">
         <Sig path={`pages.${page}.sig`} title={signer} label={signer} en={en} />
       </div>

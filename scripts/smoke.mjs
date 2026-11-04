@@ -160,6 +160,7 @@ await screen({
 // ------------------------------------------- 2. 逐頁掃描（紙本 41 頁 + 附錄）
 
 const PAGE_TEXT = {
+  cover: '樂行童軍紀錄冊',
   contents: '本電子版逐頁對應',
   colophon: '九龍柯士甸道',
   'particulars-1': '林卓瑤',
@@ -201,14 +202,16 @@ const PAGE_TEXT = {
   'expeditions-1': '遠足',
   'expeditions-2': '遠足',
   uniform: '制服',
+  'notes-1': null,
+  'notes-2': null,
   appendix: '數位附錄',
 };
 
 report(SECTIONS.length === Object.keys(PAGE_TEXT).length, `章節數目 ${SECTIONS.length}`, Object.keys(PAGE_TEXT).join(','));
 
 for (const section of SECTIONS) {
-  const expect = [PAGE_TEXT[section.id]];
-  if (typeof section.page === 'number') expect.push(`第 ${section.page} 頁`, `${section.page} / 41`);
+  const expect = [PAGE_TEXT[section.id]].filter(Boolean);
+  if (typeof section.page === 'number') expect.push(`第 ${section.page} 頁`, `${section.page} / 43`);
   await screen({ name: '頁面', path: `/p/${section.id}`, expect, wait: 340 });
 }
 
@@ -917,12 +920,12 @@ await screen({
 // --------------------------------------------------------- v13 整本列印對頁
 
 await screen({
-  name: '整本列印：40 頁紙對 40 頁紀錄冊',
+  name: '整本列印：43 頁紙對 43 頁紀錄冊',
   path: '/print',
-  expect: ['第 2 頁 · 共 41 頁', '第 41 頁 · 共 41 頁'],
+  expect: ['第 2 頁 · 共 43 頁', '第 43 頁 · 共 43 頁'],
   interact: async (doc) => {
     const n = doc.querySelectorAll('.printall__one .sheet').length;
-    if (n !== 40) throw new Error(`列印頁數 ${n}，應為 40`);
+    if (n !== 43) throw new Error(`列印頁數 ${n}，應為 43`);
   },
 });
 

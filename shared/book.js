@@ -335,6 +335,7 @@ export function progressedCount(book) {
 // 逐頁對應《Rover Scout Record Book (v 20260727).pdf》第 1–41 頁。
 // page = 紙本頁碼（封面為 1，內頁由 2 開始）。
 export const SECTIONS = [
+  { id: 'cover', label: '封面', en: 'Cover', page: 1 },
   { id: 'contents', label: '目錄', en: 'Contents', page: '—', digital: true },
   { id: 'colophon', label: '出版資料', en: 'Publication', page: 2 },
   { id: 'particulars-1', label: '個人資料', en: 'Personal Particulars', page: 3 },
@@ -376,6 +377,8 @@ export const SECTIONS = [
   { id: 'expeditions-1', label: '遠足及海外活動', en: 'Expeditions and Overseas Activities', page: 39 },
   { id: 'expeditions-2', label: '遠足及海外活動（續）', en: 'Expeditions and Overseas Activities', page: 40 },
   { id: 'uniform', label: '樂行童軍制服', en: 'Rover Scout Uniform', page: 41 },
+  { id: 'notes-1', label: '空白頁', en: 'Notes', page: 42 },
+  { id: 'notes-2', label: '空白頁', en: 'Notes', page: 43 },
   { id: 'appendix', label: '數位附錄', en: 'Digital Appendix', page: '—', digital: true },
 ];
 
@@ -388,7 +391,7 @@ export const SCOUTING_UNITS = [
   { key: 'leader', label: '領袖', en: 'Leader' },
 ];
 
-export const PAGE_TOTAL = 41;
+export const PAGE_TOTAL = 43;
 export const PRINT_PAGES = SECTIONS.filter((s) => !s.digital);
 
 // ------------------------------------------------------------------ 示範資料

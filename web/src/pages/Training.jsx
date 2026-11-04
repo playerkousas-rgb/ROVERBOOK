@@ -83,9 +83,9 @@ export function MbUnderstanding() {
       <H no="(2)" en="Understanding" progress={['L1-UND-01', 'L1-UND-02', 'L1-UND-03', 'L1-UND-04']}>理解</H>
       <div className="itemhead">
         <Bilingual zh="項目" en="Items" />
-        <Bilingual zh="完成" en="Done" />
-        <Bilingual zh="日期" en="Date" />
+        <span />
         <Bilingual zh="審核員" en="Assessor" />
+        <Bilingual zh="日期" en="Date" />
       </div>
       <ItemLine label="(2.1) 對國旗、國徽、區旗、區徽和國歌的認識" en="Understand the National Flag and Emblem, Regional Flag and Emblem, and National Anthem" ids={['L1-UND-01', 'L1-UND-02', 'L1-UND-03']} />
       <ItemLine label="(2.2) 對香港及世界童軍運動有普遍的認識" en="Understand Hong Kong and World Scout Movement" ids={['L1-UND-04']} />
@@ -93,9 +93,9 @@ export function MbUnderstanding() {
       <H no="(3)" en="Ceremonial" progress={['L1-ETQ-01', 'L1-ETQ-02', 'L1-ETQ-03', 'L1-ETQ-04', 'L1-ETQ-05', 'L1-ETQ-06']}>禮節</H>
       <div className="itemhead">
         <Bilingual zh="項目" en="Items" />
-        <Bilingual zh="完成" en="Done" />
-        <Bilingual zh="日期" en="Date" />
+        <span />
         <Bilingual zh="審核員" en="Assessor" />
+        <Bilingual zh="日期" en="Date" />
       </div>
       <ItemLine label="(3.1) 認識在國歌奏唱和升掛國旗、區旗時應有之禮儀" en="Know the rite to the National Flag and Emblem, Regional Flag and Emblem, and National Anthem" ids={['L1-ETQ-01']} />
       <ItemLine label="(3.2) 認識升掛國旗、區旗及展示國徽、區徽時之注意事項及使用限制" en="Know the regulations for the use and display of the flags and emblems" ids={['L1-ETQ-01']} />
@@ -132,15 +132,16 @@ export function MbPresented() {
   return (
     <Page id="mb-presented" className="p-presented">
       <H en="Membership Badge">會員章</H>
-      <div className="present__first">
-        <Sig
-          path="pages.mb-presented.chair"
-          title="管理委員會主席"
-          label="管理委員會主席簽署 Signature of Chairperson, Management Committee"
-          en="Chairperson, Management Committee"
-        />
-      </div>
-      <Present page="mb-presented" signer="樂行童軍團長" en="Rover Scout Leader" />
+      <Present page="mb-presented" signer="副署 Countersigned by" en="Rover Scout Leader">
+        <div className="present__first">
+          <Sig
+            path="pages.mb-presented.chair"
+            title="管理委員會主席"
+            label="管理委員會主席簽署"
+            en="Signature of Chairperson, Management Committee"
+          />
+        </div>
+      </Present>
     </Page>
   );
 }
@@ -177,15 +178,16 @@ export function EpPresented() {
   return (
     <Page id="ep-presented" className="p-presented">
       <H en="Rover Scout Epaulettes">樂行童軍肩章</H>
-      <div className="present__first">
-        <Sig
-          path="pages.ep-presented.chair"
-          title="管理委員會主席"
-          label="管理委員會主席簽署 Signature of Chairperson, Management Committee"
-          en="Chairperson, Management Committee"
-        />
-      </div>
-      <Present page="ep-presented" signer="樂行童軍團長" en="Rover Scout Leader" />
+      <Present page="ep-presented" signer="副署 Countersigned by" en="Rover Scout Leader">
+        <div className="present__first">
+          <Sig
+            path="pages.ep-presented.chair"
+            title="管理委員會主席"
+            label="管理委員會主席簽署"
+            en="Signature of Chairperson, Management Committee"
+          />
+        </div>
+      </Present>
     </Page>
   );
 }
@@ -238,17 +240,21 @@ export function Dedication() {
     <Page id="dedication" className="p-items">
       <H no="(1)" en="DEDICATION" progress={['L3-LEADER-01', 'L3-LEADER-02']}>準領袖培訓</H>
       <Bilingual as="p" className="pglead" zh="完成下列所有項目：" en="Complete the following items" />
-      <div className="itemhead itemhead--4">
+      <div className="itemhead itemhead--3">
         <Bilingual zh="項目" en="Items" />
         <Bilingual zh="證書編號" en="Certificate Number" />
         <Bilingual zh="日期" en="Date" />
-        <Bilingual zh="審核員" en="Assessor" />
       </div>
-      <ProgressRow label="1 · 完成木章訓練系統第一階段（1A）" en="Complete Wood Badge Framework Stage 1" ids={['L3-LEADER-01']} />
-      <ProgressRow label="1 · 完成木章訓練系統第一階段（1B）" en="Complete Wood Badge Framework Stage 1" ids={['L3-LEADER-01']} />
-      <ProgressRow label="2 · 完成木章訓練系統第二階段（2A）" en="Complete Wood Badge Framework Stage 2" ids={['L3-LEADER-02']} />
-      <ProgressRow label="2 · 完成木章訓練系統第二階段（2B）" en="Complete Wood Badge Framework Stage 2" ids={['L3-LEADER-02']} />
-      <ProgressRow label="完成在職輔導或旅團服務" en="Complete In-service Mentorship OR Service within a Scout Group" ids={['L3-LEADER-02']} />
+      <ProgressRow sub="1A" label="完成木章訓練系統第一階段" en="Complete Wood Badge Framework Stage 1" ids={['L3-LEADER-01']} assessor={false} />
+      <ProgressRow sub="1B" label="完成木章訓練系統第一階段（續）" en="Complete Wood Badge Framework Stage 1" ids={['L3-LEADER-01']} assessor={false} />
+      <ProgressRow sub="2A" label="完成木章訓練系統第二階段" en="Complete Wood Badge Framework Stage 2" ids={['L3-LEADER-02']} assessor={false} />
+      <ProgressRow sub="2B" label="完成木章訓練系統第二階段（續）" en="Complete Wood Badge Framework Stage 2" ids={['L3-LEADER-02']} assessor={false} />
+      <ProgressRow
+        label="完成在職輔導或旅團服務"
+        en="Complete In-service Mentorship OR Service within a Scout Group"
+        ids={['L3-LEADER-02']}
+        assessor={false}
+      />
       <Comment page="dedication" />
     </Page>
   );
@@ -259,7 +265,7 @@ export function Dedication() {
 export function Scoutcraft() {
   return (
     <Page id="scoutcraft" className="p-items">
-      <H no="(2)" en="SCOUTCRAFT" progress={['L3-SCOUT-01', 'L3-SCOUT-02', 'L3-SCOUT-03']}>童軍技能</H>
+      <H no="(2)" en="SCOUTCRAFT" progress={['L3-SCOUT-01', 'L3-SCOUT-02']}>童軍技能</H>
 
       <Bilingual as="h4" className="pgh" zh="2.1 傳統童軍技能" en="Traditional Skills" />
       <Check
@@ -272,19 +278,17 @@ export function Scoutcraft() {
           { value: 'other', label: '其他', en: 'Others' },
         ]}
       />
-      <div className="fduo">
-        <Line label="所選之訓練班 Selected Course" path="pages.scoutcraft.course1" placeholder="領袖遠足訓練班" />
-        <ProgressRow label="證書及日期" en="" ids={['L3-SCOUT-01']} />
+      <Line label="所選之訓練班" en="Selected Course" path="pages.scoutcraft.course1" placeholder="領袖遠足訓練班" />
+      <div className="itemhead itemhead--3">
+        <Bilingual zh="項目" en="Items" />
+        <Bilingual zh="證書編號" en="Certificate Number" />
+        <Bilingual zh="日期" en="Date" />
       </div>
+      <ProgressRow label="完成所選之訓練班" en="Complete the selected course" ids={['L3-SCOUT-01']} assessor={false} />
 
       <Bilingual as="h4" className="pgh" zh="2.2 教練員或導師訓練班" en="Instructor / Assessor course" />
-      <div className="fduo">
-        <Line label="所選之訓練班 Selected Course" path="pages.scoutcraft.course2" placeholder="教練員訓練班" />
-        <ProgressRow label="證書及日期" en="" ids={['L3-SCOUT-02']} />
-      </div>
-
-      <Bilingual as="h4" className="pgh" zh="2.3 隊列訓練" en="Footdrill" />
-      <ProgressRow label="完成隊列訓練工作坊及步操訓練班" en="Footdrill workshop and drill course" ids={['L3-SCOUT-03']} />
+      <Line label="所選之訓練班" en="Selected Course" path="pages.scoutcraft.course2" placeholder="教練員訓練班" />
+      <ProgressRow label="完成所選之訓練班" en="Complete the selected course" ids={['L3-SCOUT-02']} assessor={false} />
 
       <Comment page="scoutcraft" />
     </Page>
@@ -374,7 +378,7 @@ export function Wellness1() {
         <Line label="服務時數 Service Hours" path="pages.wellness-1.serviceHours" />
       </div>
       <Area label="服務簡述 Summary of Service" path="pages.wellness-1.summary" rows={2} />
-      <Comment page="wellness-1" />
+      <Comment page="wellness-1" compact />
     </Page>
   );
 }
