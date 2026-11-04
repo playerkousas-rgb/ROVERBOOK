@@ -7870,3 +7870,69 @@ body.preview-print .formdoc {
     font-size: 11.5px;
   }
 }
+
+/* ============================================================ 離線與更新 v10 */
+
+.offlinebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  background: #eef3f8;
+  border-bottom: 1px solid #cfddea;
+  color: #2f4a63;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.updatebar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: #102338;
+  color: #f4ead4;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(8, 18, 32, 0.28);
+  font-family: var(--sans);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.updatebar .btn {
+  padding: 5px 12px;
+  font-size: 11px;
+}
+
+.updatebar__x {
+  border: 0;
+  background: transparent;
+  color: rgba(244, 234, 212, 0.75);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 2px;
+}
+
+@media (max-width: 740px) {
+  .offlinebar {
+    font-size: 12.5px;
+    padding: 9px 12px;
+  }
+
+  .updatebar {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    font-size: 13px;
+  }
+
+  .updatebar .btn {
+    font-size: 12px;
+    padding: 7px 14px;
+  }
+}

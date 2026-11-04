@@ -484,6 +484,45 @@ await screen({
   );
 }
 
+// PWA：離線與更新
+{
+  const swPath = path.join(ROOT, 'dist', 'sw.js');
+  const sw = fs.existsSync(swPath) ? fs.readFileSync(swPath, 'utf8') : '';
+  report(
+    sw.includes('SKIP_WAITING') && sw.includes('roverbook-') && sw.includes("request.mode === 'navigate'"),
+    '離線：service worker 已輸出並有導航快取',
+    sw ? `${Math.round(sw.length / 1024)} KB` : '缺少 dist/sw.js',
+  );
+}
+
+{
+  reset();
+  seed(demoBook());
+  const html = await renderPath('/p/particulars-1', {
+    wait: 480,
+    interact: async (doc) => {
+      window.dispatchEvent(new window.Event('offline'));
+      await new Promise((r) => setTimeout(r, 260));
+      if (!doc.body.textContent.includes('離線模式')) throw new Error('未顯示離線提示');
+    },
+  });
+  report(html.includes('離線模式'), '離線：顯示「離線模式」提示，可繼續使用');
+}
+
+{
+  reset();
+  seed(demoBook());
+  const html = await renderPath('/p/particulars-1', {
+    wait: 480,
+    interact: async (doc) => {
+      window.dispatchEvent(new window.CustomEvent('roverbook:update'));
+      await new Promise((r) => setTimeout(r, 260));
+      if (!doc.body.textContent.includes('有新版本')) throw new Error('未顯示更新提示');
+    },
+  });
+  report(html.includes('有新版本') && html.includes('重新載入'), '更新：有新版本時提示重新載入');
+}
+
 // ---------------------------------------------------------------- 2b. 官方表格
 
 await screen({
