@@ -22,8 +22,14 @@ export function loadBook() {
   }
 }
 
+/** 寫入本機；成功回 null，失敗回錯誤物件（通常是 QuotaExceededError）。 */
 export function persistBook(book) {
-  localStorage.setItem(STORE_KEY, JSON.stringify(book));
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(book));
+    return null;
+  } catch (e) {
+    return { name: e?.name || 'Error', message: e?.message || '未能儲存' };
+  }
 }
 
 export function clearBook() {

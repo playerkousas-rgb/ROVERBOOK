@@ -14,6 +14,7 @@ import {
 } from '@shared/book.js';
 import { FORM_META, FORM_ORDER, formStatus } from '@shared/forms.js';
 import { ShowQrButton } from '../components/ShowQrDialog.jsx';
+import { compressBookImages, imageSizeLabel, storageUsage, stripFieldInk } from '../storageHealth.js';
 
 export default function Appendix() {
   const { book, update, replace } = useBook();
@@ -24,6 +25,25 @@ export default function Appendix() {
   const share = latestShare();
   const size = new Blob([JSON.stringify(book)]).size;
   const forms = formStatus(book);
+  const storage = storageUsage(book);
+  const [compressing, setCompressing] = useState(false);
+
+  const runCompress = async () => {
+    setCompressing(true);
+    try {
+      const res = await compressBookImages(book);
+      if (res.changed) {
+        replace(res.book);
+        push(`已壓縮 ${res.changed} 項，節省約 ${Math.round((res.savedChars * 2) / 1024)} KB`);
+      } else {
+        push('圖片已經夠細，毋須壓縮');
+      }
+    } catch {
+      push('壓縮失敗，請先匯出備份', 'error');
+    } finally {
+      setCompressing(false);
+    }
+  };
   const url = share ? `${window.location.origin}/v/${share.id}` : '';
 
   const exportJson = () => {
@@ -80,6 +100,50 @@ export default function Appendix() {
       right={
         <>
           <div className="appx-grid">
+            <div className={`appendix-card appendix-card--storage${storage.ratio > 0.8 ? ' is-full' : ''}`}>
+              <h4>
+                <Icon name="lock" size={13} /> 儲存健康
+              </h4>
+              <div className="storebar">
+                <i style={{ width: `${Math.max(2, Math.round(storage.ratio * 100))}%` }} />
+              </div>
+              <p className="tiny">
+                已用約 {((storage.bytes / 1024) / 1024).toFixed(2)} MB / 5 MB（{Math.round(storage.ratio * 100)}%）
+              </p>
+              {storage.images.length > 0 ? (
+                <ul className="storelist">
+                  {storage.images.slice(0, 3).map((img) => (
+                    <li key={img.path}>
+                      <span>{img.label}</span>
+                      <b>{imageSizeLabel(img.chars)}</b>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="tiny">未有圖片資料，空間充足。</p>
+              )}
+              <div className="aside-actions">
+                <button className="btn btn--ghost btn--sm" onClick={runCompress} disabled={compressing}>
+                  <Icon name="download" size={13} /> {compressing ? '壓縮中…' : '壓縮圖片／墨跡'}
+                </button>
+                <button className="btn btn--ghost btn--sm" onClick={exportJson}>
+                  <Icon name="download" size={13} /> 匯出備份
+                </button>
+              </div>
+              <button
+                className="linkbtn linkbtn--danger linkbtn--small"
+                onClick={() => {
+                  if (!confirm('清除所有「頁面手寫墨跡」，只保留簽名？手寫內容無法復原（文字不受影響）。')) return;
+                  const res = stripFieldInk(book);
+                  if (res.removed === 0) return push('沒有手寫墨跡需要清除');
+                  replace(res.book);
+                  push(`已清除 ${res.removed} 處手寫墨跡，簽名保留`);
+                }}
+              >
+                只保留簽名（清除頁面手寫）
+              </button>
+            </div>
+
             <div className="appendix-card appendix-card--forms">
               <h4>
                 <Icon name="seal" size={13} /> 三張官方表格
