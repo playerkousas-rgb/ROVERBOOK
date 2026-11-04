@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Icon, Modal, cx } from '../ui.jsx';
 import { SignaturePad } from './Ink.jsx';
+import { shrinkInk } from '../signature.js';
 
 /**
  * Write — a line/box on the page that you tap and type into (or write with a
@@ -220,7 +221,18 @@ function ZoomEditor({ value, multiline, rows, placeholder, onSave, onCancel }) {
   const [ink, setInk] = useState(initialInk);
   const areaRef = useRef(null);
 
-  const save = () => onSave(tab === 'ink' ? (ink ? { ink } : '') : draft);
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
+    if (tab !== 'ink') return onSave(draft);
+    if (!ink) return onSave('');
+    setSaving(true);
+    try {
+      const small = await shrinkInk(ink, { maxW: 640, maxH: 120 });
+      onSave({ ink: small || ink });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <>
@@ -278,8 +290,8 @@ function ZoomEditor({ value, multiline, rows, placeholder, onSave, onCancel }) {
         <button className="btn btn--ghost" onClick={onCancel}>
           取消
         </button>
-        <button className="btn btn--primary" onClick={save} disabled={tab === 'ink' && !ink}>
-          <Icon name="check" size={15} /> 完成
+        <button className="btn btn--primary" onClick={save} disabled={(tab === 'ink' && !ink) || saving}>
+          <Icon name="check" size={15} /> {saving ? '儲存中…' : '完成'}
         </button>
       </div>
     </>

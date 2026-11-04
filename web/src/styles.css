@@ -7776,3 +7776,97 @@ body.preview-print .formdoc {
     font-size: 12.5px;
   }
 }
+
+/* ============================================================ 儲存健康 v9 */
+
+.chipbar__save.is-error {
+  color: #9a2f22;
+  font-weight: 600;
+}
+
+.savealert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #fdeeec;
+  border-bottom: 1px solid #f0cfc9;
+  color: #8f2f26;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.savealert span {
+  flex: 1;
+}
+
+.savealert__btn {
+  flex: none;
+  border: 1px solid #d9a79f;
+  background: #fff;
+  color: #8f2f26;
+  border-radius: 3px;
+  padding: 4px 10px;
+  font-family: var(--sans);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.storebar {
+  height: 6px;
+  border-radius: 999px;
+  background: #e9e2d2;
+  overflow: hidden;
+  margin: 6px 0 6px;
+}
+
+.storebar i {
+  display: block;
+  height: 100%;
+  background: #2f6f56;
+}
+
+.appendix-card--storage.is-full .storebar i {
+  background: #9a2f22;
+}
+
+.storelist {
+  list-style: none;
+  margin: 4px 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.storelist li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--sans);
+  font-size: 10px;
+  color: var(--ink-soft);
+}
+
+.storelist b {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+@media (max-width: 740px) {
+  .savealert {
+    font-size: 12.5px;
+    padding: 10px 12px;
+    flex-wrap: wrap;
+  }
+
+  .savealert__btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .storelist li {
+    font-size: 11.5px;
+  }
+}

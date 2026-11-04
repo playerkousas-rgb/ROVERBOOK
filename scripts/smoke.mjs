@@ -11,6 +11,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { demoBook, buildSnapshot, DEFAULT_SHARE, SECTIONS, PAGE_TOTAL } from '../shared/book.js';
+import { scanImages, storageUsage, stripFieldInk } from '../web/src/storageHealth.js';
 import {
   encodeTransfer,
   decodeTransfer,
@@ -411,6 +412,76 @@ await screen({
     '領袖檢視：顯示核簽面板及待簽項目',
   );
   window.sessionStorage.clear();
+}
+
+// 儲存健康
+{
+  const book = demoBook();
+  const usage = storageUsage(book);
+  report(
+    usage.images.length > 0 && usage.ratio > 0 && usage.ratio < 1,
+    '儲存健康：計出已用比例及圖片清單',
+    `${usage.images.length} 張圖 · ${Math.round(usage.ratio * 100)}%`,
+  );
+  const labels = scanImages(book).map((i) => i.label);
+  report(
+    labels.some((l) => l.includes('簽名')) || labels.some((l) => l.includes('簽核')),
+    '儲存健康：可辨認簽名項目',
+    labels.slice(0, 3).join(' / '),
+  );
+}
+
+await screen({
+  name: '附錄：儲存健康卡',
+  path: '/p/appendix',
+  expect: ['儲存健康', '已用約', '壓縮圖片／墨跡', '只保留簽名'],
+  wait: 480,
+});
+
+{
+  reset();
+  seed(demoBook());
+  const storageProto = window.Storage.prototype;
+  const original = Object.getOwnPropertyDescriptor(storageProto, 'setItem');
+  const html = await renderPath('/p/particulars-1', {
+    wait: 460,
+    interact: async (doc) => {
+      Object.defineProperty(window.Storage.prototype, 'setItem', {
+        configurable: true,
+        writable: true,
+        value: () => {
+          const err = new Error('quota');
+          err.name = 'QuotaExceededError';
+          throw err;
+        },
+      });
+      const box = doc.querySelector('.write');
+      box.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 250));
+      const input = doc.querySelector('.write__input');
+      if (!input) throw new Error('找不到輸入框');
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(
+        input,
+        '測試儲存失敗',
+      );
+      input.dispatchEvent(new window.Event('input', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 900));
+    },
+  });
+  Object.defineProperty(window.Storage.prototype, 'setItem', original);
+  report(html.includes('儲存空間不足'), '儲存失敗：即時顯示警告，不再靜靜失效');
+}
+
+{
+  const withInk = demoBook();
+  withInk.pages.tenacity.summary = { ink: 'data:image/png;base64,AAAA' };
+  const stripped = stripFieldInk(withInk);
+  report(
+    stripped.removed === 1 &&
+      !stripped.book.pages.tenacity.summary.ink &&
+      !!stripped.book.endorsement.png,
+    '只保留簽名：可清除手寫而保留全部簽名',
+  );
 }
 
 // ---------------------------------------------------------------- 2b. 官方表格

@@ -143,7 +143,7 @@ function IndexSheet({ open, onClose, current }) {
   );
 }
 
-function BookApp({ book }) {
+function BookApp({ book, saveIssue }) {
   const path = useRoute();
   const { push } = useToast();
   const [shareOpen, setShareOpen] = useState(false);
@@ -248,7 +248,11 @@ function BookApp({ book }) {
         )}
 
         <div className="chipbar__actions">
-          {section && <span className="chipbar__save">{savedAt ? '已儲存' : '本機'}</span>}
+          {section && (
+            <span className={cx('chipbar__save', saveIssue && 'is-error')}>
+              {saveIssue ? '未儲存' : savedAt ? '已儲存' : '本機'}
+            </span>
+          )}
           {section && (
             <>
               <button className="chipbtn" onClick={() => setIndexOpen(true)} title="目錄">
@@ -271,6 +275,26 @@ function BookApp({ book }) {
           </button>
         </div>
       </header>
+
+      {saveIssue && (
+        <div className="savealert" role="alert">
+          <Icon name="alert" size={16} />
+          <span>
+            {saveIssue === 'quota'
+              ? '儲存空間不足：最新的修改未寫入。請到附錄「儲存健康」壓縮圖片／墨跡，或先匯出備份。'
+              : '未能儲存：瀏覽器可能封鎖了本機儲存（例如私人模式）。請匯出備份以免流失。'}
+          </span>
+          <button
+            className="savealert__btn"
+            onClick={() => {
+              if (section) navigate('/p/appendix');
+              else setMenuOpen(true);
+            }}
+          >
+            處理
+          </button>
+        </div>
+      )}
 
       <main
         className={cx('stage', zoom > 1 && 'stage--zoom')}
@@ -382,9 +406,14 @@ export default function App() {
 
   const replace = useCallback((next) => setBook(next), []);
 
+  const [saveIssue, setSaveIssue] = useState(null);
+
   useEffect(() => {
     if (!book) return;
-    const timer = setTimeout(() => persistBook(book), 250);
+    const timer = setTimeout(() => {
+      const err = persistBook(book);
+      setSaveIssue(err ? (err.name === 'QuotaExceededError' ? 'quota' : 'error') : null);
+    }, 250);
     return () => clearTimeout(timer);
   }, [book]);
 
@@ -409,7 +438,7 @@ export default function App() {
   return (
     <BookCtx.Provider value={ctx}>
       <ToastProvider>
-        <BookApp book={book} />
+        <BookApp book={book} saveIssue={saveIssue} />
       </ToastProvider>
     </BookCtx.Provider>
   );
