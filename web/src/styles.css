@@ -8528,3 +8528,37 @@ html[data-lang='en'] .fareas .frow__label {
 .cmt--compact .cmt__foot {
   display: none;
 }
+
+/* ------------------------------------------------ v14 封面頁底：一行版權聲明 */
+.p-cover .sheet__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.coverpage {
+  flex: 1;
+  justify-content: center;
+}
+
+.coverpage__legal,
+.legal-line {
+  margin: auto 0 0;
+  padding-top: 16px;
+  font-family: var(--sans);
+  font-size: 6.4px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: #8b8574;
+  text-align: center;
+}
+
+.legal-line__sep {
+  margin: 0 5px;
+  color: #c0b9a6;
+}
+
+@media print {
+  .coverpage__legal {
+    color: #6f6a5c;
+  }
+}

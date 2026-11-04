@@ -5,7 +5,7 @@ import Write from '../components/Write.jsx';
 import { PhotoPicker } from '../components/Edit.jsx';
 import { Crest } from '../ui.jsx';
 import { useLang } from '../i18n.jsx';
-import { LegalNote } from '../components/Legal.jsx';
+import { LegalNote, LegalLine } from '../components/Legal.jsx';
 
 /* ---------------------------------------------------------------- 出版資料 */
 
@@ -27,7 +27,7 @@ export function Cover() {
         <div className="coverpage__rule" />
         <p className="coverpage__en">Scout Association of Hong Kong</p>
         <p className="coverpage__en coverpage__en--sub">Rover Scout Record Book</p>
-        {isEn && <p className="coverpage__note">Use the menu to jump to any page.</p>}
+        <LegalLine className="coverpage__legal" />
       </div>
     </Page>
   );
