@@ -5,7 +5,7 @@ import { download, clearBook, slugify } from '../bookStore.js';
 import { demoBook, importFromRoverBadge, newBook, today } from '@shared/book.js';
 import { navigate } from '../router.jsx';
 
-export default function MenuDialog({ open, onClose }) {
+export default function MenuDialog({ open, onClose, onShowQr, onHome }) {
   const { book, replace } = useBook();
   const { push } = useToast();
   const backupRef = useRef(null);
@@ -72,6 +72,26 @@ export default function MenuDialog({ open, onClose }) {
 
         <button
           className="menu__item menu__item--accent"
+          onClick={() => {
+            onClose();
+            navigate('/scan');
+          }}
+        >
+          <Icon name="qr" size={18} />
+          <span>
+            <strong>領袖模式：掃描成員紀錄冊</strong>
+            <em>用 Chrome 掃成員的二維碼，掃邊個睇邊個</em>
+          </span>
+        </button>
+        <button className="menu__item" onClick={() => onShowQr?.()}>
+          <Icon name="qr" size={18} />
+          <span>
+            <strong>出示二維碼（給領袖掃描）</strong>
+            <em>每次自行剔選要傳送的資料，預設不傳任何內容</em>
+          </span>
+        </button>
+        <button
+          className="menu__item"
           onClick={() => {
             onClose();
             navigate('/forms');

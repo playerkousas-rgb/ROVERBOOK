@@ -20,6 +20,8 @@ import ShareDialog from './components/ShareDialog.jsx';
 import WalletDialog from './components/WalletDialog.jsx';
 import MenuDialog from './components/MenuDialog.jsx';
 import { FormsIndex, FormDoc, FormsAll } from './pages/Forms.jsx';
+import Scan, { ScanView } from './pages/Scan.jsx';
+import ShowQrDialog from './components/ShowQrDialog.jsx';
 
 const PAGES = {
   contents: Contents,
@@ -146,6 +148,7 @@ function BookApp({ book }) {
   const [shareOpen, setShareOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const [indexOpen, setIndexOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [savedAt, setSavedAt] = useState(null);
@@ -161,6 +164,7 @@ function BookApp({ book }) {
 
   const section = path.startsWith('/p/') ? path.slice(3) : null;
   const formId = path.startsWith('/forms') ? path.split('/').filter(Boolean)[1] || 'index' : null;
+  const scanPath = path === '/scan' || path === '/scan/view' ? path : null;
   const [lastSection, setLastSection] = useState(() => {
     try {
       return localStorage.getItem('roverbook.last') || '';
@@ -217,7 +221,7 @@ function BookApp({ book }) {
   }, [go]);
 
   return (
-    <div className={cx('app', formId ? 'app--forms' : section ? 'app--book' : 'app--cover')}>
+    <div className={cx('app', scanPath ? 'app--scan' : formId ? 'app--forms' : section ? 'app--book' : 'app--cover')}>
       <header className={cx('chipbar', section && 'chipbar--page')}>
         <Link to="/" className="chipbar__brand">
           <Crest size={26} />
@@ -283,8 +287,22 @@ function BookApp({ book }) {
           if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) go(dx < 0 ? 1 : -1);
         }}
       >
-        <div className={cx('stage__inner', section && 'stage__inner--page', formId && 'stage__inner--forms')} style={{ zoom }}>
-          {formId ? (
+        <div
+          className={cx(
+            'stage__inner',
+            section && 'stage__inner--page',
+            formId && 'stage__inner--forms',
+            scanPath && 'stage__inner--scan',
+          )}
+          style={{ zoom }}
+        >
+          {scanPath ? (
+            scanPath === '/scan/view' ? (
+              <ScanView />
+            ) : (
+              <Scan />
+            )
+          ) : formId ? (
             <div className="turn" key={formId}>
               {formId === 'index' ? <FormsIndex /> : formId === 'all' ? <FormsAll /> : <FormDoc id={formId} />}
             </div>
@@ -307,7 +325,7 @@ function BookApp({ book }) {
         </div>
       </main>
 
-      {section ? (
+      {scanPath ? null : section ? (
         <Pager current={section} />
       ) : (
         <div className="coverhint">
@@ -328,9 +346,14 @@ function BookApp({ book }) {
         }}
       />
       <WalletDialog open={walletOpen} onClose={() => setWalletOpen(false)} share={share} setShare={setShare} />
+      <ShowQrDialog open={qrOpen} onClose={() => setQrOpen(false)} />
       <MenuDialog
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
+        onShowQr={() => {
+          setMenuOpen(false);
+          setQrOpen(true);
+        }}
         onIndex={() => setIndexOpen(true)}
         onHome={() => {
           setMenuOpen(false);

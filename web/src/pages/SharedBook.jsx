@@ -3,6 +3,10 @@ import { api } from '../api.js';
 import { BADGE_SYLLABUS, allStats, SCOUTING_UNITS } from '@shared/book.js';
 import { Crest, Icon, SealMark, fmtDate } from '../ui.jsx';
 
+const DETAIL_ITEMS = BADGE_SYLLABUS.flatMap((level) =>
+  level.segments.flatMap((segment) => segment.items.map((item) => ({ id: item.id, name: item.name, level: level.name }))),
+);
+
 function Row({ label, value }) {
   if (!value) return null;
   return (
@@ -65,7 +69,10 @@ export default function SharedBook({ id }) {
     );
   }
 
-  const { snapshot: s, createdAt, views } = state.data;
+  return <SnapshotView snapshot={state.data.snapshot} createdAt={state.data.createdAt} views={state.data.views} />;
+}
+
+export function SnapshotView({ snapshot: s, createdAt, views = 0, flag = '公開分享 · 唯讀', source = '分享頁' }) {
   const m = s.member || {};
   const stats = allStats(s);
   const renewals = [...(s.renewals || [])].sort((a, b) => String(b.year).localeCompare(String(a.year)));
@@ -78,7 +85,7 @@ export default function SharedBook({ id }) {
           <Crest size={26} /> ROVERBOOK
         </span>
         <span className="shared__flag">
-          <Icon name="globe" size={13} /> 公開分享 · 唯讀
+          <Icon name={source === '分享頁' ? 'globe' : 'qr'} size={13} /> {flag}
         </span>
       </header>
 
@@ -171,6 +178,17 @@ export default function SharedBook({ id }) {
                 ))}
               </div>
               <p className="sfoot">已完成 {stats.done} / {stats.total} 項細項（第五版綱要）</p>
+              {DETAIL_ITEMS.some((it) => s.progress?.[it.id]?.date) && (
+                <ul className="sdetail">
+                  {DETAIL_ITEMS.filter((it) => s.progress?.[it.id]?.date).map((it) => (
+                    <li key={it.id}>
+                      <span>{it.name}</span>
+                      <b>{s.progress[it.id].date}</b>
+                      <em>{s.progress[it.id].assessor || ''}</em>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </article>
           )}
 
@@ -287,7 +305,7 @@ export default function SharedBook({ id }) {
           <footer className="shared__foot">
             <SealMark text="ROVERBOOK" sub="分享頁" size={64} />
             <p>
-              此頁由 ROVERBOOK 產生，內容由持有人自行選擇公開。
+              此頁由 ROVERBOOK 產生，內容由持有人自行選擇{source === '分享頁' ? '公開' : '傳送'}。
               <br />
               建立於 {createdAt ? createdAt.slice(0, 10) : '—'} · 瀏覽 {views || 0} 次
             </p>
