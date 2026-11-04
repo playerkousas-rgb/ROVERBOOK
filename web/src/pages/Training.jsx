@@ -1,6 +1,7 @@
 import React from 'react';
 import { Page, H, P, Note, Line, Area, Grid, Check, ItemLine, ProgressRow, Comment, Present, Sig, Rows , Bilingual } from '../components/Form.jsx';
 import Write from '../components/Write.jsx';
+import { EpauletteArt } from './Book.jsx';
 import { useBook, useField } from '../bookContext.js';
 import { navigate } from '../router.jsx';
 import { FORM_META, formStatus } from '@shared/forms.js';
@@ -188,6 +189,9 @@ export function EpPresented() {
   return (
     <Page id="ep-presented" className="p-presented">
       <H en="Rover Scout Epaulettes">樂行童軍肩章</H>
+      <div className="awardart awardart--one">
+        <EpauletteArt />
+      </div>
       <Present page="ep-presented" signer="副署 Countersigned by" en="Rover Scout Leader">
         <div className="present__first">
           <Sig
@@ -316,18 +320,19 @@ export function Scoutcraft() {
         ]}
       />
       <Line label="所選之訓練班" en="Selected Course" path="pages.scoutcraft.course1" placeholder="領袖遠足訓練班" />
-      <div className="itemhead itemhead--3">
-        <Bilingual zh="項目" en="Items" />
-        <Bilingual zh="證書編號" en="Certificate Number" />
-        <Bilingual zh="日期" en="Date" />
+      <div className="fduo">
+        <Line label="證書編號" en="Certificate Number" path="pages.scoutcraft.cert1" />
+        <Line label="日期" en="Date" type="date" path="pages.scoutcraft.date1" />
       </div>
-      <ProgressRow label="完成所選之訓練班" en="Complete the selected course" ids={['L3-SCOUT-01']} assessor={false} />
 
       <Bilingual as="h4" className="pgh" zh="2.2 教練員或導師訓練班" en="Instructor / Assessor course" />
       <Line label="所選之訓練班" en="Selected Course" path="pages.scoutcraft.course2" placeholder="教練員訓練班" />
-      <ProgressRow label="完成所選之訓練班" en="Complete the selected course" ids={['L3-SCOUT-02']} assessor={false} />
+      <div className="fduo">
+        <Line label="證書編號" en="Certificate Number" path="pages.scoutcraft.cert2" />
+        <Line label="日期" en="Date" type="date" path="pages.scoutcraft.date2" />
+      </div>
 
-      <Comment page="scoutcraft" />
+      <Comment page="scoutcraft" ids={['L3-SCOUT-01', 'L3-SCOUT-02']} />
     </Page>
   );
 }
@@ -368,11 +373,9 @@ export function GlobalVision() {
           { value: 'exchange', label: '2. 國際交流活動', en: 'International Exchange' },
         ]}
       />
-      <div className="fduo">
-        <Line label="從事之活動 Selected Activity" path="pages.global-vision.activity" />
-        <Line label="活動日期 Duration" path="pages.global-vision.duration" placeholder="2025-07 至 2026-01" />
-      </div>
-      <Area label="內容簡述 Summary of Activity" path="pages.global-vision.summary" rows={3} />
+      <Line label="從事之活動" en="Selected Activity" path="pages.global-vision.activity" />
+      <Line label="活動日期" en="Duration" path="pages.global-vision.duration" placeholder="2025-07 至 2026-01" />
+      <Area label="內容簡述 Summary of Activity" path="pages.global-vision.summary" rows={5} />
       <Comment page="global-vision" ids={['L3-INTL-01', 'L3-INTL-02']} />
     </Page>
   );
@@ -384,11 +387,9 @@ export function Tenacity() {
   return (
     <Page id="tenacity" className="p-items">
       <H no="(5)" en="TENACITY" progress={['L3-INT-01']}>興趣及技能</H>
-      <div className="fduo">
-        <Line label="從事之活動 Selected Activity" path="pages.tenacity.activity" placeholder="攝影" />
-        <Line label="活動日期 Duration" path="pages.tenacity.duration" />
-      </div>
-      <Area label="內容簡述 Summary of Activity" path="pages.tenacity.summary" rows={3} />
+      <Line label="從事之活動" en="Selected Activity" path="pages.tenacity.activity" placeholder="攝影" />
+      <Line label="活動日期" en="Duration" path="pages.tenacity.duration" />
+      <Area label="內容簡述 Summary of Activity" path="pages.tenacity.summary" rows={5} />
       <Comment page="tenacity" ids={['L3-INT-01']} />
     </Page>
   );
@@ -425,11 +426,9 @@ export function Wellness2() {
   return (
     <Page id="wellness-2" className="p-items">
       <H no="(6)" en="MENTAL AND PHYSICAL WELLNESS" progress={['L3-HEALTH-02']}>身心健康（二）</H>
-      <div className="fduo">
-        <Line label="從事之體育運動 Selected Physical Activity" path="pages.wellness-2.activity" placeholder="長跑" />
-        <Line label="時數 Hours" path="pages.wellness-2.hours" />
-      </div>
-      <Area label="內容簡述 Summary of Activity" path="pages.wellness-2.summary" rows={3} />
+      <Line label="從事之體育運動" en="Selected Physical Activity" path="pages.wellness-2.activity" placeholder="長跑" />
+      <Line label="時數" en="Hours" path="pages.wellness-2.hours" />
+      <Area label="內容簡述 Summary of Activity" path="pages.wellness-2.summary" rows={5} />
       <Comment page="wellness-2" ids={['L3-HEALTH-02']} />
     </Page>
   );
@@ -449,11 +448,9 @@ export function Intrepidity() {
           { value: 'wilderness', label: '2. 野外挑戰', en: 'Wilderness Challenge' },
         ]}
       />
-      <div className="fduo">
-        <Line label="從事之活動 Selected Activity" path="pages.intrepidity.activity" />
-        <Line label="活動日期 Duration" path="pages.intrepidity.duration" />
-      </div>
-      <Area label="內容簡述 Summary of Activity" path="pages.intrepidity.summary" rows={3} />
+      <Line label="從事之活動" en="Selected Activity" path="pages.intrepidity.activity" />
+      <Line label="活動日期" en="Duration" path="pages.intrepidity.duration" />
+      <Area label="內容簡述 Summary of Activity" path="pages.intrepidity.summary" rows={5} />
       <Comment page="intrepidity" ids={['L3-CHALLENGE-01', 'L3-CHALLENGE-02']} />
     </Page>
   );

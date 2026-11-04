@@ -138,12 +138,11 @@ export function Particulars2() {
         <Line label="出生地點 Place of Birth" path="member.placeOfBirth" placeholder="香港" />
       </div>
 
-      <Area label="通訊地址 Correspondence Address" path="member.address" rows={2} placeholder="九龍紅磡…" />
+      <Area label="通訊地址 Correspondence Address" path="member.address" rows={3} placeholder="九龍紅磡…" />
 
-      <div className="ftrio">
+      <div className="fduo">
         <Line label="聯絡電話 Telephone No." path="member.phone" placeholder="9876 5432" />
         <Line label="血型 Blood Type" path="member.bloodType" placeholder="O+" />
-        <Line label="電郵 Email" path="member.email" placeholder="you@example.org" />
       </div>
 
       <Bilingual as="h4" className="pgh" zh="緊急事故聯絡人" en="Emergency Contact Person" />
@@ -401,11 +400,42 @@ export function Scheme() {
   );
 }
 
+function AwardArt({ tone = 'green', label = 'RSA' }) {
+  const palette = {
+    red: ['#8f2f2a', '#a8342d'],
+    purple: ['#4b2c83', '#5d3a9b'],
+    green: ['#2f5c3a', '#3a6b47'],
+  };
+  const [ring, face] = palette[tone] || palette.green;
+  return (
+    <svg className="awardart__svg awardart__svg--sm" viewBox="0 0 96 96" role="img" aria-label={label}>
+      <circle cx="48" cy="48" r="45" fill={face} />
+      <circle cx="48" cy="48" r="45" fill="none" stroke={ring} strokeWidth="3" />
+      <circle cx="48" cy="48" r="35" fill="none" stroke="#f0e3c2" strokeWidth="1.4" opacity="0.85" />
+      <path d="M48 24c6 8 13 11 13 19 0 6.4-6 10.8-13 10.8S35 49.4 35 43c0-8 7-11 13-19Z" fill="#f0e3c2" opacity="0.92" />
+      <path d="M34 68h28M38 74h20" stroke="#f0e3c2" strokeWidth="2.2" strokeLinecap="round" />
+      <text x="48" y="19" textAnchor="middle" fontSize="10" letterSpacing="1.6" fill="#f0e3c2" fontFamily="serif">ROVER</text>
+      <text x="48" y="88" textAnchor="middle" fontSize="8.4" letterSpacing="1.6" fill="#f0e3c2" fontFamily="serif">SCOUTS</text>
+    </svg>
+  );
+}
+
+export function EpauletteArt() {
+  return (
+    <svg className="awardart__svg awardart__svg--sm" viewBox="0 0 96 96" role="img" aria-label="Rover Scout Epaulettes">
+      <path d="M24 26 h48 a8 8 0 0 1 8 8 v34 a8 8 0 0 1 -8 8 h-48 a8 8 0 0 1 -8 -8 v-34 a8 8 0 0 1 8 -8 Z" fill="#25452f" stroke="#1b3324" strokeWidth="2" />
+      <circle cx="48" cy="52" r="12" fill="none" stroke="#d8b871" strokeWidth="2" />
+      <circle cx="48" cy="52" r="4" fill="#d8b871" />
+      <path d="M32 74h32" stroke="#d8b871" strokeWidth="1.6" opacity="0.7" />
+    </svg>
+  );
+}
+
 const STAGES = [
-  { no: '1', name: '會員章', en: 'Membership Badge', time: '平均於 3 個月內完成', enTime: 'To be completed within 3 months on average', req: '完成啟導班／等同項目／先修章', enReq: 'Introductory Course / Link Badge / Equivalent items' },
-  { no: '2', name: '樂行童軍肩章', en: 'Rover Scout Epaulettes', time: '平均於 3 至 6 個月內完成', enTime: 'To be completed within 3-6 months on average', req: '完成 7 項考驗中的其中 4 項', enReq: 'Complete 4 of the 7 Components' },
-  { no: '3', name: '樂行童軍獎章', en: 'Rover Scout Award', time: '平均於 12 至 18 個月內完成', enTime: 'To be completed within 12-18 months on average', req: '完成 7 項考驗中的其中 4 項', enReq: 'Complete 4 of the 7 Components' },
-  { no: '4', name: '貝登堡獎章', en: 'Baden Powell Award', time: '平均於 12 至 18 個月內完成', enTime: 'To be completed within 12-18 months on average', req: '完成所有 7 項考驗', enReq: 'Complete all the 7 Components' },
+  { no: '1', tone: 'purple', name: '會員章', en: 'Membership Badge', time: '平均於 3 個月內完成', enTime: 'To be completed within 3 months on average', req: '完成啟導班／等同項目／先修章', enReq: 'Introductory Course / Link Badge / Equivalent items' },
+  { no: '2', tone: 'epaulette', name: '樂行童軍肩章', en: 'Rover Scout Epaulettes', time: '平均於 3 至 6 個月內完成', enTime: 'To be completed within 3-6 months on average', req: '完成 7 項考驗中的其中 4 項', enReq: 'Complete 4 of the 7 Components' },
+  { no: '3', tone: 'green', name: '樂行童軍獎章', en: 'Rover Scout Award', time: '平均於 12 至 18 個月內完成', enTime: 'To be completed within 12-18 months on average', req: '完成所有 7 項考驗', enReq: 'Complete all the 7 Components' },
+  { no: '4', tone: 'red', name: '貝登堡獎章', en: 'Baden Powell Award', time: '平均於 12 至 18 個月內完成', enTime: 'To be completed within 12-18 months on average', req: '', enReq: '' },
 ];
 
 export function Plan() {
@@ -420,13 +450,16 @@ export function Plan() {
         {STAGES.map((s) => (
           <div className="pstage" key={s.no}>
             <span className="pstage__no">{s.no}</span>
+            <span className="pstage__art">
+              {s.tone === 'epaulette' ? <EpauletteArt /> : <AwardArt tone={s.tone} label={s.en} />}
+            </span>
             <div className="pstage__body">
               <h4>
                 {isEn ? s.en : s.name}
                 {!isEn && <em>{s.en}</em>}
               </h4>
-              <p className="pstage__req">{isEn ? s.enReq : s.req}</p>
-              {!isEn && <p className="pstage__req-en">{s.enReq}</p>}
+              {s.req && <p className="pstage__req">{isEn ? s.enReq : s.req}</p>}
+              {!isEn && s.enReq && <p className="pstage__req-en">{s.enReq}</p>}
             </div>
             <div className="pstage__time">
               {isEn ? s.enTime : s.time}
@@ -450,7 +483,7 @@ export function BadgeTable({ id, title, en, path }) {
       <H en={en}>{title}</H>
       <Rows
         path={path}
-        min={11}
+        min={9}
         addLabel={null}
         cols={[
           { k: 'name', label: '獎章', en: 'Badges', width: 2 },
@@ -464,14 +497,14 @@ export function BadgeTable({ id, title, en, path }) {
 
 /* -------------------------------------------------------------- 經驗表格頁 */
 
-export function Experience({ id, title, en, path, lead, leadEn }) {
+export function Experience({ id, title, en, path, lead, leadEn, min = 11 }) {
   return (
     <Page id={id} className="p-exp">
       <H en={en}>{title}</H>
       <P en={leadEn}>{lead}</P>
       <Rows
         path={path}
-        min={11}
+        min={min}
         addLabel={null}
         cols={[
           { k: 'period', label: '時段', en: 'Period', width: 1.1 },

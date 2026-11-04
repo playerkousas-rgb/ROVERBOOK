@@ -100,6 +100,7 @@ const PAGES = {
       title="遠足及海外活動（續）"
       en="EXPEDITIONS AND OVERSEAS ACTIVITIES"
       path="pages.expeditions-2.rows"
+      min={12}
       lead="在此紀錄你在本港或海外進行遠足或參與國際童軍活動。"
       leadEn="Record here any expeditions in Hong Kong or overseas or International Scouting activities undertaken abroad."
     />
