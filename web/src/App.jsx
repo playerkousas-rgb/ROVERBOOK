@@ -6,16 +6,13 @@ import { ToastProvider, useToast, Crest, Icon, Modal, cx } from './ui.jsx';
 import { Pager, CoverPage } from './components/Paper.jsx';
 import { SECTIONS, PAGE_TOTAL } from '@shared/book.js';
 import Contents from './pages/Contents.jsx';
-import Particulars from './pages/Particulars.jsx';
-import GroupInfo from './pages/GroupInfo.jsx';
-import Scouting from './pages/Scouting.jsx';
-import Renewals from './pages/Renewals.jsx';
-import Service from './pages/Service.jsx';
-import Awards from './pages/Awards.jsx';
-import TrainingPage from './pages/TrainingPage.jsx';
-import Expeditions from './pages/Expeditions.jsx';
-import Additional from './pages/Additional.jsx';
-import Signatures from './pages/Signatures.jsx';
+import { Colophon, Particulars1, Particulars2, GroupInfo, Scouting, Changes, Renewals, ServiceAwards, Scheme, Plan, BadgeTable, Experience, Uniform } from './pages/Book.jsx';
+import {
+  MbIntro, MbActivities, MbUnderstanding, MbCommitment, MbPresented,
+  EpIntro, EpPresented, RsaIntro, RsaAwards, Dedication, Scoutcraft, Volunteerism,
+  GlobalVision, Tenacity, Wellness1, Wellness2, Intrepidity, RsaPresented,
+  Interview, BpaPresented,
+} from './pages/Training.jsx';
 import Appendix from './pages/Appendix.jsx';
 import Welcome from './pages/Welcome.jsx';
 import SharedBook from './pages/SharedBook.jsx';
@@ -25,29 +22,92 @@ import MenuDialog from './components/MenuDialog.jsx';
 
 const PAGES = {
   contents: Contents,
-  particulars: Particulars,
+  colophon: Colophon,
+  'particulars-1': Particulars1,
+  'particulars-2': Particulars2,
   group: GroupInfo,
   scouting: Scouting,
-  renewals: Renewals,
-  service: Service,
-  awards: Awards,
-  'training-1': () => <TrainingPage sectionId="training-1" badgeId="L1" />,
-  'training-2': () => <TrainingPage sectionId="training-2" badgeId="L2" />,
-  'training-3': () => <TrainingPage sectionId="training-3" badgeId="L3" part={0} />,
-  'training-4': () => <TrainingPage sectionId="training-4" badgeId="L3" part={1} />,
-  'training-5': () => <TrainingPage sectionId="training-5" badgeId="L4" />,
-  expeditions: Expeditions,
-  additional: Additional,
-  signatures: Signatures,
+  changes: Changes,
+  'renewals-1': () => <Renewals part={0} />,
+  'renewals-2': () => <Renewals part={1} />,
+  'service-awards': ServiceAwards,
+  scheme: Scheme,
+  plan: Plan,
+  'mb-intro': MbIntro,
+  'mb-activities': MbActivities,
+  'mb-understanding': MbUnderstanding,
+  'mb-commitment': MbCommitment,
+  'mb-presented': MbPresented,
+  'ep-intro': EpIntro,
+  'ep-presented': EpPresented,
+  'rsa-intro': RsaIntro,
+  'rsa-awards': RsaAwards,
+  dedication: Dedication,
+  scoutcraft: Scoutcraft,
+  volunteerism: Volunteerism,
+  'global-vision': GlobalVision,
+  tenacity: Tenacity,
+  'wellness-1': Wellness1,
+  'wellness-2': Wellness2,
+  intrepidity: Intrepidity,
+  'rsa-presented': RsaPresented,
+  'interview-district': () => <Interview kind="district" />,
+  'interview-region': () => <Interview kind="region" />,
+  'bpa-presented': BpaPresented,
+  wosm: () => <BadgeTable id="wosm" title="世界童軍組織推出的獎章" en="BADGES FROM THE WOSM" path="pages.wosm.rows" />,
+  'other-badges-1': () => <BadgeTable id="other-badges-1" title="其他獎章" en="OTHER BADGES" path="pages.other-badges-1.rows" />,
+  'other-badges-2': () => <BadgeTable id="other-badges-2" title="其他獎章（續）" en="OTHER BADGES" path="pages.other-badges-2.rows" />,
+  'additional-1': () => (
+    <Experience
+      id="additional-1"
+      title="其他經驗"
+      en="ADDITIONAL EXPERIENCES"
+      path="additional"
+      lead="在此紀錄你在樂行童軍支部所獲得之其他經驗，包括但不限於參加之活動、在樂行童軍團所負責之特別任務、在管理委員會所擔任之職位等。"
+      leadEn="Record here additional experiences gained and any qualifications obtained in this Section. These activities include but not limited to activities attempted, special responsibilities in the Crew and positions held in the Management Committee."
+    />
+  ),
+  'additional-2': () => (
+    <Experience
+      id="additional-2"
+      title="其他經驗（續）"
+      en="ADDITIONAL EXPERIENCES"
+      path="pages.additional-2.rows"
+      lead="續上頁。"
+      leadEn="Continued."
+    />
+  ),
+  'expeditions-1': () => (
+    <Experience
+      id="expeditions-1"
+      title="遠足及海外活動"
+      en="EXPEDITIONS AND OVERSEAS ACTIVITIES"
+      path="expeditions"
+      lead="在此紀錄你在本港或海外進行遠足或參與國際童軍活動。"
+      leadEn="Record here any expeditions in Hong Kong or overseas or international Scouting activities undertaken abroad."
+    />
+  ),
+  'expeditions-2': () => (
+    <Experience
+      id="expeditions-2"
+      title="遠足及海外活動（續）"
+      en="EXPEDITIONS AND OVERSEAS ACTIVITIES"
+      path="pages.expeditions-2.rows"
+      lead="續上頁。"
+      leadEn="Continued."
+    />
+  ),
+  uniform: Uniform,
   appendix: Appendix,
 };
 
 const bookPages = SECTIONS.filter((s) => s.id !== 'contents');
+const paperPages = SECTIONS.filter((s) => !s.digital);
 
 function IndexSheet({ open, onClose, current }) {
   if (!open) return null;
   return (
-    <Modal onClose={onClose} eyebrow="CONTENTS" title="目錄" subtitle={`本冊共 ${PAGE_TOTAL} 頁，逐頁對應紀錄冊。`} wide>
+    <Modal onClose={onClose} eyebrow="CONTENTS" title="目錄" subtitle={`紙本 41 頁，逐頁對應；另設數位附錄。`} wide>
       <div className="indexlist">
         <Link to="/" className="indexrow indexrow--cover" onClick={onClose}>
           <span className="indexrow__no">封面</span>
@@ -61,7 +121,7 @@ function IndexSheet({ open, onClose, current }) {
             onClick={onClose}
             className={cx('indexrow', current === s.id && 'is-current')}
           >
-            <span className="indexrow__no">{s.page}</span>
+            <span className="indexrow__no">{s.page === '—' ? '附錄' : s.page}</span>
             <span className="indexrow__title">
               {s.label}
               <em>{s.en}</em>
@@ -107,7 +167,7 @@ function BookApp({ book }) {
 
   const go = useCallback((delta) => {
     if (!section) {
-      navigate('/p/particulars');
+      navigate('/p/particulars-1');
       return;
     }
     const next = bookPages[index + delta];
@@ -138,7 +198,7 @@ function BookApp({ book }) {
 
         {section && (
           <button className="chipbar__page" onClick={() => setIndexOpen(true)}>
-            <span>第 {meta?.page} 頁</span>
+            <span>{meta?.page === '—' ? '數位' : `第 ${meta?.page} 頁`}</span>
             <strong>{meta?.label}</strong>
             <Icon name="down" size={12} />
           </button>
@@ -191,7 +251,7 @@ function BookApp({ book }) {
             <CoverPage
               book={book}
               onOpen={() => {
-                navigate('/p/particulars');
+                navigate('/p/particulars-1');
                 push('已打開你的紀錄冊');
               }}
             />
@@ -220,7 +280,15 @@ function BookApp({ book }) {
         }}
       />
       <WalletDialog open={walletOpen} onClose={() => setWalletOpen(false)} share={share} setShare={setShare} />
-      <MenuDialog open={menuOpen} onClose={() => setMenuOpen(false)} onIndex={() => setIndexOpen(true)} />
+      <MenuDialog
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onIndex={() => setIndexOpen(true)}
+        onHome={() => {
+          setMenuOpen(false);
+          setWalletOpen(true);
+        }}
+      />
     </div>
   );
 }

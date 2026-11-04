@@ -48,7 +48,7 @@ export default function MenuDialog({ open, onClose }) {
         draft.member = result.member;
         replace(newBook(draft));
         push(`已從 ROVERBADGE 匯入 ${result.imported} 項進度（${result.matchedBy}）`);
-        navigate('/p/training');
+        navigate('/p/mb-intro');
         onClose();
       } catch (e) {
         push(e.message || '無法讀取 ROVERBADGE 檔案', 'error');
@@ -60,11 +60,21 @@ export default function MenuDialog({ open, onClose }) {
   return (
     <Modal open={open} onClose={onClose} eyebrow="MENU" title="紀錄冊選項">
       <div className="menu">
+        {onHome && (
+          <button className="menu__item menu__item--accent" onClick={onHome}>
+            <Icon name="download" size={18} />
+            <span>
+              <strong>加到手機主畫面</strong>
+              <em>建議做法：一按即開，毋須憑證、毋須付費</em>
+            </span>
+          </button>
+        )}
+
         <button className="menu__item" onClick={() => window.print()}>
           <Icon name="print" size={18} />
           <span>
-            <strong>列印這一章 / 儲存 PDF</strong>
-            <em>用瀏覽器列印，版面已為 A4 調整</em>
+            <strong>列印整本 / 儲存 PDF</strong>
+            <em>每頁對應紙本一頁，已設 A4 分頁</em>
           </span>
         </button>
 

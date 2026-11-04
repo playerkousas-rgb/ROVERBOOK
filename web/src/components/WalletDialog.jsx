@@ -113,7 +113,7 @@ export default function WalletDialog({ open, onClose, share, setShare }) {
       onClose={onClose}
       eyebrow="WALLET"
       title="手機錢包"
-      subtitle="錢包卡上的二維碼只連到你分享的紀錄；你隨時可以刪除連結令它失效。"
+      subtitle="最快的方法：把紀錄冊加到手機主畫面。錢包卡只是額外選項，完全可以跳過。"
       wide
     >
       <div className="walletgrid">
@@ -138,11 +138,29 @@ export default function WalletDialog({ open, onClose, share, setShare }) {
         </div>
 
         <div className="walletactions">
+          <div className="pwa pwa--primary">
+            <strong>
+              <Icon name="download" size={15} /> 加到主畫面（建議，今日就可以用）
+            </strong>
+            <ol className="pwa__steps">
+              <li>
+                <span className="pwa__os">iPhone</span>用 <b>Safari</b> 開啟本頁 → 底部「分享」掣 → 揀「加入主畫面」→ 右上「新增」。
+              </li>
+              <li>
+                <span className="pwa__os">Android</span>用 <b>Chrome</b> 開啟本頁 → 右上三點 → 揀「安裝應用程式」或「加到主畫面」。
+              </li>
+            </ol>
+            <p className="pwa__note">
+              之後由主畫面一按即開，全螢幕、毋須登入、毋須任何憑證，亦唔會過期。
+              開完之後，紀錄冊會用你手機嘅儲存空間，離線都開得。
+            </p>
+          </div>
+
           <button className="walletbtn" onClick={addApple} disabled={busy === 'apple'}>
             <span className="walletbtn__logo walletbtn__logo--apple">&#63743;</span>
             <span>
-              <strong>{busy === 'apple' ? '產生中…' : '加入 Apple Wallet'}</strong>
-              <em>{appleReady ? '已連接簽署憑證' : '未設定憑證 · 需 Apple Developer 帳戶'}</em>
+              <strong>{busy === 'apple' ? '產生中…' : '（可選）加入 Apple Wallet'}</strong>
+              <em>{appleReady ? '已連接簽署憑證' : '要付費開發者帳戶；唔想付費可略過'}</em>
             </span>
             <span className={cx('dot', appleReady ? 'dot--ok' : 'dot--off')} />
           </button>
@@ -150,21 +168,11 @@ export default function WalletDialog({ open, onClose, share, setShare }) {
           <button className="walletbtn" onClick={addGoogle} disabled={busy === 'google'}>
             <span className="walletbtn__logo walletbtn__logo--google">G</span>
             <span>
-              <strong>{busy === 'google' ? '產生中…' : '加入 Google Wallet'}</strong>
-              <em>{googleReady ? '已連接簽發者帳戶' : '未設定 · 需 Google Wallet 帳戶'}</em>
+              <strong>{busy === 'google' ? '產生中…' : '（可選）加入 Google Wallet'}</strong>
+              <em>{googleReady ? '已連接簽發者帳戶' : '免費但要開通 Issuer 帳戶'}</em>
             </span>
             <span className={cx('dot', googleReady ? 'dot--ok' : 'dot--off')} />
           </button>
-
-          <div className="pwa">
-            <strong>
-              <Icon name="download" size={14} /> 今日就可以用：加到主畫面
-            </strong>
-            <p>
-              iPhone：用 Safari 開啟本頁 → 分享 →「加入主畫面」。Android：Chrome 右上選單 →「安裝應用程式」。
-              之後一按就開，毋須登入、毋須憑證。
-            </p>
-          </div>
 
           {current && (
             <p className="sharenote">
@@ -177,17 +185,18 @@ export default function WalletDialog({ open, onClose, share, setShare }) {
 
       <button className="guidetoggle" onClick={() => setGuide((g) => !g)}>
         <Icon name={guide ? 'down' : 'chevron'} size={13} />
-        我需要準備甚麼？（用家版說明）
+        三條路有咩分別？（用家版說明）
       </button>
 
       {guide && (
         <div className="guide">
           <div className="guide__row">
-            <span className="guide__tag">最快</span>
+            <span className="guide__tag">建議</span>
             <div>
-              <strong>不加憑證都可以用</strong>
+              <strong>「加到主畫面」已經等於一個 App</strong>
               <p>
-                紀錄冊本身、二維碼分享、列印全部都唔需要 Wallet。只要「加到主畫面」，開啟速度同 App 一樣。
+                唔需要開發者帳戶、唔需要付費、唔需要設定任何東西。圖示會出現喺你手機主畫面，
+                一按即開；填寫、簽名、分享、列印全部照用。Apple／Google Wallet 只係「多一個入口」，唔加都完全正常。
               </p>
             </div>
           </div>
@@ -195,12 +204,12 @@ export default function WalletDialog({ open, onClose, share, setShare }) {
           <div className="guide__row">
             <span className="guide__tag guide__tag--apple">Apple</span>
             <div>
-              <strong>Apple Wallet 需要一個付費開發者帳戶</strong>
+              <strong>Apple Wallet：必須有付費開發者帳戶（唔急就唔好搞）</strong>
               <ol>
                 <li>用 Apple ID 登記 Apple Developer Program（個人名義，年費約 US$99）。</li>
-                <li>在 Certificates → Identifiers → Pass Type IDs 建立一個 ID，例如 <code>pass.hk.yourname.roverbook</code>。</li>
-                <li>下載對應的 <code>.p12</code> 憑證，連同 Apple WWDR 憑證，放上伺服器。</li>
-                <li>設定 5 個環境變數（Pass Type ID、Team ID、憑證路徑、憑證密碼、WWDR 路徑）並重啟。</li>
+                <li>登入開發者網站，建立一個 Pass Type ID（例如 <code>pass.hk.你的名.roverbook</code>）。</li>
+                <li>下載對應的簽署憑證（.p12），連同 Apple WWDR 憑證交給管理員放上伺服器。</li>
+                <li>管理員設定 5 個環境變數後重啟，之後「加入 Apple Wallet」就會work。</li>
               </ol>
               <p className="tiny">
                 這一步只做一次；係 Apple 的規則，任何 App 都一樣。你唔想付費，用「加到主畫面」即可。
@@ -211,7 +220,7 @@ export default function WalletDialog({ open, onClose, share, setShare }) {
           <div className="guide__row">
             <span className="guide__tag guide__tag--google">Google</span>
             <div>
-              <strong>Google Wallet 免費，但要開通 Issuer 帳戶</strong>
+              <strong>Google Wallet：免費，但要開通 Issuer 帳戶</strong>
               <ol>
                 <li>用 Google 帳戶登入 Google Wallet Business Console，取得 Issuer ID（免費）。</li>
                 <li>建立一個 Generic Class（例如 <code>roverbook.card</code>）。</li>

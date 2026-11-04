@@ -1,8 +1,18 @@
-import { STORE_KEY, SHARE_KEY, newBook } from '@shared/book.js';
+import { STORE_KEY, LEGACY_STORE_KEYS, SHARE_KEY, newBook } from '@shared/book.js';
 
 export function loadBook() {
   try {
-    const raw = localStorage.getItem(STORE_KEY);
+    let raw = localStorage.getItem(STORE_KEY);
+    if (!raw) {
+      for (const key of LEGACY_STORE_KEYS) {
+        const legacy = localStorage.getItem(key);
+        if (legacy) {
+          raw = legacy;
+          localStorage.setItem(STORE_KEY, legacy);
+          break;
+        }
+      }
+    }
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || !parsed.member) return null;

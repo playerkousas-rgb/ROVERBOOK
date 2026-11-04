@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api.js';
-import { BADGE_SYLLABUS, allStats } from '@shared/book.js';
+import { BADGE_SYLLABUS, allStats, SCOUTING_UNITS } from '@shared/book.js';
 import { Crest, Icon, SealMark, fmtDate } from '../ui.jsx';
 
 function Row({ label, value }) {
@@ -180,7 +180,7 @@ export default function SharedBook({ id }) {
               <ul className="slist">
                 {s.scouting.map((r) => (
                   <li key={r.id}>
-                    <strong>{[r.unit, r.post].filter(Boolean).join(' · ')}</strong>
+                    <strong>{[SCOUTING_UNITS.find((u) => u.key === r.unit)?.label, r.post].filter(Boolean).join(' · ')}</strong>
                     <span>{[r.from, r.to].filter(Boolean).join(' – ')}</span>
                     {r.highestAward && <em>{r.highestAward}</em>}
                   </li>

@@ -13,7 +13,7 @@ export function Sheet({ id, no, title, en, children, className = '', dense = fal
         <span className="sheet__run">
           樂行童軍紀錄冊 <em>ROVER SCOUT RECORD BOOK</em>
         </span>
-        <span className="sheet__pageno">{no === '—' ? '目錄' : `第 ${no} 頁`}</span>
+        {no !== '—' && <span className="sheet__pageno">第 {no} 頁</span>}
       </header>
       <div className="sheet__titlebar">
         <h1>
@@ -104,7 +104,7 @@ export function Pager({ current }) {
         </Link>
       )}
       <span className="pager__count">
-        {list[index]?.page} / {PAGE_TOTAL}
+        {list[index]?.page === '—' ? '附錄' : `${list[index]?.page} / ${PAGE_TOTAL}`}
       </span>
       {next ? (
         <Link to={`/p/${next.id}`} className="pager__link pager__link--next">

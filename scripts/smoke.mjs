@@ -147,62 +147,78 @@ await screen({
   expect: ['打開紀錄冊', '林卓瑤', '九龍第 145', 'RECORD BOOK'],
 });
 
-// ------------------------------------------------- 2. 每一頁（逐頁掃描）
+// ------------------------------------------- 2. 逐頁掃描（紙本 41 頁 + 附錄）
 
-const pageChecks = [
-  { id: 'contents', expect: ['目錄', '個人資料', '訓練進度', '綱要'] },
-  { id: 'particulars', expect: ['個人資料', '林卓瑤', '持有人簽署', '緊急事故聯絡人', '1 / 15'] },
-  { id: 'group', expect: ['旅部資料', '黃埔宣道會', '團集會地點'] },
-  { id: 'scouting', expect: ['童軍紀錄', '小童軍', '金紫荊章'] },
-  { id: 'renewals', expect: ['會員資格', '2026', '團長簽署'] },
-  { id: 'service', expect: ['服務紀錄', '團秘書', '委任人'] },
-  { id: 'awards', expect: ['獎章及獎勵', '樂行童軍肩章', '頒授 / 核實簽署'] },
-  { id: 'training-1', expect: ['會員章', 'ACT', '簽'] },
-  { id: 'training-2', expect: ['樂行童軍肩章', 'INTRO'] },
-  { id: 'training-3', expect: ['樂行童軍獎章（一）', '準領袖', '9 / 15'] },
-  { id: 'training-4', expect: ['樂行童軍獎章（二）', '國際視野'] },
-  { id: 'training-5', expect: ['貝登堡獎章', 'ALL'] },
-  { id: 'expeditions', expect: ['遠足及海外活動', '台灣陽明山', '32 公里'] },
-  { id: 'additional', expect: ['其他經驗', '聖約翰急救證書'] },
-  { id: 'signatures', expect: ['簽署及聲明', '本人謹此聲明', '領袖核實', '馬啟明'] },
-  { id: 'appendix', expect: ['數位附錄', '本機儲存', 'ROVERBADGE', '分享'] },
-];
+const PAGE_TEXT = {
+  contents: '本電子版逐頁對應',
+  colophon: '九龍柯士甸道',
+  'particulars-1': '林卓瑤',
+  'particulars-2': '持有人簽署',
+  group: '黃埔宣道會',
+  scouting: '深資童軍',
+  changes: '遷移地址',
+  'renewals-1': '旅印及簽署',
+  'renewals-2': '十二月三十一日',
+  'service-awards': '獎章及獎勵記錄',
+  scheme: '銘言',
+  plan: '訓練計劃共分為四個階段',
+  'mb-intro': '管理委員會',
+  'mb-activities': '參與最少三次團活動',
+  'mb-understanding': '(2.1)',
+  'mb-commitment': '保護童軍成員',
+  'mb-presented': '頒發日期',
+  'ep-intro': '啟導班',
+  'ep-presented': '頒發日期',
+  'rsa-intro': '考核流程',
+  'rsa-awards': '貝登堡獎章',
+  dedication: '準領袖培訓',
+  scoutcraft: '傳統童軍技能',
+  volunteerism: '急救證書',
+  'global-vision': '國際視野',
+  tenacity: '興趣及技能',
+  'wellness-1': '精神健康',
+  'wellness-2': '體育運動',
+  intrepidity: '挑戰',
+  'rsa-presented': '樂行童軍獎章',
+  'interview-district': '區總監',
+  'interview-region': '地域總監',
+  'bpa-presented': '貝登堡獎章',
+  wosm: '世界童軍組織',
+  'other-badges-1': '其他獎章',
+  'other-badges-2': '其他獎章',
+  'additional-1': '其他經驗',
+  'additional-2': '其他經驗',
+  'expeditions-1': '遠足',
+  'expeditions-2': '遠足',
+  uniform: '制服',
+  appendix: '數位附錄',
+};
 
-for (const check of pageChecks.filter((c) => c.id !== 'contents')) {
-  await screen({ name: '頁面', path: `/p/${check.id}`, expect: check.expect });
-}
+report(SECTIONS.length === Object.keys(PAGE_TEXT).length, `章節數目 ${SECTIONS.length}`, Object.keys(PAGE_TEXT).join(','));
 
-const contents = await screen({
-  name: '目錄頁',
-  path: '/p/contents',
-  expect: pageChecks[0].expect,
-});
-report(contents.includes('目錄'), '目錄頁顯示「目錄」而非頁碼');
-
-// 每頁都應有頁碼 "n / 15"
-{
-  const numbers = SECTIONS.filter((s) => s.id !== 'contents').map((s) => s.page);
-  report(numbers.length === PAGE_TOTAL, `頁數設定：${numbers.length} / ${PAGE_TOTAL}`, numbers.join(','));
+for (const section of SECTIONS) {
+  const expect = [PAGE_TEXT[section.id]];
+  if (typeof section.page === 'number') expect.push(`第 ${section.page} 頁`, `${section.page} / 41`);
+  await screen({ name: '頁面', path: `/p/${section.id}`, expect, wait: 340 });
 }
 
 // ---------------------------------------------------------------- 3. 互動
 
 await screen({
-  name: '填寫：新增服務並自動儲存',
-  path: '/p/service',
-  expect: ['加一項服務'],
+  name: '填寫：新增一項服務並自動儲存',
+  path: '/p/service-awards',
   interact: async (doc) => {
-    const before = stored().service.length;
+    const before = (JSON.parse(localStorage.getItem('roverbook.book.v3')).service || []).length;
     doc.querySelector('.addrow').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     await new Promise((r) => setTimeout(r, 400));
-    const after = stored().service.length;
+    const after = (JSON.parse(localStorage.getItem('roverbook.book.v3')).service || []).length;
     if (after !== before + 1) throw new Error(`服務由 ${before} 變成 ${after}`);
   },
 });
 
 await screen({
-  name: '點擊填寫：文字框可直接編輯',
-  path: '/p/particulars',
+  name: '點擊即寫：底線變輸入框',
+  path: '/p/particulars-1',
   expect: ['write__input'],
   interact: async (doc) => {
     const box = doc.querySelector('.write');
@@ -215,11 +231,12 @@ await screen({
 
 await screen({
   name: '放大填寫：彈出大輸入框並可儲存',
-  path: '/p/particulars',
+  path: '/p/particulars-1',
   expect: ['放大填寫'],
   after: 600,
   interact: async (doc) => {
-    const zoom = doc.querySelector('.write__zoom');
+    const target = doc.querySelector('.write[aria-label="姓名（中文）Name (Chinese)"]');
+    const zoom = target && target.querySelector('.write__zoom');
     if (!zoom) throw new Error('找不到放大按鈕');
     zoom.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     await new Promise((r) => setTimeout(r, 300));
@@ -230,28 +247,42 @@ await screen({
     field.dispatchEvent(new window.Event('input', { bubbles: true }));
     doc.querySelector('.modal__actions .btn--primary').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     await new Promise((r) => setTimeout(r, 400));
-    if (!stored().member.nameZh.includes('測試')) throw new Error('放大輸入未寫入');
+    if (!JSON.parse(localStorage.getItem('roverbook.book.v3')).member.nameZh.includes('測試')) throw new Error('放大輸入未寫入');
   },
 });
 
 await screen({
-  name: '訓練：勾選項目會寫入本機',
-  path: '/p/training-1',
-  expect: ['會員章', 'L1-ACT-01', '本頁完成'],
+  name: '訓練細項：勾選寫入本機',
+  path: '/p/mb-understanding',
+  expect: ['understanding'],
   interact: async (doc) => {
-    const before = Object.values(stored().progress).filter((p) => p?.date).length;
-    const box = doc.querySelector('.titem__check');
+    const before = Object.values(JSON.parse(localStorage.getItem('roverbook.book.v3')).progress || {}).filter((p) => p?.date).length;
+    const box = doc.querySelector('.itemline__tick');
     if (!box) throw new Error('找不到勾選框');
     box.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     await new Promise((r) => setTimeout(r, 450));
-    const after = Object.values(stored().progress).filter((p) => p?.date).length;
+    const after = Object.values(JSON.parse(localStorage.getItem('roverbook.book.v3')).progress || {}).filter((p) => p?.date).length;
     if (after === before) throw new Error(`進度項目數沒有改變（${before}）`);
+    if (window.document.querySelectorAll('.itemline.is-done').length === 0) throw new Error('勾選後未標記完成');
+  },
+});
+
+await screen({
+  name: '簽名：可以開啟簽名板',
+  path: '/p/particulars-2',
+  expect: ['持有人簽署'],
+  interact: async (doc) => {
+    const btn = doc.querySelector('.sigblock__actions .linkbtn') || doc.querySelector('.sigblock__empty');
+    if (!btn) throw new Error('找不到簽名控制');
+    btn.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 300));
+    if (!doc.querySelector('.pad__canvas')) throw new Error('未開啟簽名板');
   },
 });
 
 await screen({
   name: '分享對話框：建立連結',
-  path: '/p/particulars',
+  path: '/p/particulars-1',
   expect: ['分享我的紀錄', '分享內容'],
   after: 900,
   interact: async (doc) => {
@@ -274,8 +305,8 @@ await screen({
 
 await screen({
   name: '目錄抽屜可開啟',
-  path: '/p/awards',
-  expect: ['本冊共 15 頁'],
+  path: '/p/uniform',
+  wait: 300,
   interact: async (doc) => {
     doc.querySelector('.chipbar__page').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     await new Promise((r) => setTimeout(r, 300));
