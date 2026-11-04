@@ -377,7 +377,7 @@ export const SECTIONS = [
   { id: 'expeditions-1', label: '遠足及海外活動', en: 'Expeditions and Overseas Activities', page: 39 },
   { id: 'expeditions-2', label: '遠足及海外活動（續）', en: 'Expeditions and Overseas Activities', page: 40 },
   { id: 'uniform', label: '樂行童軍制服', en: 'Rover Scout Uniform', page: 41 },
-  { id: 'uniform-en', label: '制服（英文）', en: 'Uniform (English)', page: 42 },
+  { id: 'promise', label: '童軍誓詞與規律', en: 'Scout Promise and Law', page: 42 },
   { id: 'crest', label: '徽章圖', en: 'Emblem', page: 43 },
   { id: 'appendix', label: '數位附錄', en: 'Digital Appendix', page: '—', digital: true },
 ];

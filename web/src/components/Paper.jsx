@@ -133,7 +133,7 @@ export function Pager({ current }) {
 }
 
 /** Full-bleed blue cover — the whole screen is the book. */
-export function CoverPage({ book, onOpen, last, onContinue, hint }) {
+export function CoverPage({ book, onOpen, last, onContinue, hint, onLeader }) {
   const { isEn } = useLang();
   const m = book?.member || {};
   return (
@@ -192,6 +192,11 @@ export function CoverPage({ book, onOpen, last, onContinue, hint }) {
         <button className="coverart__open" onClick={onOpen}>
           {isEn ? 'Open the record book' : '打開紀錄冊'}
         </button>
+        {onLeader && (
+          <button className="coverart__leader" onClick={onLeader}>
+            {isEn ? 'Leader mode' : '領袖模式'}
+          </button>
+        )}
         {last && (
           <button className="coverart__resume" onClick={onContinue}>
             {isEn ? `Continue · page ${last.page}` : `繼續上次 · 第 ${last.page} 頁`} <span>{isEn ? last.en || last.label : last.label}</span>

@@ -8832,3 +8832,320 @@ html[data-lang='en'] .fareas .frow__label {
   margin: 8% auto 0;
   mix-blend-mode: multiply;
 }
+
+/* ================================================================ v16
+   1) 加入主畫面（PWA standalone）之後：避開瀏海、圓角及手勢區，
+      否則頂欄會縮在狀態列下面，點唔到。
+   ================================================================ */
+
+.app {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+.chipbar {
+  padding-top: calc(9px + env(safe-area-inset-top, 0px));
+}
+
+/* 全螢幕模式：頂欄再留一點呼吸位，並保證按鈕有 44px 可點範圍 */
+@media (display-mode: standalone) {
+  .chipbar {
+    padding-top: calc(9px + max(env(safe-area-inset-top, 0px), 8px));
+    padding-left: calc(clamp(10px, 2.4vw, 22px) + env(safe-area-inset-left, 0px));
+    padding-right: calc(clamp(10px, 2.4vw, 22px) + env(safe-area-inset-right, 0px));
+  }
+
+  .chipbtn {
+    min-height: 36px;
+  }
+
+  .modal-backdrop {
+    padding-top: calc(clamp(8px, 3vw, 30px) + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(clamp(8px, 3vw, 30px) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.modal-backdrop {
+  padding-left: calc(clamp(8px, 3vw, 30px) + env(safe-area-inset-left, 0px));
+  padding-right: calc(clamp(8px, 3vw, 30px) + env(safe-area-inset-right, 0px));
+}
+
+/* 領袖模式：頂欄的小金章 */
+.chipbtn--leader.is-on {
+  background: rgba(216, 184, 113, 0.9);
+  border-color: #b8933f;
+  color: #22190a;
+}
+
+.app--leader .chipbar {
+  box-shadow: inset 0 -2px 0 0 var(--gold);
+}
+
+/* ------------------------------------------------------------ 領袖模式入口 */
+
+.leadergate {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: clamp(14px, 3vw, 34px) 12px;
+}
+
+.leadergate__card {
+  width: min(430px, 100%);
+  padding: clamp(18px, 3.4vw, 30px);
+  border-radius: 4px;
+  border: 1px solid rgba(216, 184, 113, 0.4);
+  background:
+    repeating-linear-gradient(0deg, rgba(150, 128, 86, 0.02) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #fcf8ee, #f4ecdb);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+}
+
+.leadergate__eyebrow {
+  display: block;
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  color: var(--gold-3);
+}
+
+.leadergate__title {
+  margin: 6px 0 10px;
+  font-family: var(--serif);
+  font-size: clamp(19px, 2.6vh, 24px);
+  color: var(--navy);
+  letter-spacing: 0.04em;
+}
+
+.leadergate__lead {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.leadergate__note {
+  display: flex;
+  gap: 7px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--seal);
+  background: rgba(163, 53, 43, 0.06);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #6d2b23;
+}
+
+.leadergate__label {
+  display: block;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+  margin-bottom: 5px;
+}
+
+.leadergate__row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.leadergate__input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: #fffdf7;
+  font-family: var(--mono);
+  font-size: 16px;
+  letter-spacing: 0.32em;
+  color: var(--ink);
+}
+
+.leadergate__input:focus {
+  outline: 2px solid rgba(216, 184, 113, 0.7);
+  outline-offset: 1px;
+}
+
+.leadergate__eye {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: #fffdf7;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.leadergate__error {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: var(--danger);
+  line-height: 1.6;
+}
+
+.leadergate__go {
+  width: 100%;
+  margin-top: 14px;
+  min-height: 44px;
+}
+
+.leadergate__back {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  border: 0;
+  background: none;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  cursor: pointer;
+  padding: 8px;
+}
+
+/* ------------------------------------------------- 第 42 頁：誓詞與規律 */
+
+.p-promise .pghead {
+  margin-bottom: 4px;
+}
+
+.promise-block {
+  margin-top: clamp(14px, 3.2vh, 30px);
+}
+
+.promise-block__title {
+  margin: 0 0 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--serif);
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  color: var(--navy);
+}
+
+.promise-block__text {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 2.35;
+  color: var(--ink);
+}
+
+.promise-block__text span {
+  display: block;
+}
+
+.promise-block__text--en {
+  font-size: 13.5px;
+  line-height: 2;
+  max-width: 46em;
+}
+
+.promise-law {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.promise-law li {
+  display: grid;
+  grid-template-columns: 1.8em 1fr;
+  gap: 4px;
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 2.2;
+  color: var(--ink);
+}
+
+.promise-law__no {
+  color: var(--gold-3);
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding-top: 0.2em;
+}
+
+@media screen and (max-width: 740px) {
+  .promise-block__text,
+  .promise-law li {
+    font-size: 14px;
+    line-height: 2;
+  }
+
+  .promise-block__title {
+    font-size: 15px;
+  }
+}
+
+@media print {
+  .promise-block {
+    break-inside: avoid;
+  }
+}
+
+/* 領袖模式入口要保留頂欄（掃描鏡頭頁才隱藏） */
+.app--gate .chipbar {
+  display: flex;
+}
+
+/* 封面底部：領袖模式入口（細細一粒，唔搶眼） */
+.coverart__leader {
+  flex: none;
+  padding: 5px 11px;
+  border: 1px solid rgba(216, 184, 113, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gold-2);
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.coverart__leader:hover {
+  background: rgba(216, 184, 113, 0.2);
+}
+
+@media (display-mode: standalone) {
+  .stage {
+    padding-left: calc(6px + env(safe-area-inset-left, 0px));
+    padding-right: calc(6px + env(safe-area-inset-right, 0px));
+  }
+}
+
+/* ---------------------------------------------- 封面（主畫面）在手機要剛好一屏 */
+@media screen and (max-width: 740px) {
+  .coverart {
+    min-height: 0;
+    flex: 1 1 auto;
+    gap: clamp(8px, 2vh, 18px);
+    padding: clamp(12px, 2.6vh, 26px) clamp(16px, 5vw, 40px) clamp(10px, 2vh, 20px);
+  }
+
+  .coverart__title {
+    font-size: clamp(28px, 10vw, 46px);
+  }
+
+  .coverart__plate {
+    padding: 12px 14px;
+  }
+
+  .coverart__foot {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 8px;
+  }
+
+  /* 底部提示同「打開紀錄冊」撞位，手機唔顯示 */
+  .coverhint {
+    display: none;
+  }
+}

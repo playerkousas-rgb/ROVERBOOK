@@ -22,6 +22,7 @@ import {
 } from '../shared/transfer.js';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const LEADER_TEST_CODE = '1234';
 const BASE = process.env.BASE || 'http://127.0.0.1:3001';
 
 const bundlePath = path.join(ROOT, 'node_modules', '.cache', 'roverbook-smoke.mjs');
@@ -35,7 +36,10 @@ await build({
   loader: { '.css': 'empty' },
   alias: { '@shared': path.join(ROOT, 'shared') },
   logLevel: 'error',
-  define: { 'process.env.NODE_ENV': '"development"' },
+  define: {
+    'process.env.NODE_ENV': '"development"',
+    'import.meta.env': JSON.stringify({ MODE: 'test', DEV: true, PROD: false }),
+  },
 });
 
 const dom = new JSDOM('<!doctype html><html><body></body></html>', {
@@ -108,9 +112,10 @@ const report = (ok, label, detail = '') => {
 const textOf = (html) =>
   html.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/g, ' ').replace(/\s+/g, ' ').trim();
 
-async function screen({ name, path: route, expect = [], empty = false, interact, after, wait = 480 }) {
+async function screen({ name, path: route, expect = [], empty = false, leader = false, interact, after, wait = 480 }) {
   reset();
   if (!empty) seed(demoBook());
+  if (leader) localStorage.setItem('roverbook.leader.v1', String(Date.now()));
   errors.length = 0;
   let html = '';
   try {
@@ -202,7 +207,7 @@ const PAGE_TEXT = {
   'expeditions-1': '遠足',
   'expeditions-2': '遠足',
   uniform: '制服',
-  'uniform-en': 'Group Badge',
+  promise: '童軍誓詞與規律',
   crest: null,
   appendix: '數位附錄',
 };
@@ -242,6 +247,7 @@ report(qrAll.tooBig, 'QR：超出容量會標示 tooBig', `${qrAll.chars} 字元
 
 await screen({
   name: '領袖掃描頁',
+  leader: true,
   path: '/scan',
   expect: ['掃描成員的紀錄冊', '貼上二維碼內容'],
   wait: 520,
@@ -249,6 +255,7 @@ await screen({
 
 await screen({
   name: '未收到紀錄冊',
+  leader: true,
   path: '/scan/view',
   expect: ['未收到紀錄冊', '去掃描'],
   wait: 420,
@@ -257,6 +264,7 @@ await screen({
 {
   reset();
   seed(demoBook());
+  localStorage.setItem('roverbook.leader.v1', String(Date.now()));
   const html = await renderPath('/scan', {
     wait: 520,
     interact: async (doc) => {
@@ -283,6 +291,119 @@ await screen({
   report(
     html.includes('二維碼接收') && html.includes('林卓瑤'),
     '掃描（貼上內容）→ 讀到成員的紀錄冊',
+  );
+}
+
+// ---------------------------------------------------------------- 領袖模式
+
+{
+  const good = await fetch(`${BASE}/api/leader`);
+  const enabled = (await good.json()).enabled;
+  const ok = await fetch(`${BASE}/api/leader`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ code: process.env.LEADER_CODE || '1234' }),
+  });
+  const bad = await fetch(`${BASE}/api/leader`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ code: '000000' }),
+  });
+  report(
+    enabled === true && ok.ok && bad.status === 401,
+    '領袖密碼只在伺服器比對（GET 開關、POST 正確／錯誤）',
+    `enabled=${enabled} ok=${ok.status} wrong=${bad.status}`,
+  );
+}
+
+{
+  reset();
+  seed(demoBook());
+  const html = await renderPath('/scan', { wait: 460 });
+  report(
+    html.includes('領袖模式') && html.includes('成員只可以出示自己的二維碼') && !html.includes('貼上二維碼內容'),
+    '普通模式：掃描頁被擋，只見到領袖模式入口',
+  );
+}
+
+{
+  reset();
+  seed(demoBook());
+  const html = await renderPath('/p/particulars-1', {
+    wait: 480,
+    interact: async (doc) => {
+      doc.querySelector('button[aria-label="更多"]').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 240));
+    },
+  });
+  report(
+    html.includes('出示二維碼') && !html.includes('掃描二維碼（領袖）') && html.includes('領袖模式'),
+    '普通模式選單：只有出示二維碼，另見領袖模式入口',
+  );
+}
+
+{
+  reset();
+  seed(demoBook());
+  const html = await renderPath('/leader', {
+    wait: 480,
+    interact: async (doc) => {
+      const input = doc.querySelector('#leader-code');
+      if (!input) throw new Error('找不到密碼欄');
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(
+        input,
+        LEADER_TEST_CODE,
+      );
+      input.dispatchEvent(new window.Event('input', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 120));
+      const go = [...doc.querySelectorAll('button')].find((b) => b.textContent.includes('進入領袖模式'));
+      if (!go) throw new Error('找不到進入按鈕');
+      go.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 700));
+    },
+  });
+  report(
+    !!localStorage.getItem('roverbook.leader.v1') && html.includes('掃描成員的紀錄冊'),
+    '領袖模式：輸入正確密碼後直接去掃描頁',
+  );
+}
+
+{
+  reset();
+  seed(demoBook());
+  const html = await renderPath('/leader', {
+    wait: 460,
+    interact: async (doc) => {
+      const input = doc.querySelector('#leader-code');
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(input, '9999');
+      input.dispatchEvent(new window.Event('input', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 120));
+      [...doc.querySelectorAll('button')]
+        .find((b) => b.textContent.includes('進入領袖模式'))
+        .dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 400));
+    },
+  });
+  report(
+    localStorage.getItem('roverbook.leader.v1') === null && html.includes('密碼不正確'),
+    '領袖模式：密碼錯誤會提示，唔會開啟',
+  );
+}
+
+{
+  reset();
+  seed(demoBook());
+  localStorage.setItem('roverbook.leader.v1', String(Date.now()));
+  const html = await renderPath('/p/particulars-1', {
+    wait: 480,
+    interact: async (doc) => {
+      doc.querySelector('button[aria-label="更多"]').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 240));
+    },
+  });
+  report(
+    html.includes('掃描二維碼（領袖）') && html.includes('退出領袖模式'),
+    '領袖模式選單：出現掃描及退出',
   );
 }
 
@@ -353,6 +474,7 @@ await screen({
 
 await screen({
   name: '未收到核簽單',
+  leader: true,
   path: '/scan/signoff',
   expect: ['未收到核簽單', '去掃描'],
   wait: 420,
@@ -371,6 +493,7 @@ await screen({
   });
   window.sessionStorage.clear();
   window.sessionStorage.setItem('roverbook.signoff.v1', JSON.stringify(signoff.payload));
+  localStorage.setItem('roverbook.leader.v1', String(Date.now()));
   const html = await renderPath('/scan/signoff', {
     wait: 520,
     interact: async (doc) => {
@@ -394,6 +517,7 @@ await screen({
   reset();
   seed(demoBook());
   const memberPayload = (await encodeTransfer(demoBook(), ['particulars', 'progress'])).payload;
+  localStorage.setItem('roverbook.leader.v1', String(Date.now()));
   window.sessionStorage.setItem('roverbook.scan.v1', JSON.stringify(memberPayload));
   const html = await renderPath('/scan/view', {
     wait: 560,

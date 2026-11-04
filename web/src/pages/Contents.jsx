@@ -65,8 +65,8 @@ export default function Contents() {
           <div className="tocpage__intro">
             <p>
               {isEn
-                ? 'This digital edition follows the Rover Scout Record Book (27 July 2026 edition) page by page, pages 1–41. Every page is directly editable and the type scales to fit.'
-                : '本電子版逐頁對應《Rover Scout Record Book》（2026 年 7 月 27 日版）第 1–41 頁。每一頁都可以直接點擊填寫，字體會自動縮放。'}
+                ? 'This digital edition follows the Rover Scout Record Book (27 July 2026 edition) page by page, pages 1–43. Every page is directly editable and the type scales to fit.'
+                : '本電子版逐頁對應《Rover Scout Record Book》（2026 年 7 月 27 日版）第 1–43 頁。每一頁都可以直接點擊填寫，字體會自動縮放。'}
             </p>
           </div>
 

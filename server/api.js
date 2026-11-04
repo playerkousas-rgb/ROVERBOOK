@@ -9,6 +9,36 @@ api.use(express.json({ limit: '8mb' }));
 const baseUrl = (req) =>
   process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
 
+// ------------------------------------------------------------ 領袖模式閘門
+
+/* 密碼只留在伺服器（環境變數 LEADER_CODE）。本機開發若未設定，用 1234 方便測試；
+   production 一定要自己設定，否則領袖模式會關閉。 */
+const leaderCode = () => {
+  const fromEnv = String(process.env.LEADER_CODE || '').trim();
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV === 'production') return '';
+  return '1234';
+};
+
+api.get('/leader', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ enabled: leaderCode().length > 0 });
+});
+
+api.post('/leader', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const expected = leaderCode();
+  if (!expected) return res.status(503).json({ error: 'unset' });
+  const given = String(req.body?.code ?? '').trim();
+  if (!given) return res.status(400).json({ error: 'empty' });
+  const same = given.length === expected.length;
+  const ok =
+    same &&
+    crypto.timingSafeEqual(Buffer.from(given), Buffer.from(expected));
+  if (!ok) return res.status(401).json({ error: 'wrong' });
+  res.json({ ok: true });
+});
+
 // --------------------------------------------------------------- 分享快照
 
 api.post('/share', (req, res) => {

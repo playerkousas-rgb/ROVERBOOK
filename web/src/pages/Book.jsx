@@ -528,11 +528,11 @@ const UNIFORM_LEGEND = [
   ['22', 'ATAS 標誌', 'ATAS emblem'],
 ];
 
-export function Uniform({ lang }) {
+export function Uniform() {
   const { isEn } = useLang();
-  const english = lang ? lang === 'en' : isEn;
+  const english = isEn;
   return (
-    <Page id={lang === 'en' ? 'uniform-en' : 'uniform'} className="p-uniform">
+    <Page id="uniform" className="p-uniform">
       <H en="ROVER SCOUT UNIFORM">{english ? 'Rover Scout Uniform' : '樂行童軍制服'}</H>
       <img
         className="uniform__plate"
@@ -547,6 +547,74 @@ export function Uniform({ lang }) {
           </p>
         ))}
       </div>
+    </Page>
+  );
+}
+
+/* ------------------------------------- 第 42 頁 · 童軍誓詞與規律（單語） */
+
+const PROMISE_ZH = [
+  '我願以信譽為誓，竭盡所能；',
+  '對神明，對國家，盡責任；',
+  '對別人，要幫助；',
+  '對規律，必遵行。',
+];
+
+const LAW_ZH = [
+  '童軍信用為人敬。',
+  '童軍待人要忠誠。',
+  '童軍友善兼親切。',
+  '童軍相處如手足。',
+  '童軍勇敢不怕難。',
+  '童軍愛物更惜陰。',
+  '童軍自重又重人。',
+];
+
+const PROMISE_EN =
+  'On my honour, I promise that I will do my best to do my duty to God and to my Country, to help other people and to keep the Scout Law.';
+
+const LAW_EN = [
+  'A Scout is to be trusted.',
+  'A Scout is loyal.',
+  'A Scout is friendly and considerate.',
+  'A Scout belongs to the world-wide family of Scouts.',
+  'A Scout has courage in all difficulties.',
+  'A Scout makes good use of time and is careful of possessions and property.',
+  'A Scout has self respect and respect for others.',
+];
+
+export function PromiseLaw() {
+  const { isEn } = useLang();
+  return (
+    <Page id="promise" className="p-promise">
+      <H en="SCOUT PROMISE AND LAW">{isEn ? 'Scout Promise and Law' : '童軍誓詞與規律'}</H>
+
+      <section className="promise-block">
+        <h4 className="promise-block__title">
+          {isEn ? 'Scout Promise' : '童軍誓詞'}
+        </h4>
+        {isEn ? (
+          <p className="promise-block__text promise-block__text--en">{PROMISE_EN}</p>
+        ) : (
+          <p className="promise-block__text">
+            {PROMISE_ZH.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
+          </p>
+        )}
+      </section>
+
+      <section className="promise-block">
+        <h4 className="promise-block__title">{isEn ? 'Scout Law' : '童軍規律'}</h4>
+        <ol className="promise-law">
+          {(isEn ? LAW_EN : LAW_ZH).map((line, i) => (
+            <li key={line}>
+              <span className="promise-law__no">{i + 1}</span>
+              <span className="promise-law__text">{line}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
     </Page>
   );
 }

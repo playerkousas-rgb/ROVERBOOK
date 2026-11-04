@@ -78,7 +78,7 @@ export default function ShowQrDialog({ open, onClose }) {
     if (!result) return '';
     if (result.tooBig) return '資料超出二維碼容量，請取消「近照」或「簽署」，或分兩次傳送。';
     if (ratio > 80) return '接近上限，掃描時請把手機放穩、光線充足。';
-    return '領袖用 Chrome 掃描即可讀取，毋須上網、毋須帳號。';
+    return '請領袖在 ROVERBOOK 開啟「領袖模式」後用「掃描二維碼」讀取；毋須上網、毋須帳號。';
   }, [result, ratio]);
 
   if (!open) return null;

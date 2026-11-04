@@ -66,7 +66,7 @@ export default function PrintBook({ pages, auto = true }) {
           <Icon name="back" size={14} /> {isEn ? 'Back' : '返回'}
         </button>
         <div className="printall__text">
-          <strong>{isEn ? 'Whole book · 40 sheets' : '整本 · 40 頁'}</strong>
+          <strong>{isEn ? 'Whole book · 43 sheets' : '整本 · 43 頁'}</strong>
           <em>
             {isEn
               ? 'One sheet = one page of the record book; the page number is printed top-right.'

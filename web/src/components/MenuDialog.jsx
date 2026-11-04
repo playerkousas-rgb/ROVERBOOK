@@ -6,8 +6,9 @@ import { demoBook, importFromRoverBadge, newBook, today } from '@shared/book.js'
 import { LegalNote } from './Legal.jsx';
 import { navigate } from '../router.jsx';
 import { useLang } from '../i18n.jsx';
+import { exitLeaderMode } from '../leader.js';
 
-export default function MenuDialog({ open, onClose, onShowQr }) {
+export default function MenuDialog({ open, onClose, onShowQr, leader = false, leaderReady = null }) {
   const { book, replace } = useBook();
   const { isEn } = useLang();
   const { push } = useToast();
@@ -96,26 +97,76 @@ export default function MenuDialog({ open, onClose, onShowQr }) {
           </div>
         )}
 
-        <button
-          className="menu__item menu__item--accent"
-          onClick={() => {
-            onClose();
-            navigate('/scan');
-          }}
-        >
-          <Icon name="qr" size={18} />
-          <span>
-            <strong>掃描二維碼</strong>
-            <em>領袖掃成員紀錄冊；成員掃領袖的核簽回傳碼</em>
-          </span>
-        </button>
+        {leader ? (
+          <button
+            className="menu__item menu__item--accent"
+            onClick={() => {
+              onClose();
+              navigate('/scan');
+            }}
+          >
+            <Icon name="qr" size={18} />
+            <span>
+              <strong>{isEn ? 'Scan a QR code' : '掃描二維碼（領袖）'}</strong>
+              <em>
+                {isEn
+                  ? 'Read a member’s book, then sign off the items'
+                  : '讀取成員的紀錄冊，核對後簽署'}
+              </em>
+            </span>
+          </button>
+        ) : null}
+
         <button className="menu__item" onClick={() => onShowQr?.()}>
           <Icon name="qr" size={18} />
           <span>
-            <strong>出示二維碼（給領袖掃描）</strong>
-            <em>每次自行剔選要傳送的資料，預設不傳任何內容</em>
+            <strong>{isEn ? 'Show my QR code' : '出示二維碼（給領袖掃描）'}</strong>
+            <em>
+              {isEn
+                ? 'Members can only share. Tick what to send; nothing is sent by default.'
+                : '成員只有分享功能。每次自行剔選要傳送的資料，預設不傳任何內容。'}
+            </em>
           </span>
         </button>
+        {leader ? (
+          <button
+            className="menu__item"
+            onClick={() => {
+              exitLeaderMode();
+              push(isEn ? 'Leader mode closed' : '已退出領袖模式');
+              onClose();
+            }}
+          >
+            <Icon name="lock" size={18} />
+            <span>
+              <strong>{isEn ? 'Leave leader mode' : '退出領袖模式'}</strong>
+              <em>
+                {isEn
+                  ? 'Scanning and signing are hidden again on this device'
+                  : '這部裝置不再顯示掃描及核簽功能'}
+              </em>
+            </span>
+          </button>
+        ) : leaderReady ? (
+          <button
+            className="menu__item"
+            onClick={() => {
+              onClose();
+              navigate('/leader');
+            }}
+          >
+            <Icon name="lock" size={18} />
+            <span>
+              <strong>{isEn ? 'Leader mode' : '領袖模式'}</strong>
+              <em>
+                {isEn
+                  ? 'For leaders: scan a member’s book and sign items off'
+                  : '領袖專用：掃描成員紀錄冊並核簽'}
+              </em>
+            </span>
+          </button>
+        ) : null}
+
         <button
           className="menu__item"
           onClick={() => {
@@ -141,8 +192,8 @@ export default function MenuDialog({ open, onClose, onShowQr }) {
             <strong>{isEn ? 'Print whole book / Save PDF' : '列印整本 / 儲存 PDF'}</strong>
             <em>
               {isEn
-                ? '40 sheets, one per record-book page; the page number is printed on each page.'
-                : '40 頁一次過，每頁對應紙本一頁（頁碼印在右上角，可直接對回 PDF）。'}
+                ? '43 sheets, one per record-book page; the page number is printed on each page.'
+                : '43 頁一次過，每頁對應紙本一頁（頁碼印在右上角，可直接對回 PDF）。'}
             </em>
           </span>
         </button>
