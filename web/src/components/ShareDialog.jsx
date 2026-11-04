@@ -140,7 +140,7 @@ export default function ShareDialog({ open, onClose, share, setShare }) {
           ) : (
             <div className="shareempty">
               <Icon name="qr" size={30} />
-              <p>建立連結後，這裡會出現二維碼，讓領袖掃描即可讀取你的紀錄。</p>
+              <p>建立連結後，這裡會出現二維碼；領袖用 ROVERBOOK 的「掃描二維碼」即可讀取你的紀錄。</p>
             </div>
           )}
         </div>

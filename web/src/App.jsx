@@ -6,7 +6,7 @@ import { ToastProvider, useToast, Crest, Icon, Modal, cx } from './ui.jsx';
 import { Pager, CoverPage } from './components/Paper.jsx';
 import { SECTIONS, PAGE_TOTAL, allStats, syncIdentity } from '@shared/book.js';
 import Contents from './pages/Contents.jsx';
-import { Emblem, Cover, Colophon, Particulars1, Particulars2, GroupInfo, Scouting, Changes, Renewals, ServiceAwards, Scheme, Plan, BadgeTable, Experience, Uniform, Notes } from './pages/Book.jsx';
+import { Emblem, PromiseLaw, Cover, Colophon, Particulars1, Particulars2, GroupInfo, Scouting, Changes, Renewals, ServiceAwards, Scheme, Plan, BadgeTable, Experience, Uniform } from './pages/Book.jsx';
 import {
   MbIntro, MbActivities, MbUnderstanding, MbCommitment, MbPresented,
   EpIntro, EpPresented, RsaIntro, RsaAwards, Dedication, Scoutcraft, Volunteerism,
@@ -23,6 +23,8 @@ import { FormsIndex, FormDoc, FormsAll } from './pages/Forms.jsx';
 import Scan, { ScanView } from './pages/Scan.jsx';
 import Signoff from './pages/Signoff.jsx';
 import ShowQrDialog from './components/ShowQrDialog.jsx';
+import LeaderGate from './components/LeaderGate.jsx';
+import { LEADER_ENABLED, isLeader, exitLeaderMode, onLeaderChange } from './leader.js';
 import { UPDATE_EVENT, applyPwaUpdate } from './pwa.js';
 import { LangProvider, useLang } from './i18n.jsx';
 
@@ -105,8 +107,8 @@ const PAGES = {
       leadEn="Record here any expeditions in Hong Kong or overseas or International Scouting activities undertaken abroad."
     />
   ),
-  uniform: () => <Uniform />,
-  'uniform-en': () => <Uniform lang="en" />,
+  uniform: Uniform,
+  promise: PromiseLaw,
   crest: Emblem,
   appendix: Appendix,
 };
@@ -179,6 +181,8 @@ function BookApp({ book, saveIssue }) {
       window.removeEventListener('offline', onOffline);
     };
   }, []);
+  const [leader, setLeader] = useState(() => isLeader());
+  useEffect(() => onLeaderChange(() => setLeader(isLeader())), []);
   const [indexOpen, setIndexOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [savedAt, setSavedAt] = useState(null);
@@ -195,6 +199,7 @@ function BookApp({ book, saveIssue }) {
   const printAll = path === '/print';
   const section = path.startsWith('/p/') ? path.slice(3) : null;
   const formId = path.startsWith('/forms') ? path.split('/').filter(Boolean)[1] || 'index' : null;
+  const leaderPath = path === '/leader';
   const scanPath = ['/scan', '/scan/view', '/scan/signoff'].includes(path) ? path : null;
   const [lastSection, setLastSection] = useState(() => {
     try {
@@ -252,7 +257,21 @@ function BookApp({ book, saveIssue }) {
   }, [go]);
 
   return (
-    <div className={cx('app', printAll ? 'app--print' : scanPath ? 'app--scan' : formId ? 'app--forms' : section ? 'app--book' : 'app--cover')}>
+    <div
+      className={cx(
+        'app',
+        printAll
+          ? 'app--print'
+          : scanPath || leaderPath
+            ? cx('app--scan', (leaderPath || !leader) && 'app--gate')
+            : formId
+              ? 'app--forms'
+              : section
+                ? 'app--book'
+                : 'app--cover',
+        leader && 'app--leader',
+      )}
+    >
       <header className={cx('chipbar', section && 'chipbar--page')}>
         <Link to="/" className="chipbar__brand">
           <Crest size={26} />
@@ -278,6 +297,17 @@ function BookApp({ book, saveIssue }) {
         )}
 
         <div className="chipbar__actions">
+          {leader && (
+            <button
+              className="chipbtn chipbtn--leader is-on"
+              onClick={() => {
+                setMenuOpen(true);
+              }}
+              title={isEn ? 'Leader mode is on' : '領袖模式已開啟'}
+            >
+              <Icon name="verified" size={15} /> <span className="hide-sm">{isEn ? 'Leader' : '領袖'}</span>
+            </button>
+          )}
           {section && (
             <span className={cx('chipbar__save', saveIssue && 'is-error')}>
               {saveIssue ? (isEn ? 'NOT SAVED' : '未儲存') : savedAt ? (isEn ? 'SAVED' : '已儲存') : isEn ? 'LOCAL' : '本機'}
@@ -363,19 +393,24 @@ function BookApp({ book, saveIssue }) {
             'stage__inner',
             section && 'stage__inner--page',
             formId && 'stage__inner--forms',
-            scanPath && 'stage__inner--scan',
+            (scanPath || leaderPath) && 'stage__inner--scan',
           )}
           style={{ zoom }}
         >
           {printAll ? (
             <PrintBook pages={PAGES} />
+          ) : leaderPath ? (
+            <LeaderGate />
           ) : scanPath ? (
+            leader ? (
             scanPath === '/scan/view' ? (
               <ScanView />
             ) : scanPath === '/scan/signoff' ? (
               <Signoff />
             ) : (
               <Scan />
+            )) : (
+              <LeaderGate mode="gate" />
             )
           ) : formId ? (
             <div className="turn" key={formId}>
@@ -395,12 +430,13 @@ function BookApp({ book, saveIssue }) {
               last={lastMeta}
               hint={coverHint}
               onContinue={() => lastMeta && navigate(`/p/${lastMeta.id}`)}
+              onLeader={LEADER_ENABLED && !leader ? () => navigate('/leader') : undefined}
             />
           )}
         </div>
       </main>
 
-      {scanPath || printAll ? null : section ? (
+      {scanPath || leaderPath || printAll ? null : section ? (
         <Pager current={section} />
       ) : (
         <div className="coverhint">
@@ -431,6 +467,7 @@ function BookApp({ book, saveIssue }) {
       <ShowQrDialog open={qrOpen} onClose={() => setQrOpen(false)} />
       <MenuDialog
         open={menuOpen}
+        leader={leader}
         onClose={() => setMenuOpen(false)}
         onShowQr={() => {
           setMenuOpen(false);
