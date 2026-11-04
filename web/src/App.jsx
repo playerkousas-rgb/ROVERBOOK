@@ -149,12 +149,35 @@ function BookApp({ book }) {
   const [zoom, setZoom] = useState(1);
   const [savedAt, setSavedAt] = useState(null);
   const touch = useRef(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  }, [path]);
   const [share, setShare] = useState(() => {
     const all = Object.values(loadShares()).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     return all[0] || null;
   });
 
   const section = path.startsWith('/p/') ? path.slice(3) : null;
+  const [lastSection, setLastSection] = useState(() => {
+    try {
+      return localStorage.getItem('roverbook.last') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  useEffect(() => {
+    if (!section) return;
+    try {
+      localStorage.setItem('roverbook.last', section);
+    } catch {
+      /* private mode */
+    }
+    setLastSection(section);
+  }, [section]);
+
+  const lastMeta = SECTIONS.find((s) => s.id === lastSection && !s.digital);
   const Page = section ? PAGES[section] : null;
   const meta = SECTIONS.find((s) => s.id === section);
   const index = bookPages.findIndex((s) => s.id === section);
@@ -233,13 +256,16 @@ function BookApp({ book }) {
         className={cx('stage', zoom > 1 && 'stage--zoom')}
         style={{ '--zoom': zoom }}
         onTouchStart={(e) => {
-          touch.current = e.touches[0]?.clientX ?? null;
+          const t = e.touches[0];
+          touch.current = t ? { x: t.clientX, y: t.clientY } : null;
         }}
         onTouchEnd={(e) => {
-          if (touch.current == null) return;
-          const dx = (e.changedTouches[0]?.clientX ?? 0) - touch.current;
+          if (!touch.current) return;
+          const t = e.changedTouches[0] || {};
+          const dx = (t.clientX ?? 0) - touch.current.x;
+          const dy = (t.clientY ?? 0) - touch.current.y;
           touch.current = null;
-          if (Math.abs(dx) > 60) go(dx < 0 ? 1 : -1);
+          if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) go(dx < 0 ? 1 : -1);
         }}
       >
         <div className={cx('stage__inner', section && 'stage__inner--page')} style={{ zoom }}>
@@ -254,6 +280,8 @@ function BookApp({ book }) {
                 navigate('/p/particulars-1');
                 push('已打開你的紀錄冊');
               }}
+              last={lastMeta}
+              onContinue={() => lastMeta && navigate(`/p/${lastMeta.id}`)}
             />
           )}
         </div>

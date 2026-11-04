@@ -34,7 +34,7 @@ export function MbIntro() {
 export function MbActivities() {
   return (
     <Page id="mb-activities">
-      <H no="(1)" en="Activities">活動</H>
+      <H no="(1)" en="Activities" progress={['L1-ACT-01']}>活動</H>
       <p className="pglead">參與最少三次團活動 <em>Take part in the crew activities at least 3 times</em></p>
       <Rows
         path="pages.mb-activities.rows"
@@ -60,7 +60,7 @@ export function MbActivities() {
 export function MbUnderstanding() {
   return (
     <Page id="mb-understanding" className="p-items">
-      <H no="(2)" en="Understanding">理解</H>
+      <H no="(2)" en="Understanding" progress={['L1-UND-01', 'L1-UND-02', 'L1-UND-03', 'L1-UND-04']}>理解</H>
       <div className="itemhead">
         <span>項目 <em>Items</em></span>
         <span>完成</span>
@@ -70,7 +70,7 @@ export function MbUnderstanding() {
       <ItemLine label="(2.1) 對國旗、國徽、區旗、區徽和國歌的認識" en="Understand the National Flag and Emblem, Regional Flag and Emblem, and National Anthem" ids={['L1-UND-01', 'L1-UND-02', 'L1-UND-03']} />
       <ItemLine label="(2.2) 對香港及世界童軍運動有普遍的認識" en="Understand Hong Kong and World Scout Movement" ids={['L1-UND-04']} />
 
-      <H no="(3)" en="Ceremonial">禮節</H>
+      <H no="(3)" en="Ceremonial" progress={['L1-ETQ-01', 'L1-ETQ-02', 'L1-ETQ-03', 'L1-ETQ-04', 'L1-ETQ-05', 'L1-ETQ-06']}>禮節</H>
       <div className="itemhead">
         <span>項目 <em>Items</em></span>
         <span>完成</span>
@@ -90,10 +90,10 @@ export function MbUnderstanding() {
 export function MbCommitment() {
   return (
     <Page id="mb-commitment" className="p-items">
-      <H no="(4)" en="Commitment">許諾</H>
+      <H no="(4)" en="Commitment" progress={['L1-PRM-01']}>許諾</H>
       <ItemLine label="明瞭及能接納童軍誓詞及規律" en="Understand and accept the Scout Promise and Scout Law" ids={['L1-PRM-01']} />
 
-      <H no="(5)" en="Safe From Harm">保護童軍成員免受傷害</H>
+      <H no="(5)" en="Safe From Harm" progress={['L1-CP-01']}>保護童軍成員免受傷害</H>
       <ItemLine label="完成「保護童軍成員免受傷害」網上自學課程" en="Finish the Safe From Harm Online Learning Course" ids={['L1-CP-01']} />
 
       <div className="fduo sigspace">
@@ -208,7 +208,7 @@ export function RsaAwards() {
 export function Dedication() {
   return (
     <Page id="dedication" className="p-items">
-      <H no="(1)" en="DEDICATION">準領袖培訓</H>
+      <H no="(1)" en="DEDICATION" progress={['L3-LEADER-01', 'L3-LEADER-02']}>準領袖培訓</H>
       <p className="pglead">完成下列所有項目：<em>Complete the following items</em></p>
       <div className="itemhead itemhead--4">
         <span>項目 <em>Items</em></span>
@@ -231,7 +231,7 @@ export function Dedication() {
 export function Scoutcraft() {
   return (
     <Page id="scoutcraft" className="p-items">
-      <H no="(2)" en="SCOUTCRAFT">童軍技能</H>
+      <H no="(2)" en="SCOUTCRAFT" progress={['L3-SCOUT-01', 'L3-SCOUT-02', 'L3-SCOUT-03']}>童軍技能</H>
 
       <h4 className="pgh">2.1 傳統童軍技能 <em>Traditional Skills</em></h4>
       <Check
@@ -268,7 +268,7 @@ export function Scoutcraft() {
 export function Volunteerism() {
   return (
     <Page id="volunteerism" className="p-items">
-      <H no="(3)" en="VOLUNTEERISM">服務</H>
+      <H no="(3)" en="VOLUNTEERISM" progress={['L3-SERVICE-01', 'L3-SERVICE-02', 'L3-SERVICE-03']}>服務</H>
       <p className="pglead">完成下列所有項目：<em>Complete the following items</em></p>
       <ProgressRow label="3.1 持有急救證書" en="Hold the First Aid Certificate" ids={['L3-SERVICE-01']} />
       <ProgressRow label="3.2 完成寰宇童軍計劃「探索」課程" en="Complete the SWA “Discovery” Section" ids={['L3-SERVICE-02']} />
@@ -284,7 +284,7 @@ export function Volunteerism() {
 export function GlobalVision() {
   return (
     <Page id="global-vision" className="p-items">
-      <H no="(4)" en="GLOBAL VISION">國際視野</H>
+      <H no="(4)" en="GLOBAL VISION" progress={['L3-INTL-01', 'L3-INTL-02']}>國際視野</H>
       <Check
         label="所選擇之項目 Selected Item"
         path="pages.global-vision.selected"
@@ -311,7 +311,7 @@ export function GlobalVision() {
 export function Tenacity() {
   return (
     <Page id="tenacity" className="p-items">
-      <H no="(5)" en="TENACITY">興趣及技能</H>
+      <H no="(5)" en="TENACITY" progress={['L3-INT-01']}>興趣及技能</H>
       <div className="fduo">
         <Line label="從事之活動 Selected Activity" path="pages.tenacity.activity" placeholder="攝影" />
         <Line label="活動日期 Duration" path="pages.tenacity.duration" />
@@ -328,7 +328,7 @@ export function Tenacity() {
 export function Wellness1() {
   return (
     <Page id="wellness-1" className="p-items">
-      <H no="(6)" en="MENTAL AND PHYSICAL WELLNESS">身心健康（一）</H>
+      <H no="(6)" en="MENTAL AND PHYSICAL WELLNESS" progress={['L3-HEALTH-01']}>身心健康（一）</H>
       <p className="pglead">精神健康 <em>Mental Health</em></p>
       <Rows
         path="pages.wellness-1.certs"
@@ -356,7 +356,7 @@ export function Wellness1() {
 export function Wellness2() {
   return (
     <Page id="wellness-2" className="p-items">
-      <H no="(6)" en="MENTAL AND PHYSICAL WELLNESS">身心健康（二）</H>
+      <H no="(6)" en="MENTAL AND PHYSICAL WELLNESS" progress={['L3-HEALTH-02']}>身心健康（二）</H>
       <div className="fduo">
         <Line label="從事之體育運動 Selected Physical Activity" path="pages.wellness-2.activity" placeholder="長跑" />
         <Line label="時數 Hours" path="pages.wellness-2.hours" />
@@ -373,7 +373,7 @@ export function Wellness2() {
 export function Intrepidity() {
   return (
     <Page id="intrepidity" className="p-items">
-      <H no="(7)" en="INTREPIDITY">挑戰</H>
+      <H no="(7)" en="INTREPIDITY" progress={['L3-CHALLENGE-01', 'L3-CHALLENGE-02']}>挑戰</H>
       <Check
         label="所選擇之項目 Selected Item"
         path="pages.intrepidity.selected"

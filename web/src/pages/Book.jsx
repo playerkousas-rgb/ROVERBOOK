@@ -176,6 +176,8 @@ export function Scouting() {
   );
 }
 
+const FIELD_LABELS = { post: '崗位／職位', highestAward: '最高奬章', from: '由', to: '至' };
+
 function Cell({ unit, index, field }) {
   const { book, update } = useBook();
   const value = index >= 0 ? book.scouting[index]?.[field] || '' : '';
@@ -188,7 +190,7 @@ function Cell({ unit, index, field }) {
     });
   };
   return (
-    <span className="pgtable__cell">
+    <span className="pgtable__cell" data-label={FIELD_LABELS[field] || field}>
       <Write value={value} onChange={onChange} compact label={field} />
     </span>
   );
@@ -244,13 +246,13 @@ export function Renewals({ part = 0 }) {
           const row = list[index] || {};
           return (
             <div className="pgtable__row pgtable__row--3" key={row.id || `r-${index}`}>
-              <span className="pgtable__cell">
+              <span className="pgtable__cell" data-label="日期">
                 <Write value={row.year ? String(row.year) : ''} onChange={(v) => setRow(index, 'year', v)} compact label="年份" placeholder="2026" />
               </span>
-              <span className="pgtable__cell">
+              <span className="pgtable__cell" data-label="有效日期至">
                 <Write value={row.validUntil || ''} onChange={(v) => setRow(index, 'validUntil', v)} type="date" compact label="有效期至" />
               </span>
-              <span className="pgtable__cell pgtable__cell--sig">
+              <span className="pgtable__cell pgtable__cell--sig" data-label="旅印及簽署">
                 <Sig path={`renewals.${index}.signature`} label={`${row.year || index + 1} 續會簽署`} compact title="樂行童軍團長" />
               </span>
             </div>

@@ -4,9 +4,9 @@ import { Crest, cx } from '../ui.jsx';
 import { Link } from '../router.jsx';
 
 /** A single printed page of the record book. */
-export function Sheet({ id, no, title, en, children, className = '', dense = false }) {
+export function Sheet({ id, no, title, en, children, className = '', dense = false, badge }) {
   return (
-    <article className={cx('sheet', dense && 'sheet--dense', className)} data-page={id}>
+    <article className={cx('sheet', dense && 'sheet--dense', className)} data-page={id} data-badge={badge || undefined}>
       <span className="sheet__gutter" aria-hidden="true" />
       <span className="sheet__corner" aria-hidden="true" />
       <header className="sheet__head">
@@ -45,6 +45,7 @@ export function Spread({ section, right, className = '', dense = false }) {
       en={meta.en || ''}
       className={className}
       dense={dense}
+      badge={meta.badge}
     >
       {right}
     </Sheet>
@@ -122,7 +123,7 @@ export function Pager({ current }) {
 }
 
 /** Full-bleed blue cover — the whole screen is the book. */
-export function CoverPage({ book, onOpen }) {
+export function CoverPage({ book, onOpen, last, onContinue }) {
   const m = book?.member || {};
   return (
     <div className="coverart">
@@ -153,6 +154,25 @@ export function CoverPage({ book, onOpen }) {
           {[m.crew, m.group].filter(Boolean).join(' · ') || '樂行童軍團'}
         </span>
         {m.memberNo && <span className="coverart__plate-no">No. {m.memberNo}</span>}
+        <div className="coverart__badges">
+          {[
+            { id: 'L1', label: '會員章', short: '會' },
+            { id: 'L2', label: '肩章', short: '肩' },
+            { id: 'L3', label: '獎章', short: '獎' },
+            { id: 'L4', label: '貝登堡', short: '貝' },
+          ].map((b) => {
+            const earned = !!book?.badges?.[b.id]?.date;
+            return (
+              <span
+                key={b.id}
+                className={cx('coverart__medal', earned && 'is-earned')}
+                title={`${b.label}${earned ? ` · ${book.badges[b.id].date}` : ' · 未獲頒'}`}
+              >
+                {b.short}
+              </span>
+            );
+          })}
+        </div>
       </div>
 
       <div className="coverart__foot">
@@ -160,6 +180,11 @@ export function CoverPage({ book, onOpen }) {
         <button className="coverart__open" onClick={onOpen}>
           打開紀錄冊
         </button>
+        {last && (
+          <button className="coverart__resume" onClick={onContinue}>
+            繼續上次 · 第 {last.page} 頁 <span>{last.label}</span>
+          </button>
+        )}
         <span className="coverart__edition">第五版綱要</span>
       </div>
     </div>

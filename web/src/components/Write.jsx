@@ -41,6 +41,20 @@ export default function Write({
   const [zoom, setZoom] = useState(false);
   const hold = useRef(null);
   const fieldRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // 手機：開始輸入時，把欄位拉到畫面中央，避免被鍵盤遮住
+  const reveal = useCallback((el) => {
+    if (!el || typeof window === 'undefined') return;
+    if (!window.matchMedia?.('(max-width: 740px)').matches) return;
+    setTimeout(() => {
+      el.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+    }, 280);
+  }, []);
+
+  useEffect(() => {
+    if (editing) reveal(inputRef.current);
+  }, [editing, reveal]);
 
   const commit = useCallback(
     (next) => {
@@ -104,6 +118,10 @@ export default function Write({
         {editing ? (
           multiline ? (
             <textarea
+              ref={(el) => {
+                inputRef.current = el;
+                if (el) fitText(el, max);
+              }}
               className="write__input write__fit"
               autoFocus
               defaultValue={value}
@@ -113,12 +131,13 @@ export default function Write({
                 fitText(e.target, max);
               }}
               onBlur={() => setEditing(false)}
-              ref={(el) => {
-                if (el) fitText(el, max);
-              }}
             />
           ) : (
             <input
+              ref={(el) => {
+                inputRef.current = el;
+                if (el) fitText(el, max);
+              }}
               className="write__input write__fit"
               autoFocus
               defaultValue={value}
@@ -130,9 +149,6 @@ export default function Write({
               onBlur={() => setEditing(false)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur();
-              }}
-              ref={(el) => {
-                if (el) fitText(el, max);
               }}
             />
           )

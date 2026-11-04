@@ -40,6 +40,22 @@ export default function Contents() {
       section="contents"
       right={
         <div className="tocpage">
+          <div className="tocpage__progress">
+            <div className="tocring" style={{ '--p': `${stats.percent}%` }}>
+              <span className="tocring__num">{stats.percent}%</span>
+            </div>
+            <div className="tocpage__progress-text">
+              <strong>
+                {stats.done} / {stats.total} 項已完成
+              </strong>
+              <span>
+                {stats.nextBadge?.badge?.name
+                  ? `下一枚：${stats.nextBadge.badge.name} · ${stats.nextBadge.done}/${stats.nextBadge.total}`
+                  : '全部完成'}
+              </span>
+            </div>
+          </div>
+
           <div className="tocpage__intro">
             <p>
               本電子版逐頁對應《Rover Scout Record Book》（2026 年 7 月 27 日版）第 1–41 頁。

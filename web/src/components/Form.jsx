@@ -11,16 +11,34 @@ export function Page({ id, children, className = '', dense = false }) {
   return <Spread section={id} dense={dense} right={<div className={`pg ${className}`}>{children}</div>} />;
 }
 
-export function H({ no, children, en, sub }) {
+export function H({ no, children, en, sub, progress }) {
   return (
     <div className="pghead">
       <h3 className="pghead__title">
         {no && <span className="pghead__no">{no}</span>}
         {children}
         {en && <em className="pghead__en">{en}</em>}
+        {progress && <Progress ids={progress} />}
       </h3>
       {sub && <p className="pghead__sub">{sub}</p>}
     </div>
+  );
+}
+
+function Progress({ ids }) {
+  const { book } = useBook();
+  const done = ids.filter((id) => getPath(book, `progress.${id}`)?.date).length;
+  const all = done === ids.length && ids.length > 0;
+  return (
+    <span className={`pgprog${all ? ' is-complete' : ''}`} title={`${done} / ${ids.length}`}>
+      <span className="pgprog__bar">
+        <i style={{ width: `${ids.length ? (done / ids.length) * 100 : 0}%` }} />
+      </span>
+      <span className="pgprog__num">
+        {done}/{ids.length}
+      </span>
+      {all && <span className="pgprog__stamp">完成</span>}
+    </span>
   );
 }
 
@@ -142,7 +160,7 @@ export function Rows({ path, cols, min = 3, addLabel = '加一行', del = true, 
       {Array.from({ length: total }).map((_, index) => (
         <div className={`pgtable__row pgtable__row--${cols.length}`} key={list[index]?.id || `blank-${index}`}>
           {cols.map((c) => (
-            <span className="pgtable__cell" key={c.k} style={c.width ? { flex: c.width } : undefined}>
+            <span className="pgtable__cell" key={c.k} data-label={c.label} style={c.width ? { flex: c.width } : undefined}>
               <Write
                 value={list[index]?.[c.k] ?? ''}
                 onChange={(v) => setCell(index, c.k, v)}
