@@ -2,6 +2,27 @@ import React from 'react';
 import { Page, H, P, Note, Line, Area, Grid, Check, ItemLine, ProgressRow, Comment, Present, Sig, Rows } from '../components/Form.jsx';
 import Write from '../components/Write.jsx';
 import { useBook, useField } from '../bookContext.js';
+import { navigate } from '../router.jsx';
+import { FORM_META, formStatus } from '@shared/forms.js';
+
+/* 完成頒發後，直接一鍵生成對應申請表 */
+function FormLink({ id }) {
+  const { book } = useBook();
+  const st = formStatus(book)[id];
+  return (
+    <div className={`formlink${st.ready ? ' is-ready' : ''}`}>
+      <div className="formlink__text">
+        <strong>
+          {FORM_META[id].code} · {st.ready ? '已備妥，可以一鍵生成' : '資料未齊'}
+        </strong>
+        <em>{st.note}</em>
+      </div>
+      <button className="btn btn--gold btn--sm" onClick={() => navigate(`/forms/${id}`)}>
+        生成表格
+      </button>
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------- 13 會員章簡介 */
 
@@ -400,6 +421,7 @@ export function RsaPresented() {
     <Page id="rsa-presented" className="p-presented">
       <H en="Rover Scout Award">樂行童軍獎章</H>
       <Present page="rsa-presented" signer="樂行童軍團長" en="Rover Scout Leader" />
+      <FormLink id="pt21" />
     </Page>
   );
 }
@@ -439,6 +461,7 @@ export function BpaPresented() {
     <Page id="bpa-presented" className="p-presented">
       <H en="Baden-Powell Award">貝登堡獎章</H>
       <Present page="bpa-presented" signer="樂行童軍團長" en="Rover Scout Leader" />
+      <FormLink id="pt22" />
     </Page>
   );
 }

@@ -479,8 +479,11 @@ export function demoBook() {
 
   const fill = (ids, dateList) => {
     ids.forEach((id, i) => {
-      const sig = leaderSig(dateList[i] || '2026-09-20');
-      book.progress[id] = { date: dateList[i] || '2026-09-20', signature: sig };
+      const date = dateList[i] || '2026-09-20';
+      const sig = leaderSig(date);
+      const entry = { date, signature: sig };
+      if (/^L[34]-/.test(id)) entry.assessor = '馬啟明';
+      book.progress[id] = entry;
     });
   };
 
@@ -497,9 +500,22 @@ export function demoBook() {
     ],
   );
   fill(
-    ['L3-LEADER-01', 'L3-LEADER-02', 'L3-SCOUT-01', 'L3-SERVICE-01', 'L3-SERVICE-02', 'L3-INTL-01', 'L3-INT-01'],
-    ['2025-08-16', '2025-09-20', '2025-10-04', '2025-11-01', '2025-11-15', '2026-01-10', '2026-02-07'],
+    [
+      'L3-LEADER-01', 'L3-LEADER-02',
+      'L3-SCOUT-01', 'L3-SCOUT-02', 'L3-SCOUT-03',
+      'L3-SERVICE-01', 'L3-SERVICE-02', 'L3-SERVICE-03',
+      'L3-INTL-01', 'L3-INTL-02',
+      'L3-INT-01',
+    ],
+    [
+      '2025-08-16', '2025-09-20',
+      '2025-10-04', '2025-10-18', '2025-10-25',
+      '2025-11-01', '2025-11-15', '2025-11-29',
+      '2026-01-10', '2026-01-24',
+      '2026-02-07',
+    ],
   );
+  book.progress['L3-SERVICE-01'].cert = 'FA-2025-0042';
   book.progress['L3-INT-01'].signature = null;
   book.progress['L4-ALL-01'] = { date: '', note: '待完成' };
 

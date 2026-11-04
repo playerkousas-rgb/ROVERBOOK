@@ -19,6 +19,7 @@ import SharedBook from './pages/SharedBook.jsx';
 import ShareDialog from './components/ShareDialog.jsx';
 import WalletDialog from './components/WalletDialog.jsx';
 import MenuDialog from './components/MenuDialog.jsx';
+import { FormsIndex, FormDoc } from './pages/Forms.jsx';
 
 const PAGES = {
   contents: Contents,
@@ -159,6 +160,7 @@ function BookApp({ book }) {
   });
 
   const section = path.startsWith('/p/') ? path.slice(3) : null;
+  const formId = path.startsWith('/forms') ? path.split('/').filter(Boolean)[1] || 'index' : null;
   const [lastSection, setLastSection] = useState(() => {
     try {
       return localStorage.getItem('roverbook.last') || '';
@@ -215,7 +217,7 @@ function BookApp({ book }) {
   }, [go]);
 
   return (
-    <div className={cx('app', section ? 'app--book' : 'app--cover')}>
+    <div className={cx('app', formId ? 'app--forms' : section ? 'app--book' : 'app--cover')}>
       <header className={cx('chipbar', section && 'chipbar--page')}>
         <Link to="/" className="chipbar__brand">
           <Crest size={26} />
@@ -224,6 +226,13 @@ function BookApp({ book }) {
             <em>樂行童軍紀錄冊</em>
           </span>
         </Link>
+
+        {formId && (
+          <span className="chipbar__page chipbar__page--static">
+            <span>表格</span>
+            <strong>{formId === 'index' ? '三張官方表格' : 'PT/' + formId.slice(2)}</strong>
+          </span>
+        )}
 
         {section && (
           <button className="chipbar__page" onClick={() => setIndexOpen(true)}>
@@ -274,8 +283,12 @@ function BookApp({ book }) {
           if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) go(dx < 0 ? 1 : -1);
         }}
       >
-        <div className={cx('stage__inner', section && 'stage__inner--page')} style={{ zoom }}>
-          {Page ? (
+        <div className={cx('stage__inner', section && 'stage__inner--page', formId && 'stage__inner--forms')} style={{ zoom }}>
+          {formId ? (
+            <div className="turn" key={formId}>
+              {formId === 'index' ? <FormsIndex /> : <FormDoc id={formId} />}
+            </div>
+          ) : Page ? (
             <div className="turn" key={section}>
               <Page />
             </div>
@@ -299,7 +312,7 @@ function BookApp({ book }) {
       ) : (
         <div className="coverhint">
           <span className="coverhint__dot" />
-          {PAGE_TOTAL} 頁 · 點擊「打開紀錄冊」或按 → 開始
+          {formId ? '三張官方表格 · 資料由紀錄冊自動帶入' : `${PAGE_TOTAL} 頁 · 點擊「打開紀錄冊」或按 → 開始`}
         </div>
       )}
 

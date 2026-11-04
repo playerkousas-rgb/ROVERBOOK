@@ -202,6 +202,50 @@ for (const section of SECTIONS) {
   await screen({ name: '頁面', path: `/p/${section.id}`, expect, wait: 340 });
 }
 
+// ---------------------------------------------------------------- 2b. 官方表格
+
+await screen({
+  name: '表格首頁',
+  path: '/forms',
+  expect: ['一鍵生成', 'PT/69', 'PT/21', 'PT/22', '補充資料'],
+  wait: 520,
+});
+
+const form21 = await screen({
+  name: 'PT/21 樂行童軍獎章申請表',
+  path: '/forms/pt21',
+  expect: ['樂行童軍獎章及證書申請表', '林卓瑤', '準領袖培訓', '申請者簽署', '提名', '回郵地址'],
+  wait: 520,
+});
+report(
+  (form21.match(/☑/g) || []).length >= 4,
+  'PT/21 自動剔選四個已完成項目',
+  `${(form21.match(/☑/g) || []).length} 個剔號`,
+);
+
+await screen({
+  name: 'PT/69 考試申請表',
+  path: '/forms/pt69',
+  expect: ['考試申請', '考試計劃', 'Assessment Planning', '個人摘要', '確認及批核'],
+  wait: 520,
+});
+
+await screen({
+  name: 'PT/22 貝登堡獎章申請表',
+  path: '/forms/pt22',
+  expect: ['貝登堡獎章及證書申請表', '有效急救證書編號', '樂行童軍獎章'],
+  wait: 520,
+});
+
+{
+  reset();
+  const inkBook = demoBook();
+  inkBook.pages.tenacity.summary = { ink: 'data:image/png;base64,iVBORw0KGgo=' };
+  seed(inkBook);
+  const html = await renderPath('/p/tenacity', { wait: 420 });
+  report(html.includes('write__ink'), '手寫墨跡存為圖片，按格線等比縮放');
+}
+
 // ---------------------------------------------------------------- 3. 互動
 
 await screen({

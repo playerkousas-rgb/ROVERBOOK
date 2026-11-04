@@ -12,6 +12,7 @@ import {
   exportForRoverBadge,
   importFromRoverBadge,
 } from '@shared/book.js';
+import { FORM_META, FORM_ORDER, formStatus } from '@shared/forms.js';
 
 export default function Appendix() {
   const { book, update, replace } = useBook();
@@ -21,6 +22,7 @@ export default function Appendix() {
   const [confirmClear, setConfirmClear] = useState(false);
   const share = latestShare();
   const size = new Blob([JSON.stringify(book)]).size;
+  const forms = formStatus(book);
   const url = share ? `${window.location.origin}/v/${share.id}` : '';
 
   const exportJson = () => {
@@ -77,6 +79,28 @@ export default function Appendix() {
       right={
         <>
           <div className="appx-grid">
+            <div className="appendix-card appendix-card--forms">
+              <h4>
+                <Icon name="seal" size={13} /> 三張官方表格
+              </h4>
+              <ul className="formshort">
+                {FORM_ORDER.map((id) => (
+                  <li key={id} className={forms[id].ready ? 'is-ready' : ''}>
+                    <button onClick={() => navigate(`/forms/${id}`)}>
+                      <span>{FORM_META[id].code}</span>
+                      <em>{FORM_META[id].zh}</em>
+                      <b>{forms[id].ready ? '可生成' : '未齊'}</b>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="aside-actions">
+                <button className="btn btn--gold btn--sm" onClick={() => navigate('/forms')}>
+                  <Icon name="seal" size={13} /> 一鍵生成
+                </button>
+              </div>
+            </div>
+
             <div className="appendix-card">
               <h4>
                 <Icon name="book" size={13} /> 本機儲存

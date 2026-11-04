@@ -1,11 +1,15 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Icon, Modal, cx } from '../ui.jsx';
+import { SignaturePad } from './Ink.jsx';
 
 /**
  * Write — a line/box on the page that you tap and type into (or write with a
  * stylus). Text shrinks automatically to fit the printed space, and every field
  * can be opened in a bigger "zoom" sheet for comfortable reading/typing.
  */
+
+export const isInkValue = (v) => !!v && typeof v === 'object' && typeof v.ink === 'string';
+export const plainText = (v) => (isInkValue(v) ? '' : typeof v === 'string' ? v : '');
 
 const MAX = 15.5;
 const MIN = 7;
@@ -64,7 +68,7 @@ export default function Write({
   );
 
   useLayoutEffect(() => {
-    if (!editing) fitText(fieldRef.current, max);
+    if (!editing && !isInkValue(value)) fitText(fieldRef.current, max);
   }, [value, editing, max, multiline, rows]);
 
   useEffect(() => {
@@ -109,7 +113,11 @@ export default function Write({
           className,
         )}
         style={multiline ? { '--rows': rows } : undefined}
-        onClick={() => !editing && setEditing(true)}
+        onClick={() => {
+          if (editing) return;
+          if (isInkValue(value)) setZoom(true);
+          else setEditing(true);
+        }}
         onDoubleClick={openZoom}
         role="button"
         tabIndex={-1}
@@ -124,7 +132,7 @@ export default function Write({
               }}
               className="write__input write__fit"
               autoFocus
-              defaultValue={value}
+              defaultValue={plainText(value)}
               placeholder={placeholder}
               onChange={(e) => {
                 commit(e.target.value);
@@ -140,7 +148,7 @@ export default function Write({
               }}
               className="write__input write__fit"
               autoFocus
-              defaultValue={value}
+              defaultValue={plainText(value)}
               placeholder={placeholder}
               onChange={(e) => {
                 commit(e.target.value);
@@ -153,14 +161,18 @@ export default function Write({
             />
           )
         ) : (
-          <span
-            className="write__fit write__text"
-            ref={fieldRef}
-            title={value || undefined}
-            style={align ? { textAlign: align } : undefined}
-          >
-            {value || <em className="write__ph">{placeholder || '點擊填寫'}</em>}
-          </span>
+          isInkValue(value) ? (
+            <img className="write__ink" src={value.ink} alt={label || placeholder || '手寫'} />
+          ) : (
+            <span
+              className="write__fit write__text"
+              ref={fieldRef}
+              title={plainText(value) || undefined}
+              style={align ? { textAlign: align } : undefined}
+            >
+              {plainText(value) || <em className="write__ph">{placeholder || '點擊填寫'}</em>}
+            </span>
+          )
         )}
         {!editing && (
           <button
@@ -202,44 +214,71 @@ export default function Write({
 }
 
 function ZoomEditor({ value, multiline, rows, placeholder, onSave, onCancel }) {
-  const [draft, setDraft] = useState(value || '');
+  const initialInk = isInkValue(value) ? value.ink : null;
+  const [tab, setTab] = useState(initialInk ? 'ink' : 'type');
+  const [draft, setDraft] = useState(plainText(value));
+  const [ink, setInk] = useState(initialInk);
   const areaRef = useRef(null);
+
+  const save = () => onSave(tab === 'ink' ? (ink ? { ink } : '') : draft);
 
   return (
     <>
-      {multiline ? (
-        <textarea
-          className="zoomfield"
-          autoFocus
-          rows={rows}
-          value={draft}
-          placeholder={placeholder}
-          onChange={(e) => setDraft(e.target.value)}
-          ref={areaRef}
-        />
+      <div className="zoomtabs" role="tablist" aria-label="輸入方式">
+        <button type="button" role="tab" aria-selected={tab === 'type'} className={cx('zoomtab', tab === 'type' && 'is-on')} onClick={() => setTab('type')}>
+          <Icon name="edit" size={14} /> 打字
+        </button>
+        <button type="button" role="tab" aria-selected={tab === 'ink'} className={cx('zoomtab', tab === 'ink' && 'is-on')} onClick={() => setTab('ink')}>
+          <Icon name="pen" size={14} /> 手寫
+        </button>
+      </div>
+
+      {tab === 'type' ? (
+        multiline ? (
+          <textarea
+            className="zoomfield"
+            autoFocus
+            rows={rows}
+            value={draft}
+            placeholder={placeholder}
+            onChange={(e) => setDraft(e.target.value)}
+            ref={areaRef}
+          />
+        ) : (
+          <input
+            className="zoomfield"
+            autoFocus
+            value={draft}
+            placeholder={placeholder}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') save();
+              if (e.key === 'Escape') onCancel();
+            }}
+            ref={areaRef}
+          />
+        )
       ) : (
-        <input
-          className="zoomfield"
-          autoFocus
-          value={draft}
-          placeholder={placeholder}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') onSave(draft);
-            if (e.key === 'Escape') onCancel();
-          }}
-          ref={areaRef}
-        />
+        <>
+          <SignaturePad onInk={setInk} />
+          <p className="zoomhint">
+            <Icon name="info" size={13} /> 手寫會等比縮到格線內（唔會斷字），在頁面上可以再放大看，亦可以隨時再寫。
+          </p>
+        </>
       )}
-      <p className="zoomhint">
-        <Icon name="info" size={13} /> 在頁面上會自動縮放到格線內；這裡只是方便你輸入與核對。
-        <span className="zoomhint__count">{draft.length} 字</span>
-      </p>
+
+      {tab === 'type' && (
+        <p className="zoomhint">
+          <Icon name="info" size={13} /> 在頁面上會自動縮放到格線內；這裡只是方便你輸入與核對。
+          <span className="zoomhint__count">{draft.length} 字</span>
+        </p>
+      )}
+
       <div className="modal__actions">
         <button className="btn btn--ghost" onClick={onCancel}>
           取消
         </button>
-        <button className="btn btn--primary" onClick={() => onSave(draft)}>
+        <button className="btn btn--primary" onClick={save} disabled={tab === 'ink' && !ink}>
           <Icon name="check" size={15} /> 完成
         </button>
       </div>

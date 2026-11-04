@@ -70,6 +70,19 @@ export default function MenuDialog({ open, onClose }) {
           </button>
         )}
 
+        <button
+          className="menu__item menu__item--accent"
+          onClick={() => {
+            onClose();
+            navigate('/forms');
+          }}
+        >
+          <Icon name="seal" size={18} />
+          <span>
+            <strong>三張官方申請表（一鍵生成）</strong>
+            <em>PT/69、PT/21、PT/22，個人資料及考核紀錄自動填入</em>
+          </span>
+        </button>
         <button className="menu__item" onClick={() => window.print()}>
           <Icon name="print" size={18} />
           <span>
