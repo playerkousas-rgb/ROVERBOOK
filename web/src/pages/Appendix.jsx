@@ -1,17 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { useBook } from '../bookContext.js';
 import { Spread } from '../components/Paper.jsx';
-import { Field } from '../components/Edit.jsx';
 import { Icon, Modal, useToast } from '../ui.jsx';
 import { download, clearBook, latestShare, slugify } from '../bookStore.js';
 import { navigate } from '../router.jsx';
-import {
-  today,
-  progressedCount,
-  newBook,
-  exportForRoverBadge,
-  importFromRoverBadge,
-} from '@shared/book.js';
+import { today, progressedCount, newBook } from '@shared/book.js';
+import RoverBadgeSyncCard from '../components/RoverBadgeSyncCard.jsx';
 import { FORM_META, FORM_ORDER, formStatus } from '@shared/forms.js';
 import { ShowQrButton } from '../components/ShowQrDialog.jsx';
 import { compressBookImages, imageSizeLabel, storageUsage, stripFieldInk } from '../storageHealth.js';
@@ -23,7 +17,6 @@ export default function Appendix() {
   const { isEn } = useLang();
   const { push } = useToast();
   const backupRef = useRef(null);
-  const rbRef = useRef(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const share = latestShare();
   const size = new Blob([JSON.stringify(book)]).size;
@@ -64,32 +57,6 @@ export default function Appendix() {
         if (!confirm('匯入備份會覆蓋目前這本紀錄冊，確定嗎？')) return;
         replace(newBook(data));
         push('已匯入紀錄冊');
-      } catch (e) {
-        push(e.message || '無法讀取檔案', 'error');
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const exportRb = () => {
-    download(
-      `roverbadge-progress-${book.member.scoutId || book.member.memberNo || 'member'}-${today()}.json`,
-      exportForRoverBadge(book, book.member.troopId || ''),
-    );
-    push('已匯出 ROVERBADGE 進度檔');
-  };
-
-  const importRb = (file) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const data = JSON.parse(String(reader.result));
-        const draft = structuredClone(book);
-        const result = importFromRoverBadge(data, draft);
-        draft.member = result.member;
-        update(() => draft);
-        push(result.imported ? `已匯入 ${result.imported} 項進度（${result.matchedBy}）` : `沒有新進度（${result.matchedBy}）`);
       } catch (e) {
         push(e.message || '無法讀取檔案', 'error');
       }
@@ -230,27 +197,7 @@ export default function Appendix() {
               </div>
             </div>
 
-            <div className="appendix-card">
-              <h4>
-                <Icon name="seam" size={13} /> {isEn ? 'ROVERBADGE exchange' : 'ROVERBADGE 互通'}
-              </h4>
-              <Field
-                label="旅團編號"
-                value={book.member.troopId || ''}
-                onChange={(v) => update((b) => ({ ...b, member: { ...b.member, troopId: v.trim() } }))}
-                placeholder="0082"
-              />
-              <div className="aside-actions">
-                <button className="btn btn--ghost btn--sm" onClick={exportRb}>
-                  <Icon name="download" size={13} /> {isEn ? 'Export progress' : '匯出進度'}
-                </button>
-                <button className="btn btn--ghost btn--sm" onClick={() => rbRef.current?.click()}>
-                  <Icon name="upload" size={13} /> {isEn ? 'Import progress' : '匯入進度'}
-                </button>
-                <input ref={rbRef} type="file" accept="application/json,.json" hidden onChange={(e) => importRb(e.target.files?.[0])} />
-              </div>
-              <p className="tiny">{isEn ? 'Only item IDs and dates are exchanged — never signatures.' : '只交換「項目編號 + 日期」，不交換簽名。'}</p>
-            </div>
+            <RoverBadgeSyncCard />
           </div>
 
           <LegalNote />

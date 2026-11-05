@@ -2,9 +2,13 @@ import express from 'express';
 import crypto from 'node:crypto';
 import QRCode from 'qrcode';
 import { createShare, getShare, deleteShare, touchShare } from './store.js';
+import roverbadgeHandler from '../api/roverbadge.js';
 
 export const api = express.Router();
 api.use(express.json({ limit: '8mb' }));
+
+// ROVERBOOK ⇄ ROVERBADGE 個人純進度雲端直連橋接（伺服器端，ROVERBADGE_ORIGIN）
+api.use('/roverbadge', (req, res, next) => roverbadgeHandler(req, res).catch(next));
 
 const baseUrl = (req) =>
   process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
