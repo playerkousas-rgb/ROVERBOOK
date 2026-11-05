@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useBook } from '../bookContext.js';
 import { useToast, Icon, Modal } from '../ui.jsx';
 import { download, clearBook, slugify } from '../bookStore.js';
-import { demoBook, importFromRoverBadge, newBook, today } from '@shared/book.js';
+import { demoBook, newBook, today } from '@shared/book.js';
 import { LegalNote } from './Legal.jsx';
 import { navigate } from '../router.jsx';
 import { useLang } from '../i18n.jsx';
@@ -13,7 +13,6 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
   const { isEn } = useLang();
   const { push } = useToast();
   const backupRef = useRef(null);
-  const rbRef = useRef(null);
   const [showAbout, setShowAbout] = useState(false);
   const [showHome, setShowHome] = useState(false);
 
@@ -37,26 +36,6 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
         onClose();
       } catch (e) {
         push(e.message || '檔案格式不正確', 'error');
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const importBadge = (file) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const data = JSON.parse(String(reader.result));
-        const draft = structuredClone(book);
-        const result = importFromRoverBadge(data, draft);
-        draft.member = result.member;
-        replace(newBook(draft));
-        push(`已從 ROVERBADGE 匯入 ${result.imported} 項進度（${result.matchedBy}）`);
-        navigate('/p/mb-intro');
-        onClose();
-      } catch (e) {
-        push(e.message || '無法讀取 ROVERBADGE 檔案', 'error');
       }
     };
     reader.readAsText(file);
@@ -214,11 +193,11 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
           </span>
         </button>
 
-        <button className="menu__item" onClick={() => rbRef.current?.click()}>
-          <Icon name="link" size={18} />
+        <button className="menu__item" onClick={() => { onClose(); navigate('/p/appendix'); }}>
+          <Icon name="seam" size={18} />
           <span>
-            <strong>從 ROVERBADGE 匯入進度</strong>
-            <em>讀取 ROVERBADGE 的 members／progress JSON</em>
+            <strong>ROVERBADGE 個人同步</strong>
+            <em>雲端直連本人進度（僅本人，零個人資料）</em>
           </span>
         </button>
 
@@ -280,7 +259,6 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
       </div>
 
       <input ref={backupRef} type="file" accept="application/json,.json" hidden onChange={(e) => importBackup(e.target.files?.[0])} />
-      <input ref={rbRef} type="file" accept="application/json,.json" hidden onChange={(e) => importBadge(e.target.files?.[0])} />
     </Modal>
   );
 }

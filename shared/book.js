@@ -21,6 +21,20 @@ export function scoutId(bookOrMember) {
   return String(m.scoutId || m.memberNo || m.ymis || '').trim();
 }
 
+/**
+ * 正規化童軍成員編號：相容舊版 YMIS 及 10 位數字前導零對齊。
+ * 例如 81420 ⇄ 0000081420。純數字號碼會補足 10 位前導零；
+ * 非純數字或空值原樣回傳（trim 後）。
+ */
+export function normalizeScoutId(id) {
+  const raw = String(id === undefined || id === null ? '' : id).trim();
+  if (!raw) return '';
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return raw;
+  if (/^\d{1,10}$/.test(digits)) return digits.padStart(10, '0');
+  return digits;
+}
+
 /** 各處（紀錄冊、成員編號、ROVERBADGE）永遠保持一致，只保留一個真相。 */
 export function syncIdentity(member) {
   if (!member) return member;
@@ -213,119 +227,170 @@ export function shareUrlOf(id) {
 
 // ------------------------------------------------- ROVERBADGE 互通（雙向）
 
-export function exportForRoverBadge(book, troopId = '') {
-  const sid = scoutId(book.member);
-  const progress = {};
+/**
+ * 收集本機已填日期但尚未獲 ROVERBADGE 核實的項目，供送交「待領袖核實」使用。
+ * @param {object} book 本機紀錄冊
+ * @param {string[]} remoteConfirmed ROVERBADGE 端已核實的項目代號（不會重複送交）
+ * @param {string[]} remotePendingIds ROVERBADGE 端已處於待批（pending）的項目代號（不會重複送交）
+ * @returns {{ pendingRequests: {itemId:string, date:string}[], count: number }}
+ */
+export function collectPendingForRoverBadge(book, remoteConfirmed = [], remotePendingIds = []) {
+  const confirmedSet = new Set((remoteConfirmed || []).map((x) => String(x)));
+  const pendingSet = new Set((remotePendingIds || []).map((x) => String(x)));
+  const pendingRequests = [];
   Object.entries(book.progress || {}).forEach(([itemId, state]) => {
-    if (state?.date) progress[itemId] = state.date;
+    if (!state || !state.date) return; // 只有填了日期的才送交
+    if (confirmedSet.has(itemId)) return; // 已在 BADGE 核實，毋須再送
+    if (pendingSet.has(itemId)) return; // 已在 BADGE 待批，避免重複
+    pendingRequests.push({ itemId, date: state.date });
   });
+  return { pendingRequests, count: pendingRequests.length };
+}
+
+/**
+ * 匯出供 ROVERBADGE 使用的進度檔（離線輔助）。
+ * 鐵律：只輸出「待領袖核實」進度，零個人資料，不含已核實 progress，
+ * 防止成員把自填檔案偽裝成已核實進度倒灌回 ROVERBADGE。
+ * schema: 'roverbadge.pending.v1' / status: 'pending' / confirmed: false
+ */
+export function exportForRoverBadge(book, troopId = '') {
+  const sid = normalizeScoutId(scoutId(book.member));
+  const { pendingRequests } = collectPendingForRoverBadge(book);
   const payload = {
-    info: 'ROVERBOOK 匯出 · 可直接餵給 ROVERBADGE（progress_mock 格式）',
+    info: 'ROVERBOOK 匯出 · 待領袖核實進度（僅本人項目＋日期，零個人資料）',
     troopId,
+    scoutId: sid,
     exportedAt: new Date().toISOString(),
-    members: [
-      {
-        scoutId: sid,
-        ymis: sid, // 舊欄位，ROVERBADGE 已改名為 scoutId
-        name: book.member.nameZh,
-        role: 'member',
-        joinDate: book.member.dateJoined || '',
-        crew: book.member.crew,
-        group: book.member.group,
-      },
-    ],
-    progress: { [sid]: progress },
-    progress_mock: { 說明: 'ROVERBOOK 匯出進度', [sid]: progress },
+    schema: 'roverbadge.pending.v1',
+    status: 'pending',
+    confirmed: false,
+    progress: {}, // 不含已核實 progress，避免自填被當成已核實
+    pendingRequests,
     badges: Object.fromEntries(
       Object.entries(book.badges || {})
         .filter(([, v]) => v?.date)
         .map(([k, v]) => [k, v.date]),
     ),
     source: 'ROVERBOOK',
-    schema: 'roverbadge.progress.v1',
   };
   return payload;
 }
 
-// 接受 ROVERBADGE 的 members/progress_mock，或單純的 {itemId: date} 進度表
+/**
+ * 從 ROVERBADGE 錄入進度進本機紀錄冊（僅讀方向，BADGE → BOOK）。
+ * 鐵律：
+ *  - 零個人資料：不讀取／不寫入 json.members 的姓名、團籍、入團日期等；
+ *  - 只以 SCOUT ID（normalizeScoutId 對齊）及項目代號配對；
+ *  - 無條件相信領袖已核實的 progress / flatProgress / otherBadges，標記 confirmedByBadge；
+ *  - 未核實（pending / confirmed: false）一律略過，回傳 skippedPending 數量；
+ *  - 保留本機既有的手寫簽名墨跡 signature，不覆寫本機已有日期；
+ *  - 移除「找不到 sid fallback 到第一位成員」及「按中文姓名配對」的危險邏輯；
+ *  - 本機空白簿尚未填 SCOUT ID 時，只在匯入單一本人資料（如雲端登入本人 ymis）
+ *    時自動綁定該 SCOUT ID。
+ */
 export function importFromRoverBadge(json, book) {
   if (!json || typeof json !== 'object') throw new Error('檔案格式不正確');
   const member = { ...book.member };
+  const localSid = normalizeScoutId(scoutId(member));
   let progressMap = null;
   let matchedBy = '檔案';
+  let sourceSid = null; // 從檔案偵測到的單一成員編號（僅供空白簿自動綁定）
 
-  const progressCandidates = [json.progress, json.progress_mock].filter((x) => x && typeof x === 'object');
-  for (const candidate of progressCandidates) {
+  // 組裝可能的進度容器：json.progress / json.progress_mock，或直接的 {itemId: date} 頂層表
+  const candidates = [];
+  if (json.progress && typeof json.progress === 'object') candidates.push(json.progress);
+  if (json.progress_mock && typeof json.progress_mock === 'object') candidates.push(json.progress_mock);
+  const direct = Object.fromEntries(
+    Object.entries(json).filter(([k, v]) => ITEM_INDEX[k] && typeof v === 'string'),
+  );
+  if (Object.keys(direct).length) candidates.push(direct);
+
+  for (const candidate of candidates) {
     const keys = Object.keys(candidate).filter((k) => k !== '說明');
     const hasItemKeys = keys.some((k) => ITEM_INDEX[k]);
+
+    // 直接進度表 {itemId: date}
     if (hasItemKeys) {
       progressMap = candidate;
       matchedBy = '直接進度表';
       break;
     }
-    const sid = scoutId(member);
-    if (sid && candidate[sid] && typeof candidate[sid] === 'object') {
-      progressMap = candidate[sid];
-      matchedBy = `SCOUT ID ${sid}`;
+
+    // 以本機 SCOUT ID 配對（有綁定編號時）
+    if (localSid && candidate[localSid] && typeof candidate[localSid] === 'object') {
+      progressMap = candidate[localSid];
+      matchedBy = `SCOUT ID ${localSid}`;
+      sourceSid = localSid;
       break;
     }
-    const byName = keys.find((k) => {
-      const m = Array.isArray(json.members)
-        ? json.members.find((x) => String(x.scoutId || x.ymis) === String(k))
-        : null;
-      return m && m.name === member.nameZh;
-    });
-    if (byName && candidate[byName]) {
-      progressMap = candidate[byName];
-      matchedBy = `姓名 ${member.nameZh}`;
-      break;
-    }
-    if (keys.length) {
-      progressMap = candidate[keys[0]];
-      matchedBy = `第一位成員（${keys[0]}）`;
-      break;
+
+    // 空白簿（未綁定 SCOUT ID）：偵測單一成員容器，自動綁定該編號
+    if (!localSid && keys.length === 1) {
+      const onlyKey = keys[0];
+      const val = candidate[onlyKey];
+      if (val && typeof val === 'object' && Object.keys(val).some((k) => ITEM_INDEX[k])) {
+        progressMap = val;
+        matchedBy = `SCOUT ID ${onlyKey}`;
+        sourceSid = normalizeScoutId(onlyKey);
+        break;
+      }
     }
   }
 
   if (!progressMap) {
-    if (json.progress === undefined && json.progress_mock === undefined) {
-      const direct = Object.fromEntries(Object.entries(json).filter(([k, v]) => ITEM_INDEX[k] && typeof v === 'string'));
-      if (Object.keys(direct).length) {
-        progressMap = direct;
-        matchedBy = '直接進度表';
-      }
+    if (Object.keys(direct).length) {
+      progressMap = direct;
+      matchedBy = '直接進度表';
+    } else {
+      throw new Error('找不到進度資料（需要 progress / progress_mock 或 {項目ID: 日期}）');
     }
   }
-  if (!progressMap) throw new Error('找不到進度資料（需要 progress / progress_mock 或 {項目ID: 日期}）');
 
   const imported = [];
   const skipped = [];
+  const skippedPending = [];
   Object.entries(progressMap).forEach(([itemId, value]) => {
     if (!ITEM_INDEX[itemId]) {
       skipped.push(itemId);
       return;
     }
-    const date = typeof value === 'string' ? value : value?.date || '';
+    const entry = typeof value === 'string' ? { date: value } : value || {};
+    const date = entry.date || '';
+    // 未核實（pending / confirmed: false / confirmedByBadge: false）一律拒絕錄入
+    if (entry.status === 'pending' || entry.confirmed === false || entry.confirmedByBadge === false) {
+      skippedPending.push(itemId);
+      return;
+    }
     const existing = book.progress?.[itemId];
-    if (existing?.date) return; // 不覆寫本機已有的日期與簽名
-    book.progress[itemId] = { date: date || '', source: 'roverbadge' };
+    // 寫入／更新已核實進度：標記 confirmedByBadge、更新核實日期與核實人，
+    // 但保留本機既有的手寫簽名墨跡 signature 與審核員
+    book.progress[itemId] = {
+      ...(existing || {}),
+      date: date || existing?.date || '',
+      source: 'roverbadge',
+      confirmedByBadge: true,
+      confirmedAt: entry.confirmedAt || new Date().toISOString(),
+      confirmedBy: entry.confirmedBy || 'ROVERBADGE',
+      signature: existing ? existing.signature : null,
+      assessor: existing ? existing.assessor : undefined,
+    };
     imported.push(itemId);
   });
 
-  // 成員基本資料：只在空白時填入
-  const srcMember = Array.isArray(json.members)
-    ? json.members.find((m) => String(m.scoutId || m.ymis) === scoutId(member)) || json.members[0]
-    : null;
-  if (srcMember) {
-    const sid = srcMember.scoutId || srcMember.ymis;
-    if (!scoutId(member) && sid) member.scoutId = String(sid);
-    if (!member.nameZh && srcMember.name) member.nameZh = srcMember.name;
-    if (!member.dateJoined && srcMember.joinDate) member.dateJoined = srcMember.joinDate;
-    if (!member.crew && srcMember.crew) member.crew = srcMember.crew;
-    if (!member.group && srcMember.group) member.group = srcMember.group;
+  // Zero PII：絕不從 json.members 抄寫姓名、團籍、入團日期等個人資料。
+  // 僅在本機空白簿且無 SCOUT ID 時，自動綁定單一來源的 SCOUT ID。
+  if (!scoutId(member) && sourceSid) {
+    member.scoutId = sourceSid;
+    member.memberNo = sourceSid;
   }
 
-  return { member, imported: imported.length, skipped, matchedBy };
+  return {
+    member,
+    imported: imported.length,
+    skipped,
+    skippedPending,
+    matchedBy,
+  };
 }
 
 export function progressedCount(book) {
