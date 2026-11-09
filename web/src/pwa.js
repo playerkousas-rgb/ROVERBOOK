@@ -6,6 +6,11 @@
 export const UPDATE_EVENT = 'roverbook:update';
 
 let refreshing = false;
+let updatePending = false;
+
+export function hasPendingPwaUpdate() {
+  return updatePending;
+}
 
 export function registerPwa() {
   if (typeof window === 'undefined') return;
@@ -18,11 +23,19 @@ export function registerPwa() {
     window.location.reload();
   });
 
-  const announce = () => window.dispatchEvent(new CustomEvent(UPDATE_EVENT));
+  const announce = () => {
+    updatePending = true;
+    window.dispatchEvent(new CustomEvent(UPDATE_EVENT));
+  };
 
   window.addEventListener('load', async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+
+      const checkNow = () => {
+        if (registration.waiting && navigator.serviceWorker.controller) announce();
+        registration.update().catch(() => {});
+      };
 
       if (registration.waiting && navigator.serviceWorker.controller) announce();
 
@@ -34,10 +47,12 @@ export function registerPwa() {
         });
       });
 
-      // 每次回到前景時檢查一次（露營回來、隔幾日再開都唔會用舊版）
+      // 每次從背景切回前景時檢查一次（加到主畫面 / iOS / Android 都適用）
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') registration.update().catch(() => {});
+        if (document.visibilityState === 'visible') checkNow();
       });
+      window.addEventListener('pageshow', checkNow);
+      window.addEventListener('focus', checkNow);
     } catch {
       /* 註冊失敗（例如 http://）就照常用，只係冇離線 */
     }
@@ -49,6 +64,12 @@ export async function applyPwaUpdate() {
     const registration = await navigator.serviceWorker.getRegistration();
     if (registration?.waiting) {
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      window.setTimeout(() => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      }, 1500);
       return;
     }
   } catch {

@@ -29,6 +29,12 @@
   --serif: "Noto Serif TC", "Songti TC", "Songti SC", "Source Han Serif TC", Georgia,
     "Times New Roman", serif;
   --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  /* 欄位標準闊度（不量度頁面容器闊度，避免困住 fixed 簽名與放大輸入彈窗） */
+  --col-no: clamp(22px, 5%, 30px);
+  --col-person: clamp(72px, 16%, 108px);
+  --col-date: clamp(94px, 21%, 120px);
+  --col-sig: clamp(88px, 19%, 118px);
+  --col-cert: clamp(78px, 17%, 112px);
 }
 
 *,
@@ -275,12 +281,12 @@ button {
 }
 
 .stage__inner--page {
-  width: min(760px, calc((100vh - 178px) * 0.72), 100%);
+  width: min(760px, max(560px, calc((100vh - 178px) * 0.72)), 100%);
 }
 
 @supports (height: 100dvh) {
   .stage__inner--page {
-    width: min(760px, calc((100dvh - 178px) * 0.72), 100%);
+    width: min(760px, max(560px, calc((100dvh - 178px) * 0.72)), 100%);
   }
 }
 
@@ -833,6 +839,7 @@ html[data-lang='zh'] .sheet .awardart__cap em {
   color: #16223a;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .write--multi {
@@ -928,6 +935,22 @@ html[data-lang='zh'] .sheet .awardart__cap em {
   padding-right: 8px;
 }
 
+.pgtable .write--compact,
+.prow .write--compact,
+.itemline .write--compact,
+.scoutgrid .write--compact,
+.fd-tbl .write--compact {
+  padding-right: 1px;
+}
+
+.pgtable .write__zoom,
+.prow .write__zoom,
+.itemline .write__zoom,
+.scoutgrid .write__zoom,
+.fd-tbl .write__zoom {
+  display: none;
+}
+
 .write--compact .write__zoom {
   top: -8px;
   width: 13px;
@@ -937,6 +960,8 @@ html[data-lang='zh'] .sheet .awardart__cap em {
 .write--date {
   display: inline-flex;
   border-bottom: 1px solid var(--rule);
+  width: 100%;
+  min-width: 0;
 }
 
 .write__date {
@@ -944,10 +969,25 @@ html[data-lang='zh'] .sheet .awardart__cap em {
   background: transparent;
   font-family: var(--sans);
   font-size: 10px;
+  font-variant-numeric: tabular-nums;
   color: #16223a;
   padding: 2px 0;
   width: 100%;
   min-width: 0;
+}
+
+.pgtable .write__date,
+.prow .write__date,
+.itemline .write__date {
+  font-size: 9.5px;
+}
+
+.pgtable .write__date::-webkit-calendar-picker-indicator,
+.prow .write__date::-webkit-calendar-picker-indicator,
+.itemline .write__date::-webkit-calendar-picker-indicator {
+  margin-left: 1px;
+  padding: 0;
+  width: 13px;
 }
 
 .inline-field {
@@ -1088,6 +1128,9 @@ textarea.zoomfield {
 
 .sigblock {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   margin-top: 8px;
   padding: 5px 8px 6px;
   border: 1px dashed var(--rule);
@@ -1101,8 +1144,20 @@ textarea.zoomfield {
   background: rgba(255, 253, 247, 0.65);
 }
 
+.sigblock__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+
 .sigblock__label {
   display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-family: var(--sans);
   font-size: 7.5px;
   letter-spacing: 0.13em;
@@ -1114,6 +1169,7 @@ textarea.zoomfield {
   display: flex;
   align-items: center;
   gap: 5px;
+  max-width: 100%;
   margin-top: 2px;
   padding: 4px 0;
   border: 0;
@@ -1124,13 +1180,22 @@ textarea.zoomfield {
   cursor: pointer;
 }
 
+.sigblock__empty span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sigblock__empty:hover {
   color: var(--gold-3);
 }
 
 .sigblock .ink {
+  display: block;
   margin-top: 2px;
   max-width: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   object-position: left center;
 }
@@ -1141,14 +1206,15 @@ textarea.zoomfield {
   font-family: var(--sans);
   font-size: 8.5px;
   color: #7a6f5b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sigblock__actions {
-  position: absolute;
-  top: 4px;
-  right: 6px;
   display: flex;
-  gap: 8px;
+  flex: none;
+  gap: 6px;
 }
 
 .sigblock--compact {
@@ -1167,7 +1233,10 @@ textarea.zoomfield {
 }
 
 .sigblock--compact .ink {
-  height: 26px !important;
+  max-height: 28px;
+  max-width: 100%;
+  width: auto;
+  height: auto;
 }
 
 .sign-grid {
@@ -1785,7 +1854,7 @@ textarea.zoomfield {
 
 .badgestrip {
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) auto;
+  grid-template-columns: 30px minmax(140px, 1fr) auto;
   gap: 10px;
   align-items: center;
   padding: 7px 9px;
@@ -1881,7 +1950,7 @@ textarea.zoomfield {
 
 .titem {
   display: grid;
-  grid-template-columns: 14px minmax(0, 1fr) 86px 40px;
+  grid-template-columns: 14px minmax(160px, 1fr) minmax(var(--col-date), 96px) 44px;
   gap: 6px;
   align-items: center;
   padding: 3px 0;
@@ -3681,12 +3750,15 @@ textarea.zoomfield {
   gap: 7px;
   padding-bottom: 3px;
   border-bottom: 1px solid var(--rule);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .ssig img {
-  height: 36px;
+  max-height: 36px;
+  height: auto;
   width: auto;
-  max-width: 58%;
+  max-width: min(140px, 58%);
   object-fit: contain;
   object-position: left bottom;
 }
@@ -3913,7 +3985,7 @@ textarea.zoomfield {
   }
 
   .titem {
-    grid-template-columns: 14px minmax(0, 1fr) 74px 34px;
+    grid-template-columns: 14px minmax(120px, 1fr) minmax(var(--col-date), 92px) 40px;
     gap: 4px;
   }
 
@@ -4011,7 +4083,7 @@ textarea.zoomfield {
   }
 
   .titem {
-    grid-template-columns: 13px minmax(0, 1fr) 68px 32px;
+    grid-template-columns: 13px minmax(110px, 1fr) minmax(var(--col-date), 88px) 38px;
   }
 
   .minisign {
@@ -4511,9 +4583,10 @@ textarea.zoomfield {
 }
 
 .pgtable__row {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--pg-cols, repeat(auto-fit, minmax(72px, 1fr)));
   align-items: stretch;
-  gap: 8px;
+  gap: 6px 8px;
   border-bottom: 1px solid var(--rule-soft);
   min-height: 26px;
   padding: 2px 0;
@@ -4527,6 +4600,7 @@ textarea.zoomfield {
   letter-spacing: 0.04em;
   color: var(--ink-soft);
   padding-bottom: 3px;
+  align-items: end;
 }
 
 .pgtable__head em {
@@ -4537,7 +4611,6 @@ textarea.zoomfield {
 }
 
 .pgtable__row > span {
-  flex: 1;
   min-width: 0;
 }
 
@@ -4617,13 +4690,14 @@ textarea.zoomfield {
 
 .itemhead {
   display: grid;
-  grid-template-columns: 1fr 24px 88px 88px;
+  grid-template-columns: minmax(155px, 1.8fr) 24px minmax(var(--col-person), 0.85fr) minmax(var(--col-date), 0.95fr);
   gap: 8px;
   padding: 2px 0 3px;
   border-bottom: 1px solid var(--rule);
   font-family: var(--sans);
   font-size: 8px;
   color: var(--ink-soft);
+  align-items: end;
 }
 
 .itemhead em {
@@ -4634,7 +4708,7 @@ textarea.zoomfield {
 
 .itemline {
   display: grid;
-  grid-template-columns: 1fr 24px 88px 88px;
+  grid-template-columns: minmax(155px, 1.8fr) 24px minmax(var(--col-person), 0.85fr) minmax(var(--col-date), 0.95fr);
   gap: 8px;
   align-items: center;
   padding: 4px 0;
@@ -4705,19 +4779,25 @@ textarea.zoomfield {
 }
 
 .prow--4 {
-  grid-template-columns: 1fr 76px 84px 74px;
+  grid-template-columns: minmax(145px, 1.55fr) minmax(var(--col-cert), 0.85fr) minmax(var(--col-person), 0.85fr) minmax(var(--col-date), 0.9fr);
 }
 
 .prow--3 {
-  grid-template-columns: 1fr 96px 84px;
+  grid-template-columns: minmax(175px, 1.85fr) minmax(var(--col-cert), 0.9fr) minmax(var(--col-date), 0.95fr);
 }
 
 .itemhead--3 {
-  grid-template-columns: 1fr 96px 84px;
+  grid-template-columns: minmax(175px, 1.85fr) minmax(var(--col-cert), 0.9fr) minmax(var(--col-date), 0.95fr);
 }
 
 .itemhead--4 {
-  grid-template-columns: 1fr 76px 84px 74px;
+  grid-template-columns: minmax(145px, 1.55fr) minmax(var(--col-cert), 0.85fr) minmax(var(--col-person), 0.85fr) minmax(var(--col-date), 0.9fr);
+}
+
+.itemline__label,
+.prow__label,
+.prow__cell {
+  min-width: 0;
 }
 
 .prow__sub {
@@ -4783,8 +4863,14 @@ textarea.zoomfield {
 
 .cmt__foot {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 0.8fr;
+  grid-template-columns: minmax(150px, 1.55fr) minmax(84px, 0.85fr) minmax(var(--col-date), 0.95fr);
   gap: 0 12px;
+  align-items: end;
+}
+
+.cmt__sign {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .cmt .sigblock {
@@ -5167,8 +5253,7 @@ textarea.zoomfield {
 
   .fduo,
   .ftrio,
-  .present__grid,
-  .cmt__foot {
+  .present__grid {
     grid-template-columns: 1fr;
   }
 }
@@ -5482,8 +5567,7 @@ textarea.zoomfield {
   .ftrio,
   .fgrid--2,
   .fgrid--3,
-  .present__grid,
-  .cmt__foot {
+  .present__grid {
     grid-template-columns: 1fr;
     gap: 0;
   }
@@ -5523,24 +5607,87 @@ textarea.zoomfield {
   }
 
   .pgtable__row {
-    display: block;
+    display: grid;
+    grid-template-columns: minmax(var(--col-date), 0.85fr) minmax(130px, 1.4fr);
+    gap: 6px 10px;
     border: 0;
     border-bottom: 1px solid var(--rule-soft);
     border-radius: 0;
     background: none;
-    padding: 6px 0 4px;
+    padding: 8px 0 6px;
     margin-bottom: 0;
     min-height: 0;
+    align-items: end;
   }
 
   .pgtable__row > span {
-    display: block;
     width: auto !important;
-    flex: none !important;
+    min-width: 0;
   }
 
   .pgtable__cell {
-    padding: 3px 0;
+    padding: 2px 0;
+  }
+
+  .pgtable--badges .pgtable__row {
+    grid-template-columns: minmax(var(--col-cert), 1fr) minmax(var(--col-date), 1fr);
+  }
+
+  .pgtable--badges .pgtable__cell:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .pgtable--exp .pgtable__row,
+  .pgtable--detail .pgtable__row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pgtable--exp .pgtable__cell:nth-child(3),
+  .pgtable--detail .pgtable__cell:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .pgtable--renewals .pgtable__row {
+    grid-template-columns: minmax(68px, 0.75fr) minmax(var(--col-date), 1.25fr);
+  }
+
+  .pgtable--renewals .pgtable__cell:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .pgtable--service .pgtable__row,
+  .pgtable--awards .pgtable__row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pgtable--service .pgtable__cell:nth-child(2),
+  .pgtable--service .pgtable__cell:nth-child(3) {
+    order: 2;
+  }
+
+  .pgtable--awards .pgtable__cell:first-child {
+    order: -2;
+  }
+
+  .pgtable--awards .pgtable__cell:nth-child(3) {
+    order: -1;
+  }
+
+  .pgtable--activities .pgtable__row {
+    grid-template-columns: minmax(var(--col-date), 1.15fr) minmax(68px, 0.9fr) minmax(var(--col-person), 0.95fr);
+  }
+
+  .pgtable--activities .pgtable__cell:nth-child(3) {
+    order: -1;
+    grid-column: 1 / -1;
+  }
+
+  .pgtable--wellness .pgtable__row {
+    grid-template-columns: minmax(var(--col-cert), 1fr) minmax(56px, 0.55fr) minmax(var(--col-date), 1fr);
+  }
+
+  .pgtable--wellness .pgtable__cell:first-child {
+    grid-column: 1 / -1;
   }
 
   .pgtable__cell[data-label]::before {
@@ -5571,56 +5718,65 @@ textarea.zoomfield {
     padding: 2px 8px;
   }
 
-  .itemhead {
-    display: none;
+  .itemhead,
+  .itemhead--3,
+  .itemhead--4 {
+    display: none !important;
   }
 
   .itemline {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 24px minmax(var(--col-person), 1fr) minmax(var(--col-date), 1fr);
     gap: 6px 8px;
     align-items: center;
     padding: 10px 0;
   }
 
   .itemline__tick {
-    order: 0;
+    grid-column: 1;
+    grid-row: 1;
     width: 24px;
     height: 24px;
     font-size: 13px;
   }
 
   .itemline__label {
-    order: 1;
-    flex: 1 1 calc(100% - 34px);
+    grid-column: 2 / -1;
+    grid-row: 1;
     font-size: 13px;
     line-height: 1.5;
   }
 
-  .itemline__date {
-    order: 2;
-    flex: 1 1 45%;
-  }
-
   .itemline__assessor {
-    order: 3;
-    flex: 1 1 45%;
+    grid-column: 1 / 3;
+    grid-row: 2;
   }
 
-  .prow {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px 8px;
+  .itemline__date {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .prow,
+  .prow--3 {
+    display: grid;
+    grid-template-columns: minmax(var(--col-person), 1fr) minmax(var(--col-date), 1fr);
+    gap: 6px 10px;
     padding: 10px 0;
+    align-items: end;
+  }
+
+  .prow--4 {
+    grid-template-columns: minmax(var(--col-cert), 1fr) minmax(var(--col-person), 1fr) minmax(var(--col-date), 1fr);
   }
 
   .prow__label {
-    flex: 1 1 100%;
+    grid-column: 1 / -1;
     font-size: 13px;
   }
 
   .prow__cell {
-    flex: 1 1 30%;
+    min-width: 0;
   }
 
   .chk__opts {
@@ -6418,7 +6574,6 @@ textarea.zoomfield {
 }
 
 .fd-tbl--particulars th {
-  width: 92px;
   background: #faf7ef;
 }
 
@@ -6456,10 +6611,6 @@ textarea.zoomfield {
   color: #333;
 }
 
-.fd-tbl--plan th.fd-item {
-  width: 210px;
-}
-
 .fd-tbl--plan th.fd-item small {
   display: block;
   font-size: 7.2px;
@@ -6474,22 +6625,9 @@ textarea.zoomfield {
   font-size: 8.4px;
 }
 
-.fd-tbl--items th {
-  width: 190px;
-}
-
 .fd-tbl--items td.fd-summary {
   font-size: 8.6px;
   line-height: 1.45;
-}
-
-.fd-tbl--items td:nth-child(3),
-.fd-tbl--items td:nth-child(5) {
-  width: 82px;
-}
-
-.fd-tbl--items td:nth-child(4) {
-  width: 74px;
 }
 
 .fd-summary {
@@ -7535,8 +7673,8 @@ body.preview-print .formdoc {
 
 .sdetail li {
   display: grid;
-  grid-template-columns: 1fr 84px 84px;
-  gap: 8px;
+  grid-template-columns: minmax(150px, 1.8fr) minmax(var(--col-date), 0.95fr) minmax(var(--col-person), 0.85fr);
+  gap: 4px 10px;
   font-family: var(--sans);
   font-size: 10.5px;
   line-height: 1.5;
@@ -7544,6 +7682,8 @@ body.preview-print .formdoc {
 }
 
 .sdetail li span {
+  min-width: 0;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -7551,14 +7691,30 @@ body.preview-print .formdoc {
 .sdetail li b {
   font-weight: 500;
   color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 .sdetail li em {
   font-style: normal;
   font-size: 9.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media screen and (max-width: 560px) {
+  .sdetail li {
+    grid-template-columns: minmax(var(--col-date), 1fr) minmax(var(--col-person), 1fr);
+    gap: 2px 10px;
+    padding: 4px 0;
+    border-bottom: 1px dotted var(--rule-soft);
+  }
+
+  .sdetail li span {
+    grid-column: 1 / -1;
+    white-space: normal;
+  }
+
   .qrgrid {
     grid-template-columns: 1fr;
   }
@@ -7631,8 +7787,10 @@ body.preview-print .formdoc {
 }
 
 .signpanel__sig img {
-  height: 42px;
-  max-width: 180px;
+  max-height: 42px;
+  height: auto;
+  width: auto;
+  max-width: min(180px, 100%);
   object-fit: contain;
 }
 
@@ -7749,8 +7907,10 @@ body.preview-print .formdoc {
 }
 
 .signoffsig img {
-  height: 40px;
-  max-width: 160px;
+  max-height: 40px;
+  height: auto;
+  width: auto;
+  max-width: min(160px, 100%);
   object-fit: contain;
 }
 
@@ -8304,7 +8464,7 @@ html[data-lang='en'] .fareas .frow__label {
 .scoutgrid__sub,
 .scoutgrid__row {
   display: grid;
-  grid-template-columns: 78px 52px 52px 1fr 1fr 1.2fr;
+  grid-template-columns: 76px 50px 50px minmax(68px, 0.95fr) minmax(68px, 1fr) minmax(84px, 1.2fr);
   gap: 6px;
   align-items: center;
 }
@@ -8560,7 +8720,7 @@ html[data-lang='en'] .fareas .frow__label {
 /* ------------------------------------------------------ v14 審核員評語區 */
 .cmt__foot {
   display: grid;
-  grid-template-columns: 1.6fr 0.9fr 0.9fr;
+  grid-template-columns: minmax(150px, 1.55fr) minmax(84px, 0.85fr) minmax(var(--col-date), 0.95fr);
   gap: 10px;
   align-items: end;
 }
@@ -8569,6 +8729,8 @@ html[data-lang='en'] .fareas .frow__label {
   display: flex;
   flex-direction: column;
   gap: 1px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .cmt__sign-label {
@@ -8708,28 +8870,11 @@ html[data-lang='en'] .fareas .frow__label {
     width: auto;
   }
 
-  /* 細項／進度列：項目在上，其餘逐項列出 */
+  /* 細項／進度列：項目全寬佔第一行，考官／簽署與日期並排下一行 */
   .itemhead,
   .itemhead--3,
   .itemhead--4 {
     display: none !important;
-  }
-
-  .itemline,
-  .prow {
-    grid-template-columns: 1fr;
-    gap: 4px;
-    padding: 9px 0;
-  }
-
-  .itemline__tick,
-  .itemline__assessor,
-  .itemline__date,
-  .itemline__label,
-  .prow__label,
-  .prow__cell {
-    grid-column: 1 !important;
-    grid-row: auto !important;
   }
 
   .prow__cell[data-label]::before,
@@ -8742,7 +8887,7 @@ html[data-lang='en'] .fareas .frow__label {
     color: #a0947c;
   }
 
-  /* 童軍紀錄六欄 → 逐段列出 */
+  /* 童軍紀錄六欄 → 兩欄整理，單位全寬第一行 */
   .scoutgrid__head,
   .scoutgrid__sub {
     display: none;
@@ -8751,7 +8896,7 @@ html[data-lang='en'] .fareas .frow__label {
   .scoutgrid__row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    gap: 6px 10px;
     border: 0;
     border-bottom: 1px solid var(--rule-soft);
     padding: 9px 0;
@@ -8769,8 +8914,12 @@ html[data-lang='en'] .fareas .frow__label {
   }
 
   .cmt__foot {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: minmax(84px, 1fr) minmax(var(--col-date), 1fr);
+    gap: 8px 12px;
+  }
+
+  .cmt__sign {
+    grid-column: 1 / -1;
   }
 
   .uniform__legend {
@@ -8781,6 +8930,96 @@ html[data-lang='en'] .fareas .frow__label {
 
   .uniform__plate {
     max-width: 100%;
+  }
+}
+
+@media screen and (max-width: 520px) {
+  .prow--4 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .prow--4 .prow__cell:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .pgtable--activities .pgtable__row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pgtable--activities .pgtable__cell:first-child {
+    grid-column: 1 / -1;
+    order: 2;
+  }
+
+  .pgtable--wellness .pgtable__row {
+    grid-template-columns: 1.4fr 0.6fr;
+  }
+
+  .pgtable--wellness .pgtable__cell:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* 列印：不論螢幕闊度，一律保持桌面多欄闊度（日期、簽署必須完整印出） */
+@media print {
+  .pgtable__head,
+  .itemhead,
+  .itemhead--3,
+  .itemhead--4,
+  .scoutgrid__head,
+  .scoutgrid__sub {
+    display: grid !important;
+  }
+
+  .pgtable__row {
+    display: grid !important;
+    grid-template-columns: var(--pg-cols, repeat(auto-fit, minmax(72px, 1fr))) !important;
+  }
+
+  .itemhead,
+  .itemline {
+    display: grid !important;
+    grid-template-columns: minmax(155px, 1.8fr) 24px minmax(var(--col-person), 0.85fr) minmax(var(--col-date), 0.95fr) !important;
+  }
+
+  .itemhead--3,
+  .prow--3 {
+    display: grid !important;
+    grid-template-columns: minmax(175px, 1.85fr) minmax(var(--col-cert), 0.9fr) minmax(var(--col-date), 0.95fr) !important;
+  }
+
+  .itemhead--4,
+  .prow--4 {
+    display: grid !important;
+    grid-template-columns: minmax(145px, 1.55fr) minmax(var(--col-cert), 0.85fr) minmax(var(--col-person), 0.85fr) minmax(var(--col-date), 0.9fr) !important;
+  }
+
+  .cmt__foot {
+    display: grid !important;
+    grid-template-columns: minmax(150px, 1.55fr) minmax(84px, 0.85fr) minmax(var(--col-date), 0.95fr) !important;
+  }
+
+  .scoutgrid__head,
+  .scoutgrid__sub,
+  .scoutgrid__row {
+    display: grid !important;
+    grid-template-columns: 76px 50px 50px minmax(68px, 0.95fr) minmax(68px, 1fr) minmax(84px, 1.2fr) !important;
+  }
+
+  .scoutgrid__unit {
+    grid-column: auto !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .scoutgrid__na {
+    display: block !important;
+  }
+
+  .prow__cell[data-label]::before,
+  .pgtable__cell[data-label]::before,
+  .itemline [data-label]::before {
+    display: none !important;
   }
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SECTIONS, PAGE_TOTAL } from '@shared/book.js';
+import { SECTIONS, PAGE_TOTAL, APP_VERSION } from '@shared/book.js';
 import { Crest, cx } from '../ui.jsx';
 import { Link } from '../router.jsx';
 import { useLang } from '../i18n.jsx';
@@ -34,7 +34,9 @@ export function Sheet({ id, no, title, en, children, className = '', dense = fal
       <div className="sheet__body">{children}</div>
       <footer className="sheet__foot">
         <span>SCOUT ASSOCIATION OF HONG KONG</span>
-        <span>{(en || 'CONTENTS').toUpperCase()}</span>
+        <span>
+          {(en || 'CONTENTS').toUpperCase()} · {APP_VERSION}
+        </span>
       </footer>
     </article>
   );
@@ -202,7 +204,9 @@ export function CoverPage({ book, onOpen, last, onContinue, hint, onLeader }) {
             {isEn ? `Continue · page ${last.page}` : `繼續上次 · 第 ${last.page} 頁`} <span>{isEn ? last.en || last.label : last.label}</span>
           </button>
         )}
-        <span className="coverart__edition">{isEn ? 'Edition V' : '第五版綱要'}</span>
+        <span className="coverart__edition">
+          {isEn ? `Edition V · ${APP_VERSION}` : `第五版綱要 · ${APP_VERSION}`}
+        </span>
       </div>
     </div>
   );

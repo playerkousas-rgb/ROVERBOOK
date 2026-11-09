@@ -3,13 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="app-version" content="v2.1.0" />
     <meta name="theme-color" content="#071b38" />
     <meta name="application-name" content="ROVERBOOK" />
     <meta
       name="description"
-      content="ROVERBOOK — 樂行童軍電子紀錄冊。毋須登入，資料留在你的裝置；可逐頁填寫、請領袖簽名、放入手機錢包。"
+      content="ROVERBOOK — 樂行童軍電子紀錄冊（v2.1.0）。毋須登入，資料留在你的裝置；可逐頁填寫、請領袖簽名、放入手機錢包。"
     />
-    <title>ROVERBOOK · 樂行童軍紀錄冊</title>
+    <title>ROVERBOOK · 樂行童軍紀錄冊 v2.1.0</title>
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -20,9 +21,19 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ROVERBOOK" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <script>
+      window.APP_VERSION = 'v2.1.0';
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div
+        id="app-boot"
+        style="padding:24px;min-height:100dvh;color:#f2e7cd;background:#071b38;font-family:system-ui,sans-serif;text-align:center"
+      >
+        ROVERBOOK v2.1.0 · 樂行童軍電子紀錄冊
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

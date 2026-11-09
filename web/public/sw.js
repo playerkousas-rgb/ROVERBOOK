@@ -1,15 +1,15 @@
-/* ROVERBOOK service worker — 令紀錄冊真正可以離線使用。
+/* ROVERBOOK service worker — 配合 APP_VERSION = v2.1.0
  *
  * 策略：
  *   導航請求（/、/p/…、/forms/…、/scan）→ network-first，失敗時用快取的 index.html
  *   /assets/*（有 hash、永不變）        → cache-first
  *   /api/*、其他網域、非 GET            → 直接放行（唔 cache）
  *
- * 更新：主程式收到「有新版本」提示後會 postMessage({type:'SKIP_WAITING'})，
+ * 更新：不在 install 階段自動 skipWaiting，等用戶點擊「重新載入」才 postMessage({type:'SKIP_WAITING'})，
  *       activate 時清走舊版本 cache。
  */
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = `roverbook-${VERSION}`;
 const SHELL = [
   '/',
@@ -21,6 +21,14 @@ const SHELL = [
   '/icons/favicon.png',
   '/favicon.svg',
   '/favicon-32.png',
+  '/favicon-48.png',
+  '/img/badge-membership.png',
+  '/img/badge-epaulettes.png',
+  '/img/badge-rsa.png',
+  '/img/badge-bpa.png',
+  '/img/crest-rovers.png',
+  '/img/uniform-zh.png',
+  '/img/uniform-en.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -54,7 +62,7 @@ const isApi = (url) => url.pathname.startsWith('/api/');
 async function networkFirstNavigation(request) {
   const cache = await caches.open(CACHE);
   try {
-    const fresh = await fetch(request);
+    const fresh = await fetch(request, { cache: 'no-cache' });
     if (fresh && fresh.ok) {
       cache.put('/index.html', fresh.clone());
     }
@@ -99,7 +107,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (isAsset(url) || url.pathname.startsWith('/icons/') || url.pathname === '/manifest.webmanifest') {
+  if (
+    isAsset(url) ||
+    url.pathname.startsWith('/icons/') ||
+    url.pathname.startsWith('/img/') ||
+    url.pathname.startsWith('/favicon') ||
+    url.pathname === '/manifest.webmanifest'
+  ) {
     event.respondWith(cacheFirstAsset(request));
   }
 });

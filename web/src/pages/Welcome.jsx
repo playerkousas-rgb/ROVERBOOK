@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useToast, Crest, Icon } from '../ui.jsx';
-import { demoBook, newBook } from '@shared/book.js';
+import { APP_VERSION, demoBook, newBook } from '@shared/book.js';
 import { persistBook } from '../bookStore.js';
 import { navigate } from '../router.jsx';
 
@@ -80,7 +80,7 @@ export default function Welcome({ onReady }) {
         <div className="welcome__brand">
           <Crest size={30} />
           <span>
-            <strong>ROVERBOOK</strong>
+            <strong>ROVERBOOK {APP_VERSION}</strong>
             <em>樂行童軍紀錄冊</em>
           </span>
         </div>

@@ -281,12 +281,21 @@ function Particulars({ p, note }) {
   return (
     <div className="fd-particulars">
       <table className="fd-tbl fd-tbl--particulars">
+        <colgroup>
+          <col style={{ width: '92px' }} />
+          <col />
+          <col style={{ width: '74px' }} />
+          <col style={{ width: '58px' }} />
+          <col style={{ width: '60px' }} />
+          <col style={{ width: '52px' }} />
+          <col style={{ width: '86px' }} />
+        </colgroup>
         <tbody>
           <tr>
             <th>姓名（中文）<em>Name (Chinese)</em></th>
             <td>{p.nameZh}</td>
             <th>（英文）<em>(English)</em></th>
-            <td colSpan={2}>{p.nameEn}</td>
+            <td colSpan={3}>{p.nameEn}</td>
             <td className="fd-photo" rowSpan={4}>
               {p.photo ? <img src={p.photo} alt="近照" /> : <span>近照<br />Recent Photo</span>}
             </td>
@@ -297,22 +306,23 @@ function Particulars({ p, note }) {
             <th>年齡<em>Age</em></th>
             <td>{p.age}</td>
             <th>性別<em>Gender</em></th>
+            <td>{p.gender}</td>
           </tr>
           <tr>
             <th>童軍成員編號<em>Scout ID</em></th>
             <td>{p.memberNo}</td>
             <th>簽發日期<em>Issue Date</em></th>
-            <td colSpan={2}>{fmtDate(p.issueDate)}</td>
+            <td colSpan={3}>{fmtDate(p.issueDate)}</td>
           </tr>
           <tr>
             <th>所屬單位<em>Unit</em></th>
-            <td colSpan={4}>
+            <td colSpan={5}>
               （地域 Region）{p.region}　（區 District）{p.district}　（旅 Group）{p.group}
             </td>
           </tr>
           <tr>
             <th>通訊地址<em>Address</em></th>
-            <td colSpan={4}>{p.address}</td>
+            <td colSpan={5}>{p.address}</td>
             {p.addressEn && <td className="fd-addr-en">{p.addressEn}</td>}
             {!p.addressEn && <td className="fd-photo fd-photo--blank" />}
           </tr>
@@ -320,7 +330,7 @@ function Particulars({ p, note }) {
             <th>聯絡電話<em>Contact No.</em></th>
             <td>{p.phone}</td>
             <th>電郵地址<em>E-mail</em></th>
-            <td colSpan={3}>{p.email}</td>
+            <td colSpan={4}>{p.email}</td>
           </tr>
         </tbody>
       </table>
@@ -395,6 +405,12 @@ function Doc69({ data }) {
 
       <Section no="(2)" zh="考試計劃" en="Assessment Planning" breakBefore>
         <table className="fd-tbl fd-tbl--plan">
+          <colgroup>
+            <col style={{ width: '210px' }} />
+            <col />
+            <col style={{ width: '82px' }} />
+            <col style={{ width: '82px' }} />
+          </colgroup>
           <thead>
             <tr>
               <th>項目<em>Items</em></th>
@@ -519,6 +535,13 @@ function ItemsTable({ components, ticked, summaryLabel = '活動簡述' }) {
   const isTicked = (c) => (ticked ? ticked.includes(c?.key) : !!c?.done);
   return (
     <table className="fd-tbl fd-tbl--items">
+      <colgroup>
+        <col style={{ width: '185px' }} />
+        <col />
+        <col style={{ width: '84px' }} />
+        <col style={{ width: '78px' }} />
+        <col style={{ width: '82px' }} />
+      </colgroup>
       <thead>
         <tr>
           <th>*項目<em>*Items</em></th>

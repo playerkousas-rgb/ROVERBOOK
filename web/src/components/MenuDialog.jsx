@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useBook } from '../bookContext.js';
 import { useToast, Icon, Modal } from '../ui.jsx';
 import { download, clearBook, slugify } from '../bookStore.js';
-import { demoBook, newBook, today } from '@shared/book.js';
+import { APP_VERSION, demoBook, newBook, today } from '@shared/book.js';
 import { LegalNote } from './Legal.jsx';
 import { navigate } from '../router.jsx';
 import { useLang } from '../i18n.jsx';
@@ -229,7 +229,7 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
         {showAbout && (
           <div className="about">
             <p>
-              <strong>ROVERBOOK v2</strong> · 樂行童軍電子紀錄冊。所有內容只儲存在你這部裝置的瀏覽器
+              <strong>ROVERBOOK {APP_VERSION}</strong> · 樂行童軍電子紀錄冊。所有內容只儲存在你這部裝置的瀏覽器
               （localStorage），不會自動上載。只有你主動建立的分享連結會放到伺服器，並可隨時刪除。
             </p>
             <p>

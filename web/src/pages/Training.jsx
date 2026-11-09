@@ -62,11 +62,12 @@ export function MbActivities() {
         min={3}
         addLabel={null}
         del={false}
+        layout="activities"
         cols={[
           { k: 'date', label: '日期', en: 'Date', type: 'date' },
-          { k: 'place', label: '地點', en: 'Place' },
-          { k: 'summary', label: '活動簡述', en: 'Summary of Activities', width: 2.1 },
-          { k: 'certifiedBy', label: '確認人簽署', en: 'Certified by', width: 1.2 },
+          { k: 'place', label: '地點', en: 'Place', col: 'minmax(72px, 0.95fr)' },
+          { k: 'summary', label: '活動簡述', en: 'Summary of Activities', col: 'minmax(140px, 2.1fr)' },
+          { k: 'certifiedBy', label: '確認人簽署', en: 'Certified by', col: 'minmax(var(--col-person), 0.95fr)' },
         ]}
       />
     </Page>
@@ -386,10 +387,11 @@ export function Wellness1() {
         path="pages.wellness-1.certs"
         min={4}
         addLabel={null}
+        layout="wellness"
         cols={[
-          { k: 'item', label: '項目', en: 'Items', width: 2.2 },
-          { k: 'cert', label: '證書編號', en: 'Certificate No.' },
-          { k: 'hours', label: '時數', en: 'Hours' },
+          { k: 'item', label: '項目', en: 'Items', col: 'minmax(130px, 2fr)' },
+          { k: 'cert', label: '證書編號', en: 'Certificate No.', col: 'minmax(var(--col-cert), 1fr)' },
+          { k: 'hours', label: '時數', en: 'Hours', col: 'minmax(48px, 0.55fr)' },
           { k: 'date', label: '日期', en: 'Date', type: 'date' },
         ]}
       />

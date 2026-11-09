@@ -4,7 +4,7 @@ import { BookCtx } from './bookContext.js';
 import { loadBook, persistBook, loadShares } from './bookStore.js';
 import { ToastProvider, useToast, Crest, Icon, Modal, cx } from './ui.jsx';
 import { Pager, CoverPage } from './components/Paper.jsx';
-import { SECTIONS, PAGE_TOTAL, allStats, syncIdentity } from '@shared/book.js';
+import { APP_VERSION, SECTIONS, PAGE_TOTAL, allStats, syncIdentity } from '@shared/book.js';
 import Contents from './pages/Contents.jsx';
 import { Emblem, PromiseLaw, Cover, Colophon, Particulars1, Particulars2, GroupInfo, Scouting, Changes, Renewals, ServiceAwards, Scheme, Plan, BadgeTable, Experience, Uniform } from './pages/Book.jsx';
 import {
@@ -25,7 +25,7 @@ import Signoff from './pages/Signoff.jsx';
 import ShowQrDialog from './components/ShowQrDialog.jsx';
 import LeaderGate from './components/LeaderGate.jsx';
 import { isLeader, onLeaderChange, leaderAvailable } from './leader.js';
-import { UPDATE_EVENT, applyPwaUpdate } from './pwa.js';
+import { UPDATE_EVENT, applyPwaUpdate, hasPendingPwaUpdate } from './pwa.js';
 import { LangProvider, useLang } from './i18n.jsx';
 
 const PAGES = {
@@ -165,7 +165,7 @@ function BookApp({ book, saveIssue }) {
   const [shareOpen, setShareOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
-  const [updateReady, setUpdateReady] = useState(false);
+  const [updateReady, setUpdateReady] = useState(() => hasPendingPwaUpdate());
   const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine !== false));
 
   useEffect(() => {
@@ -285,7 +285,7 @@ function BookApp({ book, saveIssue }) {
           <Crest size={26} />
           <span>
             <strong>ROVERBOOK</strong>
-            <em>{isEn ? 'Rover Scout Record Book' : '樂行童軍紀錄冊'}</em>
+            <em>{isEn ? `Rover Scout · ${APP_VERSION}` : `樂行童軍紀錄冊 · ${APP_VERSION}`}</em>
           </span>
         </Link>
 
@@ -462,11 +462,11 @@ function BookApp({ book, saveIssue }) {
       />
       {updateReady && (
         <div className="updatebar" role="status">
-          <span>有新版本</span>
+          <span>{isEn ? 'New version available' : '有新版本可用'}</span>
           <button className="btn btn--primary btn--sm" onClick={() => applyPwaUpdate()}>
-            重新載入
+            {isEn ? 'Reload' : '重新載入'}
           </button>
-          <button className="updatebar__x" aria-label="稍後" onClick={() => setUpdateReady(false)}>
+          <button className="updatebar__x" aria-label={isEn ? 'Later' : '稍後'} onClick={() => setUpdateReady(false)}>
             <Icon name="x" size={14} />
           </button>
         </div>

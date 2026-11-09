@@ -5,7 +5,14 @@ const INK = '#1d2b3f';
 
 export function Ink({ dataUrl, height = 46, className = '' }) {
   if (!dataUrl) return null;
-  return <img className={`ink ${className}`} src={dataUrl} alt="簽名" style={{ height }} />;
+  return (
+    <img
+      className={`ink ${className}`}
+      src={dataUrl}
+      alt="簽名"
+      style={{ maxHeight: height, maxWidth: '100%', width: 'auto', height: 'auto' }}
+    />
+  );
 }
 
 function trimCanvas(canvas) {
@@ -209,8 +216,13 @@ export function SignModal({ open, onClose, onSave, title = '簽署', subtitle, d
             </label>
             {allowTitle && (
               <label className="field">
-                <span className="field__label">職位</span>
-                <input className="input" value={role} onChange={(e) => setRole(e.target.value)} placeholder="例：樂行童軍團長 RSL" />
+                <span className="field__label">職位／身分（可留空）</span>
+                <input
+                  className="input"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  placeholder="可留空；一般簽署只寫姓名即可"
+                />
               </label>
             )}
             <label className="field">
@@ -240,19 +252,13 @@ export function SignModal({ open, onClose, onSave, title = '簽署', subtitle, d
   );
 }
 
-export function SignatureBlock({ label = '簽署', value, onSign, onClear, hint, compact = false, name, title }) {
+export function SignatureBlock({ label = '簽署', value, onSign, onClear, hint, compact = false, name }) {
   const [open, setOpen] = useState(false);
   return (
     <div className={`sigblock ${compact ? 'sigblock--compact' : ''} ${value ? 'is-signed' : ''}`}>
-      <span className="sigblock__label">{label}</span>
-      {value ? (
-        <>
-          <Ink dataUrl={value.png} height={compact ? 32 : 44} />
-          <span className="sigblock__meta">
-            {value.name}
-            {value.title ? ` · ${value.title}` : ''}
-            {value.at ? ` · ${value.at}` : ''}
-          </span>
+      <div className="sigblock__head">
+        <span className="sigblock__label">{label}</span>
+        {value && (
           <div className="sigblock__actions">
             <button type="button" className="linkbtn" onClick={() => setOpen(true)}>
               重簽
@@ -263,6 +269,14 @@ export function SignatureBlock({ label = '簽署', value, onSign, onClear, hint,
               </button>
             )}
           </div>
+        )}
+      </div>
+      {value ? (
+        <>
+          <Ink dataUrl={value.png} height={compact ? 32 : 44} />
+          {(value.name || value.at) && (
+            <span className="sigblock__meta">{[value.name, value.at].filter(Boolean).join(' · ')}</span>
+          )}
         </>
       ) : (
         <button type="button" className="sigblock__empty" onClick={() => setOpen(true)}>
@@ -275,7 +289,7 @@ export function SignatureBlock({ label = '簽署', value, onSign, onClear, hint,
         onClose={() => setOpen(false)}
         title={label}
         defaultName={value?.name || name || ''}
-        defaultTitle={value?.title || title || ''}
+        defaultTitle={value?.title || ''}
         onSave={(sig) => {
           onSign?.(sig);
           setOpen(false);
