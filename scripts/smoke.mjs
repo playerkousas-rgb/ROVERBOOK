@@ -239,8 +239,10 @@ report(
   !qrEmpty.payload.member && !qrEmpty.payload.contact && !qrEmpty.payload.progress,
   'QR：預設不傳任何個人資料',
 );
+const bigBook = demoBook();
+bigBook.member.photo = `data:image/jpeg;base64,${'A'.repeat(2600)}`;
 const qrAll = await encodeTransfer(
-  demoBook(),
+  bigBook,
   ['particulars', 'progress', 'summaries', 'signatures', 'holderSignature', 'photo'],
 );
 report(qrAll.tooBig, 'QR：超出容量會標示 tooBig', `${qrAll.chars} 字元`);
@@ -1083,6 +1085,70 @@ await screen({
 {
   const health = await api('/healthz');
   report(health.res.ok && health.body.ok, 'GET /healthz');
+}
+
+// --------------------------------------------------------- v2.1 版面、簽名與版本同步
+
+{
+  const css = fs.readFileSync(path.join(ROOT, 'web', 'src', 'styles.css'), 'utf8');
+  const hasCols = ['--col-no', '--col-person', '--col-date', '--col-sig', '--col-cert'].every((v) => css.includes(v));
+  const hasContainer = /container-type|@container/.test(css);
+  const hasEllipsis = /\.write__fit\s*\{[^}]*text-overflow:\s*ellipsis/.test(css);
+  report(hasCols && !hasContainer && hasEllipsis, '樣式：已定義 --col-* 闊度與截斷，並禁用容器查詢');
+}
+
+{
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  const html = fs.readFileSync(path.join(ROOT, 'web', 'index.html'), 'utf8');
+  const swSrc = fs.readFileSync(path.join(ROOT, 'web', 'public', 'sw.js'), 'utf8');
+  const { APP_VERSION } = await import('../shared/book.js');
+  const installBlock = swSrc.match(/addEventListener\('install'[\s\S]*?\}\);/)?.[0] || '';
+  const noAutoSkip = !installBlock.includes('skipWaiting');
+  const swV3 = swSrc.includes("VERSION = 'v3'") && swSrc.includes('roverbook-');
+  const verMatch =
+    `v${pkg.version}` === APP_VERSION &&
+    html.includes(`content="${APP_VERSION}"`) &&
+    html.includes(`window.APP_VERSION = '${APP_VERSION}'`);
+  report(verMatch && swV3 && noAutoSkip, `版本同步：package / APP_VERSION / index.html / sw.js (${APP_VERSION})`);
+}
+
+{
+  reset();
+  const b = demoBook();
+  b.member.gender = '女 Female';
+  seed(b);
+  const pt21 = await renderPath('/forms/pt21', { wait: 420 });
+  report(pt21.includes('<th>性別<em>Gender</em></th><td>女 Female</td>'), '表格：PT/21 個人資料顯示性別欄');
+}
+
+await screen({
+  name: '簽署視窗：不預填職銜，頁面顯示純姓名',
+  path: '/p/particulars-2',
+  expect: ['林卓瑤'],
+  interact: async (doc) => {
+    const meta = doc.querySelector('.sigblock__meta')?.textContent || '';
+    if (meta.includes('持有人') || meta.includes('RSL')) throw new Error(`簽署欄仍顯示職銜：${meta}`);
+    const btn = doc.querySelector('.sigblock__actions .linkbtn');
+    btn.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 250));
+    const inputs = [...doc.querySelectorAll('.modal--sign input')];
+    const roleInput = inputs[1];
+    if (!roleInput || roleInput.value !== '') throw new Error(`職位欄不應預填（目前：${roleInput?.value}）`);
+  },
+});
+
+{
+  const b = demoBook();
+  const row2 = b.pages?.['mb-activities']?.rows?.[2]?.certifiedBy || '';
+  const rsaBy = b.pages?.['rsa-presented']?.by || '';
+  report(
+    b.member.emergencyName === '林美珍' &&
+      row2 === '陳詠詩' &&
+      rsaBy === '陳國強' &&
+      !b.holderSignature.title &&
+      !b.endorsement.title,
+    '示範資料：人名欄與簽署只放純姓名',
+  );
 }
 
 console.log(`\n${passes} 項通過、${failures} 項失敗`);

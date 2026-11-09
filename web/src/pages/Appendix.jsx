@@ -4,7 +4,7 @@ import { Spread } from '../components/Paper.jsx';
 import { Icon, Modal, useToast } from '../ui.jsx';
 import { download, clearBook, latestShare, slugify } from '../bookStore.js';
 import { navigate } from '../router.jsx';
-import { today, progressedCount, newBook } from '@shared/book.js';
+import { APP_VERSION, today, progressedCount, newBook } from '@shared/book.js';
 import RoverBadgeSyncCard from '../components/RoverBadgeSyncCard.jsx';
 import { FORM_META, FORM_ORDER, formStatus } from '@shared/forms.js';
 import { ShowQrButton } from '../components/ShowQrDialog.jsx';
@@ -139,7 +139,7 @@ export default function Appendix() {
 
             <div className="appendix-card">
               <h4>
-                <Icon name="book" size={13} /> {isEn ? 'On this device' : '本機儲存'}
+                <Icon name="book" size={13} /> {isEn ? 'On this device' : '本機儲存'} ({APP_VERSION})
               </h4>
               <dl className="kv">
                 <div>

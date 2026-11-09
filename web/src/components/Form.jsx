@@ -166,11 +166,21 @@ export function Bilingual({ zh, en, as: Tag = 'span', className = '', children }
 
 /* -------------------------------------------------------------------- 表格 */
 
-export function Rows({ path, cols, min = 3, addLabel, del = false, dense = false, cap }) {
+function colTemplate(c) {
+  if (c.col) return c.col;
+  if (c.type === 'date') return 'minmax(var(--col-date), 0.9fr)';
+  const w = Number(c.width) || 1;
+  if (w >= 2) return `minmax(140px, ${w}fr)`;
+  if (w >= 1.3) return `minmax(96px, ${w}fr)`;
+  return `minmax(72px, ${w}fr)`;
+}
+
+export function Rows({ path, cols, min = 3, addLabel, del = false, dense = false, cap, layout }) {
   const [stored, set] = useField(path, []);
   const { isEn } = useLang();
   const list = Array.isArray(stored) ? stored : [];
   const total = Math.max(min, list.length);
+  const gridCols = cols.map(colTemplate).join(' ') + (del ? ' 18px' : '');
 
   const setCell = (index, key, value) => {
     const next = list.slice();
@@ -182,10 +192,13 @@ export function Rows({ path, cols, min = 3, addLabel, del = false, dense = false
   const add = () => set([...list, { id: `row_${Math.random().toString(36).slice(2, 8)}` }]);
 
   return (
-    <div className={`pgtable${dense ? ' pgtable--dense' : ''}`}>
+    <div
+      className={cx('pgtable', dense && 'pgtable--dense', layout && `pgtable--${layout}`)}
+      style={{ '--pg-cols': gridCols }}
+    >
       <div className={`pgtable__head pgtable__row pgtable__row--${cols.length}`}>
         {cols.map((c) => (
-          <span key={c.k} style={c.width ? { flex: c.width } : undefined}>
+          <span key={c.k}>
             {isEn ? c.en || englishOf(c.label) || termFor('en', c.label) : c.label}
             {!isEn && c.en && <em>{c.en}</em>}
           </span>
@@ -195,7 +208,7 @@ export function Rows({ path, cols, min = 3, addLabel, del = false, dense = false
       {Array.from({ length: total }).map((_, index) => (
         <div className={`pgtable__row pgtable__row--${cols.length}`} key={list[index]?.id || `blank-${index}`}>
           {cols.map((c) => (
-            <span className="pgtable__cell" key={c.k} data-label={c.label} style={c.width ? { flex: c.width } : undefined}>
+            <span className="pgtable__cell" key={c.k} data-label={isEn ? c.en || c.label : c.label}>
               <Write
                 value={list[index]?.[c.k] ?? ''}
                 onChange={(v) => setCell(index, c.k, v)}

@@ -1,6 +1,6 @@
 {
   "name": "roverbook",
-  "version": "0.1.0",
+  "version": "2.1.0",
   "private": true,
   "description": "ROVERBOOK — 樂行童軍紀錄冊 / Rover Scout digital record book",
   "type": "module",

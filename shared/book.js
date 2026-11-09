@@ -8,6 +8,7 @@ export { BADGE_SYLLABUS, SYLLABUS_ITEMS, ITEM_INDEX, TOTAL_ITEMS, SYLLABUS_META 
 export const STORE_KEY = 'roverbook.book.v3';
 export const LEGACY_STORE_KEYS = ['roverbook.book.v2'];
 export const SHARE_KEY = 'roverbook.shares.v2';
+export const APP_VERSION = 'v2.1.0';
 
 export const uid = (p = 'r') => `${p}_${Math.random().toString(36).slice(2, 9)}`;
 
@@ -474,7 +475,7 @@ const SIG_B = inkSvg(
   '#22324d',
 );
 
-const leaderSig = (at) => ({ png: SIG_A, name: '馬啟明', title: '樂行童軍團長 RSL', at });
+  const leaderSig = (at) => ({ png: SIG_A, name: '馬啟明', title: '', at });
 
 export function demoBook() {
   const book = newBook({
@@ -493,7 +494,7 @@ export function demoBook() {
       email: 'cy.lam@example.org',
       address: '九龍紅磡黃埔花園 5 座 12A',
       bloodType: 'O+',
-      emergencyName: '林美珍（母親）',
+      emergencyName: '林美珍',
       emergencyPhone: '9012 3456',
       sponsoringAuthority: '黃埔宣道會',
       groupAddress: '九龍紅磡黃埔花園社區中心 3 樓',
@@ -542,7 +543,7 @@ export function demoBook() {
         rows: [
           { id: uid('act'), date: '2024-09-21', place: '黃埔社區中心', summary: '迎新營火晚會', certifiedBy: '馬啟明' },
           { id: uid('act'), date: '2024-10-05', place: '大埔滘', summary: '夜行訓練（戶外活動）', certifiedBy: '馬啟明' },
-          { id: uid('act'), date: '2024-10-19', place: '西貢', summary: '獨木舟體驗（海上活動）', certifiedBy: '陳姑娘' },
+          { id: uid('act'), date: '2024-10-19', place: '西貢', summary: '獨木舟體驗（海上活動）', certifiedBy: '陳詠詩' },
         ],
       },
       'mb-presented': { presentedOn: '2024-12-15', place: '旅部週年大會', by: '馬啟明', comment: '會員章已完成' },
@@ -557,12 +558,12 @@ export function demoBook() {
       'wellness-1': { certs: [{ id: uid('cert'), item: 'SOUL Keeper 精神健康守護者計劃', cert: 'SK-2025-0117', hours: '30', date: '2025-05-10' }], serviceHours: '22', summary: '於學校分享精神健康訊息 3 次。' },
       'wellness-2': { activity: '長跑', hours: '52', summary: '全年每週兩課，完成半馬。' },
       intrepidity: { selected: 'wilderness', activity: '鳳凰徑全走', duration: '2026-01-02 至 2026-01-04', summary: '3 日 2 夜，與 4 位團員完成 70 公里。' },
-      'rsa-presented': { presentedOn: '2026-03-14', place: '九龍地域總部', by: '地域總監' },
+      'rsa-presented': { presentedOn: '2026-03-14', place: '九龍地域總部', by: '陳國強' },
       'interview-district': { comment: '表現成熟，對樂行童軍支部有清晰認識。', name: '梁淑儀', unit: '紅磡區', date: '2026-05-09' },
       'interview-region': { comment: '推薦申請貝登堡獎章。', name: '陳國強', unit: '九龍地域', date: '2026-06-13' },
       uniform: { notes: '' },
     },
-    holderSignature: { png: SIG_B, name: '林卓瑤', title: '持有人', at: '2024-09-08' },
+    holderSignature: { png: SIG_B, name: '林卓瑤', title: '', at: '2024-09-08' },
     endorsement: { ...leaderSig('2026-09-20'), validUntil: '2026-12-31' },
     meta: {
       demo: true,

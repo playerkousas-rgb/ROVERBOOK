@@ -254,7 +254,7 @@ export async function encodeSignoff({ member, leader, items, note }) {
     member: { nameZh: member?.nameZh || '', memberNo: member?.memberNo || '' },
     leader: {
       name: leader?.name || '',
-      title: leader?.title || '樂行童軍團長',
+      title: leader?.title || '',
       at: leader?.at || new Date().toISOString().slice(0, 10),
       png: leader?.png || null,
     },

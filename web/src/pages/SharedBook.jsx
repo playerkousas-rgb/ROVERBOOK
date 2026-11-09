@@ -17,16 +17,13 @@ function Row({ label, value }) {
   );
 }
 
-function Sig({ sig, name, title }) {
+function Sig({ sig, name }) {
   if (!sig) return null;
   return (
     <div className="ssig">
       {(sig.png || sig.data) && <img src={sig.png || sig.data} alt="簽名" />}
-      <span>
-        {sig.name || name || ''}
-        {(sig.title || title) && <em>{sig.title || title}</em>}
-      </span>
-      {sig.date && <time>{sig.date}</time>}
+      <span>{sig.name || name || ''}</span>
+      {(sig.at || sig.date) && <time>{sig.at || sig.date}</time>}
     </div>
   );
 }
@@ -291,11 +288,11 @@ export function SnapshotView({ snapshot: s, createdAt, views = 0, flag = '公開
               <div className="ssigs">
                 <div>
                   <span className="slabel">持有人</span>
-                  <Sig sig={s.holderSignature} name={m.nameZh} title="持有人" />
+                  <Sig sig={s.holderSignature} name={m.nameZh} />
                 </div>
                 <div>
                   <span className="slabel">領袖核實</span>
-                  <Sig sig={s.endorsement?.signature} name={s.endorsement?.name} title={s.endorsement?.title} />
+                  <Sig sig={s.endorsement?.signature} name={s.endorsement?.name} />
                   {s.endorsement?.date && <p className="tiny">核實日期 {s.endorsement.date}</p>}
                 </div>
               </div>

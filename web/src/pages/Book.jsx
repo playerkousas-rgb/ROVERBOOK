@@ -136,7 +136,7 @@ export function Particulars2() {
 
       <Bilingual as="h4" className="pgh" zh="緊急事故聯絡人" en="Emergency Contact Person" />
       <div className="fduo">
-        <Line label="姓名 Name" path="member.emergencyName" placeholder="林美珍（母親）" />
+        <Line label="姓名 Name" path="member.emergencyName" placeholder="林美珍" />
         <Line label="聯絡電話 Telephone No." path="member.emergencyPhone" placeholder="9012 3456" />
       </div>
 
@@ -257,13 +257,39 @@ export function Changes() {
       <H en="TRANSFER / CHANGE OF ADDRESS / CHANGE OF PARTICULARS">轉旅 · 遷移地址 · 更改摘要</H>
 
       <Bilingual as="h4" className="pgh" zh="轉旅" en="TRANSFER OF GROUP" />
-      <Rows path="transfers" min={3} addLabel={null} cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'groupNo', label: '新旅旅號', en: 'Number of New Group' }]} />
+      <Rows
+        path="transfers"
+        min={3}
+        addLabel={null}
+        cols={[
+          { k: 'date', label: '日期', en: 'Date', type: 'date' },
+          { k: 'groupNo', label: '新旅旅號', en: 'Number of New Group', col: 'minmax(160px, 2.2fr)' },
+        ]}
+      />
 
       <Bilingual as="h4" className="pgh" zh="遷移地址" en="CHANGE OF ADDRESS" />
-      <Rows path="addressChanges" min={3} addLabel={null} cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'address', label: '新地址', en: 'New Address', width: 2.4 }]} />
+      <Rows
+        path="addressChanges"
+        min={3}
+        addLabel={null}
+        cols={[
+          { k: 'date', label: '日期', en: 'Date', type: 'date' },
+          { k: 'address', label: '新地址', en: 'New Address', col: 'minmax(180px, 2.6fr)' },
+        ]}
+      />
 
       <Bilingual as="h4" className="pgh" zh="更改個人摘要" en="CHANGE OF PERSONAL PARTICULARS" />
-      <Rows path="detailChanges" min={3} addLabel={null} cols={[{ k: 'date', label: '日期', en: 'Date', type: 'date' }, { k: 'item', label: '項目', en: 'Item' }, { k: 'content', label: '內容', en: 'Content', width: 2 }]} />
+      <Rows
+        path="detailChanges"
+        min={3}
+        addLabel={null}
+        layout="detail"
+        cols={[
+          { k: 'date', label: '日期', en: 'Date', type: 'date' },
+          { k: 'item', label: '項目', en: 'Item', col: 'minmax(84px, 1fr)' },
+          { k: 'content', label: '內容', en: 'Content', col: 'minmax(150px, 2fr)' },
+        ]}
+      />
     </Page>
   );
 }
@@ -289,7 +315,10 @@ export function Renewals({ part = 0 }) {
   return (
     <Page id={id}>
       <H en="RENEWAL OF MEMBERSHIP">會員資格</H>
-      <div className="pgtable">
+      <div
+        className="pgtable pgtable--renewals"
+        style={{ '--pg-cols': 'minmax(64px, 0.72fr) minmax(var(--col-date), 0.92fr) minmax(var(--col-sig), 1.45fr)' }}
+      >
         <div className="pgtable__head pgtable__row pgtable__row--3">
           <Bilingual zh="日期" en="Date" />
           <Bilingual zh="有效日期至" en="Valid Until" />
@@ -312,7 +341,6 @@ export function Renewals({ part = 0 }) {
                   label={`${row.year || index + 1} 續會簽署`}
                   en={`Renewal signature ${row.year || index + 1}`}
                   compact
-                  title="樂行童軍團長"
                 />
               </span>
             </div>
@@ -338,11 +366,12 @@ export function ServiceAwards() {
         path="service"
         min={7}
         addLabel={null}
+        layout="service"
         cols={[
-          { k: 'post', label: '崗位／職位', en: 'Post / Title', width: 1.6 },
-          { k: 'from', label: '由', en: 'From' },
-          { k: 'to', label: '至', en: 'To' },
-          { k: 'appointedBy', label: '委任人', en: 'Appointed by', width: 1.3 },
+          { k: 'post', label: '崗位／職位', en: 'Post / Title', col: 'minmax(108px, 1.55fr)' },
+          { k: 'from', label: '由', en: 'From', col: 'minmax(74px, 0.85fr)' },
+          { k: 'to', label: '至', en: 'To', col: 'minmax(74px, 0.85fr)' },
+          { k: 'appointedBy', label: '委任人', en: 'Appointed by', col: 'minmax(var(--col-person), 1.15fr)' },
         ]}
       />
       <Note en="This table above is for recording the services done by the Rover Scout in Crew, Group, Student Union, clubs and societies, and other organizations.">
@@ -354,11 +383,12 @@ export function ServiceAwards() {
         path="awards"
         min={3}
         addLabel={null}
+        layout="awards"
         cols={[
-          { k: 'name', label: '獎章／獎勵名稱', en: 'Name of Award' },
-          { k: 'summary', label: '內容簡述', en: 'Summary of Content', width: 1.5 },
+          { k: 'name', label: '獎章／獎勵名稱', en: 'Name of Award', col: 'minmax(96px, 1.15fr)' },
+          { k: 'summary', label: '內容簡述', en: 'Summary of Content', col: 'minmax(115px, 1.55fr)' },
           { k: 'date', label: '頒發日期', en: 'Date of Issue', type: 'date' },
-          { k: 'org', label: '機構名稱', en: 'Name of Organization' },
+          { k: 'org', label: '機構名稱', en: 'Name of Organization', col: 'minmax(84px, 1fr)' },
         ]}
       />
     </Page>
@@ -470,9 +500,10 @@ export function BadgeTable({ id, title, en, path }) {
         path={path}
         min={9}
         addLabel={null}
+        layout="badges"
         cols={[
-          { k: 'name', label: '獎章', en: 'Badges', width: 2 },
-          { k: 'cert', label: '證書編號', en: 'Certificate No.', width: 1.4 },
+          { k: 'name', label: '獎章', en: 'Badges', col: 'minmax(150px, 2fr)' },
+          { k: 'cert', label: '證書編號', en: 'Certificate No.', col: 'minmax(var(--col-cert), 1.25fr)' },
           { k: 'date', label: '完成日期', en: 'Date of Completion', type: 'date' },
         ]}
       />
@@ -491,10 +522,11 @@ export function Experience({ id, title, en, path, lead, leadEn, min = 11 }) {
         path={path}
         min={min}
         addLabel={null}
+        layout="exp"
         cols={[
-          { k: 'period', label: '時段', en: 'Period', width: 1.1 },
-          { k: 'item', label: '項目', en: 'Items', width: 1.2 },
-          { k: 'description', label: '描述', en: 'Descriptions', width: 2.4, rows: 1 },
+          { k: 'period', label: '時段', en: 'Period', col: 'minmax(90px, 1.05fr)' },
+          { k: 'item', label: '項目', en: 'Items', col: 'minmax(92px, 1.1fr)' },
+          { k: 'description', label: '描述', en: 'Descriptions', col: 'minmax(160px, 2.35fr)', rows: 1 },
         ]}
       />
     </Page>

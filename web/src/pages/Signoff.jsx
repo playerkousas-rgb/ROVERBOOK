@@ -105,7 +105,10 @@ export default function Signoff() {
       {payload.leader?.png && (
         <div className="signoffsig">
           <img src={payload.leader.png} alt="領袖簽名" />
-          <span>{payload.leader.name} · {payload.leader.title}</span>
+          <span>
+            {payload.leader.name}
+            {payload.leader.title ? ` · ${payload.leader.title}` : ''}
+          </span>
         </div>
       )}
 

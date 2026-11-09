@@ -223,7 +223,7 @@ export default function SignoffPanel({ payload, onSigned }) {
         onClose={() => setOpenSign(false)}
         title="領袖核簽"
         subtitle="簽名會壓縮後放入回傳碼；成員一掃即寫入紀錄冊。"
-        defaultTitle="樂行童軍團長"
+        defaultTitle=""
         onSave={(sig) => {
           setLeader(sig);
           setOpenSign(false);
