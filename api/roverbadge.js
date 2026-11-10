@@ -9,55 +9,203 @@
    動作白名單：login / logout / load / submitPending
    直接寫入動作（save / saveOtherBadge / reviewRequest …）一律 403 Forbidden，
    杜絕成員將自填進度偽裝成已核實。
+
+   已登記旅團清單（GET）：
+   - 回傳 `upstreamOk` 供前端區分「清單真的為空」與「暫時讀不到清單」；
+   - 略過 `connected === false` 的未接通項目；
+   - 略過帶有 `_aliasOf` 且主鍵（`json.troops[info._aliasOf]`）有效存在的別名項目
+     （避免下拉選單同時出現例如 `0082` 與 `82`）。
    ========================================================================== */
 
-const DEFAULT_ORIGIN = 'https://roverbadge.vercel.app';
+export const DEFAULT_BADGE_ORIGIN = 'https://roverbadge.vercel.app';
+const EXEC_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,}\/exec\/?$/i;
+const TEST_LOCAL_RE = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/[A-Za-z0-9._~\-/?=&%]*)?$/;
+const ALLOWED_ACTIONS = new Set(['login', 'logout', 'load', 'submitPending']);
+const MAX_BODY_BYTES = 512 * 1024;
+const TIMEOUT_MS = 30000;
+const TROOPS_TIMEOUT_MS = 10000;
 
-function origin() {
-  return String(process.env.ROVERBADGE_ORIGIN || DEFAULT_ORIGIN).replace(/\/$/, '');
+export function resolveBadgeOrigin() {
+  const raw = String(
+    process.env.ROVERBADGE_ORIGIN || process.env.ROVERBADGE_URL || DEFAULT_BADGE_ORIGIN,
+  ).trim();
+  try {
+    const u = new URL(raw);
+    if (u.username || u.password) return DEFAULT_BADGE_ORIGIN;
+    if (u.protocol === 'https:') return u.origin;
+    if (
+      process.env.ROVERBOOK_PROXY_TEST === '1' &&
+      process.env.VERCEL !== '1' &&
+      (u.hostname === '127.0.0.1' || u.hostname === 'localhost')
+    ) {
+      return u.origin;
+    }
+  } catch {
+    /* fallback below */
+  }
+  return DEFAULT_BADGE_ORIGIN;
+}
+
+function normalizeGasUrl(url) {
+  const raw = String(url ?? '').trim();
+  if (!raw) return '';
+  try {
+    const u = new URL(raw);
+    if (
+      u.protocol !== 'https:' ||
+      u.hostname !== 'script.google.com' ||
+      u.search ||
+      u.hash ||
+      u.username ||
+      u.password ||
+      u.port
+    ) {
+      return raw;
+    }
+    const m = u.pathname.match(/^\/a\/[^/]+\/macros\/s\/([A-Za-z0-9_-]+)\/exec\/?$/);
+    return m ? `https://script.google.com/macros/s/${m[1]}/exec` : raw;
+  } catch {
+    return raw;
+  }
+}
+
+function isTrustedGasUrl(url) {
+  if (typeof url !== 'string' || url.length > 300) return false;
+  if (EXEC_URL_RE.test(normalizeGasUrl(url))) return true;
+  if (
+    process.env.ROVERBOOK_PROXY_TEST === '1' &&
+    process.env.VERCEL !== '1' &&
+    TEST_LOCAL_RE.test(url.trim())
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function getLocalTroopRegistry() {
+  const ids = new Set();
+  for (const key of Object.keys(process.env)) {
+    const m = key.match(/^TROOP_([0-9A-Za-z_-]{1,32})_(NAME|EN|BACKEND|APIKEY)$/);
+    if (m) ids.add(m[1]);
+  }
+  const out = Object.create(null);
+  for (const id of ids) {
+    const name = String(process.env[`TROOP_${id}_NAME`] || '').trim();
+    const en = String(process.env[`TROOP_${id}_EN`] || '').trim();
+    const backend = normalizeGasUrl(process.env[`TROOP_${id}_BACKEND`] || '');
+    const apikey = String(process.env[`TROOP_${id}_APIKEY`] || '').trim();
+    if (name && apikey && backend && isTrustedGasUrl(backend)) {
+      out[id] = { id, name, en, backend: backend.replace(/\/$/, ''), apikey };
+    }
+  }
+  return out;
+}
+
+function isListableTroop(info) {
+  return Boolean(
+    info &&
+      typeof info === 'object' &&
+      !Array.isArray(info) &&
+      info.name &&
+      info.connected !== false,
+  );
+}
+
+function aliasTargetOf(id, info) {
+  const raw = info && typeof info === 'object' ? info._aliasOf : '';
+  const target = typeof raw === 'string' || typeof raw === 'number' ? String(raw).trim() : '';
+  return target && target !== id ? target : '';
+}
+
+function isDuplicateAlias(id, info, list) {
+  const primaryId = aliasTargetOf(id, info);
+  if (!primaryId || !Object.prototype.hasOwnProperty.call(list, primaryId)) return false;
+  const primary = list[primaryId];
+  return isListableTroop(primary) && !aliasTargetOf(primaryId, primary);
 }
 
 function sendJson(res, status, obj) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.status(status).json(obj);
+  if (typeof res.status === 'function' && typeof res.json === 'function') {
+    return res.status(status).json(obj);
+  }
+  res.statusCode = status;
+  res.end(JSON.stringify(obj));
+  return res;
 }
 
-// 讀取請求本體（Vercel 與 Express 皆可能已解析 JSON，也可能是字串 / stream）
+// 讀取請求本體（Vercel、Express 與原生 Node stream 皆相容）
 async function readBody(req) {
   if (req.body && typeof req.body === 'object' && !Array.isArray(req.body)) return req.body;
   if (typeof req.body === 'string') {
-    try { return JSON.parse(req.body); } catch { return {}; }
+    try {
+      return JSON.parse(req.body);
+    } catch {
+      return {};
+    }
   }
-  if (req.body && typeof req.body.pipe === 'function') {
-    const chunks = [];
-    for await (const chunk of req.body) chunks.push(chunk);
-    const buf = Buffer.concat(chunks);
-    if (!buf.length) return {};
-    try { return JSON.parse(buf.toString('utf8')); } catch { return {}; }
+  const stream =
+    req.body && typeof req.body.pipe === 'function'
+      ? req.body
+      : typeof req.pipe === 'function'
+        ? req
+        : null;
+  if (!stream) return {};
+  const chunks = [];
+  let total = 0;
+  for await (const chunk of stream) {
+    const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    total += buf.length;
+    if (total > MAX_BODY_BYTES) return null;
+    chunks.push(buf);
   }
-  return {};
+  if (!chunks.length) return {};
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  } catch {
+    return {};
+  }
 }
 
-// 轉發到 ROVERBADGE 的同源 /api/proxy（伺服器對伺服器，無瀏覽器 header 限制）
+// 轉發到 ROVERBADGE 的同源 /api/proxy（或個別旅團覆寫 GAS 後端）
 async function forwardProxy(action, data, troopId) {
-  const res = await fetch(`${origin()}/api/proxy`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify({ action, troopId: String(troopId || '').trim(), data: data || {} }),
-  });
-  let json = null;
-  const ct = res.headers.get('content-type') || '';
-  if (ct.includes('application/json')) {
-    try { json = await res.json(); } catch { json = null; }
+  const cleanTroop = String(troopId || '').trim();
+  const localRegistry = getLocalTroopRegistry();
+  const localTroop = localRegistry[cleanTroop];
+  const controller = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), TIMEOUT_MS) : null;
+
+  try {
+    const target = localTroop ? localTroop.backend : `${resolveBadgeOrigin()}/api/proxy`;
+    const payload = localTroop
+      ? { ...(data || {}), action, apiKey: localTroop.apikey }
+      : { action, troopId: cleanTroop, data: data || {} };
+    const res = await fetch(target, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(payload),
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+    let json = null;
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      try {
+        json = await res.json();
+      } catch {
+        json = null;
+      }
+    }
+    if (!res.ok) {
+      const err = new Error(json && json.error ? json.error : `上游錯誤 (${res.status})`);
+      err.status = res.status;
+      err.data = json;
+      throw err;
+    }
+    return json || {};
+  } finally {
+    if (timer) clearTimeout(timer);
   }
-  if (!res.ok) {
-    const err = new Error(json && json.error ? json.error : `上游錯誤 (${res.status})`);
-    err.status = res.status;
-    err.data = json;
-    throw err;
-  }
-  return json || {};
 }
 
 /**
@@ -76,10 +224,11 @@ function filterPersonalConfirmedLoad(json, scoutId) {
 
   // 1. 優先在 members 名單中以 SCOUT ID / ymis 找到本人
   if (members.length) {
-    me = members.find((m) => {
-      const msid = normalizeScoutIdInFn(m.scoutId || m.ymis || m.memberNo);
-      return msid && msid === sid;
-    }) || null;
+    me =
+      members.find((m) => {
+        const msid = normalizeScoutIdInFn(m.scoutId || m.ymis || m.memberNo);
+        return msid && msid === sid;
+      }) || null;
   }
 
   // 2. 否則嘗試頂層 progress / progress_mock 以 sid 取單一成員進度
@@ -132,28 +281,57 @@ function normalizeScoutIdInFn(id) {
   return digits;
 }
 
-const WRITE_ACTIONS = new Set(['save', 'saveOtherBadge', 'reviewRequest']);
-const ALLOWED_ACTIONS = new Set(['login', 'logout', 'load', 'submitPending']);
-
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   if (req.method === 'GET') {
     // 公開旅團清單（僅 id + 名稱，零後端 URL / API Key）
-    try {
-      const up = await fetch(`${origin()}/api/troops`, {
-        headers: { accept: 'application/json' },
-      });
-      let data = { troops: {} };
-      if (up.ok) {
-        try { data = await up.json(); } catch { data = { troops: {} }; }
-      }
-      const troops = data && data.troops && typeof data.troops === 'object' ? data.troops : {};
-      return sendJson(res, 200, { troops, _note: 'ROVERBOOK ⇄ ROVERBADGE 旅團下拉選單來源' });
-    } catch (e) {
-      return sendJson(res, 502, { error: '無法讀取旅團清單', troops: {} });
+    const origin = resolveBadgeOrigin();
+    const localRegistry = getLocalTroopRegistry();
+    const troops = Object.create(null);
+    for (const [id, t] of Object.entries(localRegistry)) {
+      troops[id] = { name: t.name, ...(t.en ? { en: t.en } : {}) };
     }
+    let upstreamOk = false;
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), TROOPS_TIMEOUT_MS) : null;
+    try {
+      const up = await fetch(`${origin}/api/troops`, {
+        method: 'GET',
+        headers: { accept: 'application/json' },
+        ...(controller ? { signal: controller.signal } : {}),
+      });
+      if (up.ok) {
+        const data = await up.json().catch(() => null);
+        const list = data?.troops;
+        if (list && typeof list === 'object' && !Array.isArray(list)) {
+          upstreamOk = true;
+          for (const [id, info] of Object.entries(list)) {
+            if (!isListableTroop(info)) continue;
+            if (isDuplicateAlias(id, info, list)) continue;
+            if (!troops[id]) {
+              troops[id] = {
+                name: String(info.name),
+                ...(info.en ? { en: String(info.en) } : {}),
+              };
+            }
+          }
+        }
+      }
+    } catch {
+      /* 上游暫時不可達時仍回傳 200 與 upstreamOk: false，讓前端顯示重試與開戶引導 */
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+    return sendJson(res, 200, {
+      success: true,
+      origin,
+      privacy: 'progress-only',
+      upstreamOk,
+      troops,
+      _note: 'ROVERBOOK ⇄ ROVERBADGE 旅團下拉選單來源',
+    });
   }
 
   if (req.method !== 'POST') {
@@ -162,6 +340,9 @@ export default async function handler(req, res) {
   }
 
   const body = await readBody(req);
+  if (body === null) {
+    return sendJson(res, 413, { error: '請求內容過大' });
+  }
   const action = String(body.action || '');
   const troopId = String(body.troopId || '').trim();
   const scoutId = String(body.scoutId || '').trim();
@@ -185,11 +366,12 @@ export default async function handler(req, res) {
       }
       const up = await forwardProxy('login', { login_id: scoutId, password }, troopId);
       const user = up && up.user ? up.user : {};
+      const rawYmis = user.ymis || user.scoutId || user.memberNo || scoutId || '';
       // 剝除姓名與電郵，只回傳身份憑證
       return sendJson(res, 200, {
         success: !!up.success,
         token: up.token || null,
-        ymis: user.ymis || user.scoutId || user.memberNo || scoutId || null,
+        ymis: normalizeScoutIdInFn(rawYmis) || null,
       });
     }
 
@@ -231,7 +413,10 @@ export default async function handler(req, res) {
       for (const it of items) {
         const itemId = String(it.itemId || it.id || '');
         const date = String(it.date || '');
-        if (!itemId) { results.push({ itemId: '', ok: false, error: '缺少項目代號' }); continue; }
+        if (!itemId) {
+          results.push({ itemId: '', ok: false, error: '缺少項目代號' });
+          continue;
+        }
         try {
           const up = await forwardProxy('requestComplete', { token, itemId, date }, troopId);
           results.push({ itemId, date, ok: !!up.success, status: 'pending', data: up });

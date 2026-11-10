@@ -3,8 +3,11 @@ import { useToast, Crest, Icon } from '../ui.jsx';
 import { APP_VERSION, demoBook, newBook } from '@shared/book.js';
 import { persistBook } from '../bookStore.js';
 import { navigate } from '../router.jsx';
+import { isBadgeProgressFile, isBookBackupFile } from '../roverbadgeBridge.js';
+import { useLang } from '../i18n.jsx';
 
 export default function Welcome({ onReady }) {
+  const { isEn } = useLang();
   const { push } = useToast();
   const [form, setForm] = useState({
     nameZh: '',
@@ -37,11 +40,23 @@ export default function Welcome({ onReady }) {
     reader.onload = () => {
       try {
         const data = JSON.parse(String(reader.result));
-        if (!data?.member) throw new Error('這不是 ROVERBOOK 備份檔');
-        start(newBook(data), '/p/contents');
-        push('備份已還原');
+        if (isBookBackupFile(data)) {
+          start(newBook(data), '/p/contents');
+          push(isEn ? 'Backup restored' : '備份已還原');
+          return;
+        }
+        if (isBadgeProgressFile(data)) {
+          push(
+            isEn
+              ? 'ROVERBADGE progress files cannot be restored here. Open or create your record book first, then connect and sign in to ROVERBADGE in the Digital Appendix before importing.'
+              : 'ROVERBADGE 進度檔不能在此還原。請先建立或開啟紀錄冊，再到「數位附錄」連接並登入 ROVERBADGE 後匯入。',
+            'error',
+          );
+          return;
+        }
+        throw new Error(isEn ? 'Not a complete ROVERBOOK backup JSON file' : '這不是完整的 ROVERBOOK 紀錄冊備份檔');
       } catch (err) {
-        push(err.message || '檔案格式不正確', 'error');
+        push(err.message || (isEn ? 'Invalid file format' : '檔案格式不正確'), 'error');
       }
     };
     reader.readAsText(file);
@@ -151,7 +166,17 @@ export default function Welcome({ onReady }) {
           <p className="welcome__fine">
             沒有「註冊」或「登入」。資料留在這部裝置；換機前請在選單匯出備份。
           </p>
-          <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => importFile(e.target.files?.[0])} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = '';
+              importFile(file);
+            }}
+          />
         </form>
       </div>
     </div>

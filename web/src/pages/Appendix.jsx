@@ -6,6 +6,7 @@ import { download, clearBook, latestShare, slugify } from '../bookStore.js';
 import { navigate } from '../router.jsx';
 import { APP_VERSION, today, progressedCount, newBook } from '@shared/book.js';
 import RoverBadgeSyncCard from '../components/RoverBadgeSyncCard.jsx';
+import { isBadgeProgressFile, isBookBackupFile } from '../roverbadgeBridge.js';
 import { FORM_META, FORM_ORDER, formStatus } from '@shared/forms.js';
 import { ShowQrButton } from '../components/ShowQrDialog.jsx';
 import { compressBookImages, imageSizeLabel, storageUsage, stripFieldInk } from '../storageHealth.js';
@@ -13,7 +14,7 @@ import { LegalNote } from '../components/Legal.jsx';
 import { useLang } from '../i18n.jsx';
 
 export default function Appendix() {
-  const { book, update, replace } = useBook();
+  const { book, replace } = useBook();
   const { isEn } = useLang();
   const { push } = useToast();
   const backupRef = useRef(null);
@@ -53,12 +54,21 @@ export default function Appendix() {
     reader.onload = () => {
       try {
         const data = JSON.parse(String(reader.result));
-        if (!data || !data.member) throw new Error('這不是 ROVERBOOK 備份檔');
-        if (!confirm('匯入備份會覆蓋目前這本紀錄冊，確定嗎？')) return;
+        if (isBadgeProgressFile(data)) {
+          throw new Error(
+            isEn
+              ? 'ROVERBADGE progress files cannot be restored here. Connect and sign in to ROVERBADGE above before importing.'
+              : 'ROVERBADGE 進度檔不能在此還原；請於上方「ROVERBADGE 個人進度同步」連接並登入帳戶後匯入。',
+          );
+        }
+        if (!isBookBackupFile(data)) {
+          throw new Error(isEn ? 'Not a complete ROVERBOOK backup JSON' : '這不是完整的 ROVERBOOK 紀錄冊備份檔');
+        }
+        if (!confirm(isEn ? 'Overwrite current record book with this backup?' : '匯入備份會覆蓋目前這本紀錄冊，確定嗎？')) return;
         replace(newBook(data));
-        push('已匯入紀錄冊');
+        push(isEn ? 'Backup restored' : '已匯入紀錄冊');
       } catch (e) {
-        push(e.message || '無法讀取檔案', 'error');
+        push(e.message || (isEn ? 'Cannot read file' : '無法讀取檔案'), 'error');
       }
     };
     reader.readAsText(file);
@@ -137,6 +147,8 @@ export default function Appendix() {
               </div>
             </div>
 
+            <RoverBadgeSyncCard />
+
             <div className="appendix-card">
               <h4>
                 <Icon name="book" size={13} /> {isEn ? 'On this device' : '本機儲存'} ({APP_VERSION})
@@ -165,12 +177,22 @@ export default function Appendix() {
               </dl>
               <div className="aside-actions">
                 <button className="btn btn--ghost btn--sm" onClick={exportJson}>
-                  <Icon name="download" size={13} /> {isEn ? 'Export backup' : '匯出備份'}
+                  <Icon name="download" size={13} /> {isEn ? 'Export backup JSON' : '匯出完整備份 JSON'}
                 </button>
                 <button className="btn btn--ghost btn--sm" onClick={() => backupRef.current?.click()}>
-                  <Icon name="upload" size={13} /> {isEn ? 'Import backup' : '匯入備份'}
+                  <Icon name="upload" size={13} /> {isEn ? 'Restore backup JSON' : '還原備份 JSON'}
                 </button>
-                <input ref={backupRef} type="file" accept="application/json,.json" hidden onChange={(e) => importJson(e.target.files?.[0])} />
+                <input
+                  ref={backupRef}
+                  type="file"
+                  accept="application/json,.json"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = '';
+                    importJson(file);
+                  }}
+                />
               </div>
             </div>
 
@@ -196,8 +218,6 @@ export default function Appendix() {
                 />
               </div>
             </div>
-
-            <RoverBadgeSyncCard />
           </div>
 
           <LegalNote />

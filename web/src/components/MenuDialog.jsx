@@ -7,6 +7,7 @@ import { LegalNote } from './Legal.jsx';
 import { navigate } from '../router.jsx';
 import { useLang } from '../i18n.jsx';
 import { exitLeaderMode } from '../leader.js';
+import { isBadgeProgressFile, isBookBackupFile } from '../roverbadgeBridge.js';
 
 export default function MenuDialog({ open, onClose, onShowQr, leader = false, leaderReady = null }) {
   const { book, replace } = useBook();
@@ -29,13 +30,22 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
     reader.onload = () => {
       try {
         const data = JSON.parse(String(reader.result));
-        if (!data?.member) throw new Error('這不是 ROVERBOOK 備份檔');
-        if (!confirm('匯入備份會覆蓋目前這本紀錄冊，確定嗎？')) return;
+        if (isBadgeProgressFile(data)) {
+          throw new Error(
+            isEn
+              ? 'ROVERBADGE progress files cannot be restored here. Open Digital Appendix and connect your ROVERBADGE account before importing.'
+              : 'ROVERBADGE 進度檔不能在此還原，請到「數位附錄」連接並登入 ROVERBADGE 後匯入。',
+          );
+        }
+        if (!isBookBackupFile(data)) {
+          throw new Error(isEn ? 'Not a complete ROVERBOOK backup JSON file' : '這不是完整的 ROVERBOOK 紀錄冊備份檔');
+        }
+        if (!confirm(isEn ? 'Overwrite current record book with this backup?' : '匯入備份會覆蓋目前這本紀錄冊，確定嗎？')) return;
         replace(newBook(data));
-        push('備份已還原');
+        push(isEn ? 'Backup restored' : '備份已還原');
         onClose();
       } catch (e) {
-        push(e.message || '檔案格式不正確', 'error');
+        push(e.message || (isEn ? 'Invalid file format' : '檔案格式不正確'), 'error');
       }
     };
     reader.readAsText(file);
@@ -258,7 +268,17 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
         </button>
       </div>
 
-      <input ref={backupRef} type="file" accept="application/json,.json" hidden onChange={(e) => importBackup(e.target.files?.[0])} />
+      <input
+        ref={backupRef}
+        type="file"
+        accept="application/json,.json"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          importBackup(file);
+        }}
+      />
     </Modal>
   );
 }

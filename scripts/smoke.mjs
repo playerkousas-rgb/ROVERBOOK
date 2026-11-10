@@ -56,6 +56,7 @@ global.Event = window.Event;
 global.MouseEvent = window.MouseEvent;
 global.getComputedStyle = window.getComputedStyle;
 global.localStorage = window.localStorage;
+global.sessionStorage = window.sessionStorage;
 global.Blob = window.Blob;
 global.FileReader = window.FileReader;
 global.requestAnimationFrame = (cb) => setTimeout(() => cb(Date.now()), 16);
@@ -1104,13 +1105,33 @@ await screen({
   const { APP_VERSION } = await import('../shared/book.js');
   const installBlock = swSrc.match(/addEventListener\('install'[\s\S]*?\}\);/)?.[0] || '';
   const noAutoSkip = !installBlock.includes('skipWaiting');
-  const swV3 = swSrc.includes("VERSION = 'v3'") && swSrc.includes('roverbook-');
+  const swV4 = swSrc.includes("VERSION = 'v4'") && swSrc.includes('roverbook-');
   const verMatch =
     `v${pkg.version}` === APP_VERSION &&
     html.includes(`content="${APP_VERSION}"`) &&
     html.includes(`window.APP_VERSION = '${APP_VERSION}'`);
-  report(verMatch && swV3 && noAutoSkip, `版本同步：package / APP_VERSION / index.html / sw.js (${APP_VERSION})`);
+  report(verMatch && swV4 && noAutoSkip, `版本同步：package / APP_VERSION / index.html / sw.js (${APP_VERSION})`);
 }
+
+{
+  const rb = await api('/api/roverbadge');
+  report(
+    rb.res.ok &&
+      rb.body?.success === true &&
+      rb.body?.origin === 'https://roverbadge.vercel.app' &&
+      typeof rb.body?.upstreamOk === 'boolean' &&
+      rb.body?.troops &&
+      typeof rb.body.troops === 'object',
+    'GET /api/roverbadge：回傳 origin、upstreamOk 與已過濾旅團物件',
+  );
+}
+
+await screen({
+  name: '附錄：ROVERBADGE 進度檔未登入鎖定＋開戶提示＋離線完整備份維持可用',
+  path: '/p/appendix',
+  expect: ['ROVERBADGE 進度檔匯出／匯入已鎖定', '匯出完整備份 JSON', '還原備份 JSON', '前往 ROVERBADGE 開戶'],
+  wait: 520,
+});
 
 {
   reset();

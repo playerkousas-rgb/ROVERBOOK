@@ -12,6 +12,7 @@
 // 執行：node tests/roverbadge_sync.test.mjs   (或 npm test)
 
 import assert from 'node:assert/strict';
+import { Readable } from 'node:stream';
 import {
   exportForRoverBadge,
   importFromRoverBadge,
@@ -21,7 +22,7 @@ import {
   scoutId,
   ITEM_INDEX,
 } from '../shared/book.js';
-import roverbadgeHandler from '../api/roverbadge.js';
+import roverbadgeHandler, { DEFAULT_BADGE_ORIGIN, resolveBadgeOrigin } from '../api/roverbadge.js';
 
 process.env.ROVERBADGE_ORIGIN = 'https://roverbadge.vercel.app';
 
@@ -316,6 +317,91 @@ async function main() {
     ok(res.body.token === 'abc123', 'login 回傳 token');
     ok(res.body.ymis === '0000081420', 'login 回傳 ymis（正規化 81420 → 0000081420）');
     ok(res.body.name === undefined && res.body.email === undefined, 'login 剝除姓名與電郵（零 PII）');
+  }
+
+  // ================================================================ 5. DEFAULT_BADGE_ORIGIN、別名去重、upstreamOk 與原始 Node 流兼容
+  ok(DEFAULT_BADGE_ORIGIN === 'https://roverbadge.vercel.app', 'DEFAULT_BADGE_ORIGIN 為 https://roverbadge.vercel.app');
+
+  {
+    const prevOrigin = process.env.ROVERBADGE_ORIGIN;
+    delete process.env.ROVERBADGE_ORIGIN;
+    ok(resolveBadgeOrigin() === 'https://roverbadge.vercel.app', '未設定 ROVERBADGE_ORIGIN 時退回 https://roverbadge.vercel.app');
+    process.env.ROVERBADGE_ORIGIN = 'http://insecure.example.com';
+    ok(resolveBadgeOrigin() === 'https://roverbadge.vercel.app', '非 HTTPS ROVERBADGE_ORIGIN 退回預設值');
+    process.env.ROVERBADGE_ORIGIN = 'https://custom.roverbadge.example/path/';
+    ok(resolveBadgeOrigin() === 'https://custom.roverbadge.example', '合法 HTTPS ROVERBADGE_ORIGIN 擷取 origin');
+    process.env.ROVERBADGE_ORIGIN = prevOrigin || 'https://roverbadge.vercel.app';
+  }
+
+  // 過濾 connected:false、_aliasOf 重複別名、保留獨立別名
+  installFetch((url) => {
+    if (url.endsWith('/api/troops')) {
+      return jsonResponse({
+        troops: {
+          '0082': { name: '九龍第 82 旅', en: 'Kowloon 82nd', backend: 'https://secret.example', apikey: 'secret' },
+          '82': { name: '九龍第 82 旅（別名）', _aliasOf: '0082' },
+          '0145': { name: '未接通旅', connected: false },
+          orphan: { name: '孤立別名', _aliasOf: '9999' },
+        },
+      });
+    }
+    return jsonResponse({ error: 'unexpected' }, 404);
+  });
+  {
+    const { res } = await get();
+    ok(res.statusCode === 200 && res.body.success === true, 'GET 過濾清單回傳 200');
+    ok(res.body.origin === 'https://roverbadge.vercel.app', 'GET 回傳安全 origin');
+    ok(res.body.upstreamOk === true, 'GET 上游正常時 upstreamOk = true');
+    ok(Boolean(res.body.troops['0082']), '保留正常已登記旅團 0082');
+    ok(!res.body.troops['0082'].backend && !res.body.troops['0082'].apikey, '已過濾旅團仍不洩漏 backend/apikey');
+    ok(res.body.troops['82'] === undefined, '已剔除主鍵存在之 _aliasOf 重複別名 82');
+    ok(res.body.troops['0145'] === undefined, '已剔除 connected === false 之旅團');
+    ok(Boolean(res.body.troops.orphan), '主鍵不存在時保留 _aliasOf 旅團');
+  }
+
+  // 上游失敗時仍回傳 HTTP 200、upstreamOk: false 與空清單（讓 UI 條件式提示前往開戶）
+  installFetch(() => Promise.reject(new Error('network down')));
+  {
+    const { res } = await get();
+    ok(res.statusCode === 200 && res.body.success === true, '上游離線時 GET /api/roverbadge 仍回傳 200');
+    ok(res.body.upstreamOk === false, '上游離線時 upstreamOk = false');
+    ok(res.body.origin === 'https://roverbadge.vercel.app', '上游離線時仍回傳預設 origin');
+    ok(Object.keys(res.body.troops || {}).length === 0, '無本地 TROOP_* 時回傳空旅團物件');
+  }
+
+  // 原始 Node stream req + raw http.ServerResponse（Vite middleware 相容）
+  installFetch((url, init) => {
+    const body = JSON.parse(init.body || '{}');
+    if (body.action === 'login') return jsonResponse({ success: true, token: 'vite-tok', ymis: '81420' });
+    return jsonResponse({ error: 'unexpected' }, 400);
+  });
+  {
+    const streamReq = Readable.from([
+      Buffer.from(JSON.stringify({ action: 'login', troopId: '0082', scoutId: '81420', password: 'pw' })),
+    ]);
+    streamReq.method = 'POST';
+    streamReq.url = '/api/roverbadge';
+    streamReq.headers = { 'content-type': 'application/json' };
+    const rawRes = {
+      headers: {},
+      statusCode: 200,
+      setHeader(k, v) {
+        this.headers[k.toLowerCase()] = v;
+      },
+      writeHead(code, hdrs = {}) {
+        this.statusCode = code;
+        for (const [k, v] of Object.entries(hdrs)) this.headers[k.toLowerCase()] = v;
+      },
+      end(chunk) {
+        this.rawBody = Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk || '');
+        this.body = JSON.parse(this.rawBody);
+      },
+    };
+    await roverbadgeHandler(streamReq, rawRes);
+    ok(
+      rawRes.statusCode === 200 && rawRes.body?.token === 'vite-tok' && rawRes.body?.ymis === '0000081420',
+      'raw Node stream + writeHead/end 正常登入並正規化 ymis',
+    );
   }
 
   restoreFetch();
