@@ -1,7 +1,7 @@
 import React from 'react';
 import { useBook } from '../bookContext.js';
 import { Spread } from '../components/Paper.jsx';
-import { allStats, membershipStatus, SECTIONS, SYLLABUS_META } from '@shared/book.js';
+import { allStats, membershipStatus, SECTIONS, SYLLABUS_META, PAGE_TOTAL, SHEET_TOTAL } from '@shared/book.js';
 import { Link } from '../router.jsx';
 import { Icon, fmtDate } from '../ui.jsx';
 import { useLang } from '../i18n.jsx';
@@ -28,6 +28,7 @@ const GROUPS = [
     ids: ['rsa-presented', 'interview-district', 'interview-region', 'bpa-presented'],
   },
   { title: '其他獎章及經驗', en: 'Other badges & experiences', ids: ['wosm', 'other-badges-1', 'other-badges-2', 'additional-1', 'additional-2', 'expeditions-1', 'expeditions-2', 'uniform'] },
+  { title: '參考頁', en: 'Reference leaves', ids: ['promise', 'crest'] },
 ];
 
 export default function Contents() {
@@ -65,8 +66,8 @@ export default function Contents() {
           <div className="tocpage__intro">
             <p>
               {isEn
-                ? 'This digital edition follows the Rover Scout Record Book (27 July 2026 edition) page by page, pages 1–43. Every page is directly editable and the type scales to fit.'
-                : '本電子版逐頁對應《Rover Scout Record Book》（2026 年 7 月 27 日版）第 1–43 頁。每一頁都可以直接點擊填寫，字體會自動縮放。'}
+                ? `This digital edition follows the Rover Scout Record Book (27 July 2026 edition) sheet by sheet: an unnumbered cover + printed pages 1–${PAGE_TOTAL} = ${SHEET_TOTAL} sheets. Every page is directly editable and the type scales to fit.`
+                : `本電子版逐張對應《Rover Scout Record Book》（2026 年 7 月 27 日版）：封面不計頁碼 + 內頁第 1–${PAGE_TOTAL} 頁 = 共 ${SHEET_TOTAL} 張紙。每一頁都可以直接點擊填寫，字體會自動縮放。`}
             </p>
           </div>
 

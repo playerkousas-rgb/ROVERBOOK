@@ -1,5 +1,5 @@
 import React from 'react';
-import { SECTIONS, PAGE_TOTAL, APP_VERSION } from '@shared/book.js';
+import { SECTIONS, PAGE_TOTAL, SHEET_TOTAL, APP_VERSION } from '@shared/book.js';
 import { Crest, cx } from '../ui.jsx';
 import { Link } from '../router.jsx';
 import { useLang } from '../i18n.jsx';
@@ -18,11 +18,15 @@ export function Sheet({ id, no, title, en, children, className = '', dense = fal
         <span className="sheet__run">
           {isEn ? 'ROVER SCOUT RECORD BOOK' : <>樂行童軍紀錄冊 <em>ROVER SCOUT RECORD BOOK</em></>}
         </span>
-        {no !== '—' && (
+        {typeof no === 'number' ? (
           <span className="sheet__pageno">
             {isEn ? `PAGE ${no} / ${PAGE_TOTAL}` : `第 ${no} 頁 · 共 ${PAGE_TOTAL} 頁`}
           </span>
-        )}
+        ) : no === null ? (
+          <span className="sheet__pageno">
+            {isEn ? `COVER · ${SHEET_TOTAL} SHEETS` : `封面 · 共 ${SHEET_TOTAL} 張`}
+          </span>
+        ) : null}
       </header>
       <div className="sheet__titlebar">
         <h1>
@@ -78,6 +82,7 @@ export function ChapterMark({ no, title, en, lead, children }) {
 
 /** Vertical index strip (desktop). */
 export function Tabs({ current }) {
+  const { isEn } = useLang();
   return (
     <nav className="tabs" aria-label="章節">
       {SECTIONS.filter((s) => s.id !== 'contents').map((s) => (
@@ -87,7 +92,7 @@ export function Tabs({ current }) {
           className={cx('tab', current === s.id && 'is-active')}
           aria-current={current === s.id ? 'page' : undefined}
         >
-          <span className="tab__page">{s.page}</span>
+          <span className="tab__page">{typeof s.page === 'number' ? s.page : s.page === '—' ? '—' : (isEn ? 'Cover' : '封面')}</span>
           <span className="tab__label">{s.label}</span>
         </Link>
       ))}
@@ -117,7 +122,15 @@ export function Pager({ current }) {
         </Link>
       )}
       <span className="pager__count">
-        {list[index]?.page === '—' ? (isEn ? 'APPENDIX' : '附錄') : `${list[index]?.page} / ${PAGE_TOTAL}`}
+        {typeof list[index]?.page === 'number'
+          ? `${list[index].page} / ${PAGE_TOTAL}`
+          : list[index]?.page === '—'
+            ? isEn
+              ? 'APPENDIX'
+              : '附錄'
+            : isEn
+              ? `COVER / ${SHEET_TOTAL}`
+              : `封面 / ${SHEET_TOTAL} 張`}
       </span>
       {next ? (
         <Link to={`/p/${next.id}`} className="pager__link pager__link--next">

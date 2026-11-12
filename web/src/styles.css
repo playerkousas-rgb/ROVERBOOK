@@ -6742,6 +6742,70 @@ textarea.zoomfield {
   color: #2a2418;
 }
 
+.fd-demo-banner{
+  display:block;
+  margin:6px 0 8px;
+  padding:5px 8px;
+  border:2px solid #a3231b;
+  background:#fff3f1;
+  color:#8a1c17;
+  text-align:center;
+}
+.fd-demo-banner strong{
+  display:block;
+  font-family:var(--sans);
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.08em;
+}
+.fd-demo-banner em{
+  display:block;
+  margin-top:1px;
+  font-family:var(--sans);
+  font-size:7.8px;
+  font-style:normal;
+  letter-spacing:.05em;
+  color:#a3231b;
+}
+.formdoc[data-demo='true']{position:relative}
+.fd-demo-watermark{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:78px;
+  transform:rotate(-28deg) scale(1.15);
+  opacity:.1;
+  pointer-events:none;
+  color:#a3231b;
+  font-family:var(--sans);
+  font-size:34px;
+  font-weight:800;
+  letter-spacing:.12em;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.fd-demo-watermark span{display:block}
+.formdoc[data-demo='true'] > *:not(.fd-demo-watermark){position:relative;z-index:1}
+.roversync__demo{
+  display:flex;
+  align-items:flex-start;
+  gap:7px;
+  margin-top:8px;
+  padding:9px 10px;
+  border-radius:3px;
+  border:1px dashed rgba(163,35,27,.45);
+  background:rgba(255,243,241,.9);
+  color:#8a1c17;
+  font-family:var(--sans);
+}
+.roversync__demo > svg{flex:none;margin-top:2px}
+.roversync__demo strong{display:block;margin-bottom:2px;font-size:10px;letter-spacing:.04em}
+.roversync__demo p{margin:0;font-size:9.5px;line-height:1.5}
+
 .fd-sec {
   margin-top: 9px;
 }
@@ -8799,7 +8863,7 @@ html[data-lang='en'] .fareas .frow__label {
   }
 }
 
-/* ---------------------------------------------------- v14 對頁：第 1 頁 封面 */
+/* ---------------------------------------------------- 封面（不計頁碼） */
 .sheet__body:has(> .p-cover) {
   justify-content: center;
 }
@@ -8919,7 +8983,7 @@ html[data-lang='en'] .fareas .frow__label {
   color: #6b6555;
 }
 
-/* ------------------------------------------------- v14 第 41 頁 制服參考圖 */
+/* ------------------------------------------------- v14 第 40 頁 制服參考圖 */
 .sheet__body:has(> .p-uniform) {
   gap: 6px;
 }
@@ -9302,7 +9366,7 @@ html[data-lang='en'] .fareas .frow__label {
   }
 }
 
-/* -------------------------------------------- v15 第 43 頁：樂行童軍徽章圖 */
+/* -------------------------------------------- v15 第 42 頁：樂行童軍徽章圖 */
 .sheet__body:has(> .p-crest) {
   display: flex;
   align-items: center;
@@ -9494,7 +9558,7 @@ html[data-lang='en'] .fareas .frow__label {
   padding: 8px;
 }
 
-/* ------------------------------------------------- 第 42 頁：誓詞與規律 */
+/* ------------------------------------------------- 第 41 頁：誓詞與規律 */
 
 .p-promise .pghead {
   margin-bottom: 4px;
@@ -9632,4 +9696,8 @@ html[data-lang='en'] .fareas .frow__label {
   .coverhint {
     display: none;
   }
+}
+
+@media print {
+  .fd-demo-watermark{position:fixed;inset:0}
 }

@@ -4,6 +4,7 @@ import { Link, navigate } from '../router.jsx';
 import { Icon } from '../ui.jsx';
 import Write from '../components/Write.jsx';
 import { FORM_META, FORM_ORDER, formData, formStatus } from '@shared/forms.js';
+import { isDemoBook } from '@shared/book.js';
 
 const nz = (v) => (v == null || v === '' ? '' : String(v));
 const fmtDate = (v) => {
@@ -62,6 +63,29 @@ function PreviewBar({ preview, onToggle, onPrint }) {
   );
 }
 
+const DEMO_TEXT = '示範樣本，只供測試，不可遞交';
+const DEMO_TEXT_EN = 'DEMO SAMPLE — FOR TESTING ONLY — NOT FOR SUBMISSION';
+
+/* 示範紀錄冊的表格必須清楚標示不可遞交（螢幕及列印皆可見）。 */
+function DemoBanner({ label = DEMO_TEXT }) {
+  return (
+    <div className="fd-demo-banner" role="note">
+      <strong>{label || DEMO_TEXT}</strong>
+      <em>{DEMO_TEXT_EN}</em>
+    </div>
+  );
+}
+
+function DemoWatermark({ label = DEMO_TEXT }) {
+  return (
+    <div className="fd-demo-watermark" aria-hidden="true">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <span key={i}>{label || DEMO_TEXT}</span>
+      ))}
+    </div>
+  );
+}
+
 /* 文件內可直接補寫的欄位（紀錄冊沒有的資料），存於 book.forms */
 function FormField({ path, fallback = '', placeholder = '', multiline = false, rows = 2 }) {
   const { book, update } = useBook();
@@ -85,6 +109,7 @@ function FormField({ path, fallback = '', placeholder = '', multiline = false, r
 export function FormsIndex() {
   const { book, update } = useBook();
   const status = formStatus(book);
+  const demo = isDemoBook(book);
   const setMember = (key, value) =>
     update((b) => ({ ...b, member: { ...b.member, [key]: value } }));
 
@@ -99,6 +124,8 @@ export function FormsIndex() {
           你只需要核對，然後列印或存成 PDF。
         </p>
       </header>
+
+      {demo && <DemoBanner />}
 
       <div className="formshome__list">
         {FORM_ORDER.map((id) => {
@@ -163,6 +190,7 @@ export function FormsIndex() {
         </Link>
         <p>
           三張表格的公函部分（區總監、地域、青少年活動署簽署及蓋章）留白，交由領袖及總會填寫。
+          {demo ? ' 現時載入的是示範紀錄冊，所有表格只供測試，不可遞交。' : ''}
         </p>
       </div>
     </div>
@@ -240,7 +268,12 @@ export function FormDoc({ id }) {
       </p>
 
       <div className={`formwrap${full ? ' is-full' : ''}`} ref={wrapRef}>
-        <div className="formdoc" style={full ? undefined : { zoom: scale }}>
+        <div
+          className="formdoc"
+          data-demo={data.demo ? 'true' : undefined}
+          style={full ? undefined : { zoom: scale }}
+        >
+          {data.demo && <DemoWatermark label={data.demoLabel} />}
           {id === 'pt69' && <Doc69 data={data} />}
           {id === 'pt21' && <Doc21 data={data} />}
           {id === 'pt22' && <Doc22 data={data} />}
@@ -393,6 +426,7 @@ function Doc69({ data }) {
   return (
     <>
       <DocHead code="PT/69" zh="樂行童軍獎章及貝登堡獎章考試申請" en="Application for Assessment of the Rover Scout Award and Baden-Powell Award" />
+      {data.demo && <DemoBanner label={data.demoLabel} />}
       <Section no="(1)" zh="個人摘要" en="Personal Particulars">
         <div className="fd-no">
           編號 No.：<span className="fd-write">{personal.memberNo}</span>
@@ -576,6 +610,7 @@ function Doc21({ data }) {
   return (
     <>
       <DocHead code="PT/21" zh="樂行童軍獎章及證書申請表" en="Application Form for the Rover Scout Award and Certificate" />
+      {data.demo && <DemoBanner label={data.demoLabel} />}
       <Section no="1" zh="個人資料" en="Personal Particulars">
         <Particulars p={personal} note="（須與香港身份證／出生證明書上資料相同）(Same as Name printed on Identification)" />
       </Section>
@@ -719,6 +754,7 @@ function Doc22({ data }) {
   return (
     <>
       <DocHead code="PT/22" zh="貝登堡獎章及證書申請表" en="Application Form for the Baden-Powell Award and Certificate" />
+      {data.demo && <DemoBanner label={data.demoLabel} />}
       <Section no="1" zh="個人資料" en="Personal Particulars">
         <Particulars p={personal} note="（須與香港身份證／出生證明書上資料相同）(Same as Name printed on Identification)" />
       </Section>
@@ -868,6 +904,7 @@ function Doc22({ data }) {
 
 export function FormsAll() {
   const { book } = useBook();
+  const demo = isDemoBook(book);
   const [wrapRef, scale] = useFitScale();
   const [preview, setPreview] = usePrintPreview();
 
@@ -889,6 +926,7 @@ export function FormsAll() {
 
       <p className="formwarn formwarn--info">
         <Icon name="info" size={14} /> 三張文件會依次列印，每張由新一頁開始；未完成的欄位會留白，方便手寫。
+        {demo ? ' 示範紀錄冊：三張表格均標示「示範樣本，只供測試，不可遞交」。' : ''}
       </p>
 
       <div className="formwrap formwrap--stack" ref={wrapRef}>
@@ -896,7 +934,13 @@ export function FormsAll() {
           {FORM_ORDER.map((id) => {
             const data = formData(book, id);
             return (
-              <div className="formdoc formdoc--stack" key={id} id={`doc-${id}`}>
+              <div
+                className="formdoc formdoc--stack"
+                key={id}
+                id={`doc-${id}`}
+                data-demo={data.demo ? 'true' : undefined}
+              >
+                {data.demo && <DemoWatermark label={data.demoLabel} />}
                 {id === 'pt69' && <Doc69 data={data} />}
                 {id === 'pt21' && <Doc21 data={data} />}
                 {id === 'pt22' && <Doc22 data={data} />}

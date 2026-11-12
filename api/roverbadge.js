@@ -348,6 +348,19 @@ export default async function handler(req, res) {
   const scoutId = String(body.scoutId || '').trim();
   const token = String(body.token || '');
 
+  // 示範樣本（或明顯無效的 0000000000 成員編號）不得接觸正式系統的任何寫入路徑。
+  const demoPayload =
+    body.demo === true ||
+    (scoutId && /^0+$/.test(normalizeScoutIdInFn(scoutId))) ||
+    (Array.isArray(body.items) && body.items.some((x) => x && x.demo === true));
+  if (demoPayload && (action === 'login' || action === 'submitPending')) {
+    return sendJson(res, 403, {
+      success: false,
+      error: '示範樣本只供測試，不可送交 ROVERBADGE 正式系統',
+      code: 'DEMO_BLOCKED',
+    });
+  }
+
   // 嚴格單向信任：只允許四個動作，其餘（含 save / saveOtherBadge / reviewRequest）一律 403
   if (!ALLOWED_ACTIONS.has(action)) {
     return sendJson(res, 403, {

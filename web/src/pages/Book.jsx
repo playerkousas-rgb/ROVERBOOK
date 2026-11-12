@@ -6,10 +6,11 @@ import { PhotoPicker } from '../components/Edit.jsx';
 import { Crest, cx } from '../ui.jsx';
 import { useLang } from '../i18n.jsx';
 import { LegalNote, LegalLine } from '../components/Legal.jsx';
+import { PAGE_ROWS } from '@shared/book.js';
 
 /* ---------------------------------------------------------------- 出版資料 */
 
-/* ------------------------------------------------------------ 第 1 頁 · 封面 */
+/* ------------------------------------------------------- 封面（不計頁碼） */
 
 export function Cover() {
   const { isEn } = useLang();
@@ -76,7 +77,7 @@ export function Particulars1() {
             placeholder="24010001"
             hint={isEn ? 'Same number used in ROVERBADGE' : '＝童軍成員編號 SCOUT ID（ROVERBADGE 用同一個號碼）'}
           />
-          <Line label="姓名（中文）" en="Name (Chinese)" path="member.nameZh" placeholder="林卓瑤" />
+          <Line label="姓名（中文）" en="Name (Chinese)" path="member.nameZh" placeholder="陳大文" />
           <Line label="（英文）" en="Name (English)" path="member.nameEn" placeholder="Lam Cheuk-yiu" />
         </div>
       </div>
@@ -85,7 +86,7 @@ export function Particulars1() {
       <div className="ftrio">
         <Line label="地域" en="Region" path="member.region" placeholder="九龍" />
         <Line label="區" en="District" path="member.district" placeholder="九龍城" />
-        <Line label="旅" en="Group" path="member.group" placeholder="九龍第 145 旅" />
+        <Line label="旅" en="Group" path="member.group" placeholder="九龍第 001 旅" />
       </div>
 
       <p className="sentence sentence--static">
@@ -136,7 +137,7 @@ export function Particulars2() {
 
       <Bilingual as="h4" className="pgh" zh="緊急事故聯絡人" en="Emergency Contact Person" />
       <div className="fduo">
-        <Line label="姓名 Name" path="member.emergencyName" placeholder="林美珍" />
+        <Line label="姓名 Name" path="member.emergencyName" placeholder="陳小文" />
         <Line label="聯絡電話 Telephone No." path="member.emergencyPhone" placeholder="9012 3456" />
       </div>
 
@@ -154,10 +155,10 @@ export function GroupInfo() {
     <Page id="group">
       <H en="GROUP INFORMATION">旅部資料</H>
       <div className="flist">
-        <Line label="主辦機構 Sponsoring Authority" path="member.sponsoringAuthority" placeholder="黃埔宣道會" />
+        <Line label="主辦機構 Sponsoring Authority" path="member.sponsoringAuthority" placeholder="示例機構" />
         <Area label="旅部地址 Group Address" path="member.groupAddress" rows={2} placeholder="九龍紅磡…" />
         <Line label="旅長姓名 Name of GSL" path="member.gsl" placeholder="何志強" />
-        <Line label="團長姓名 Name of RSL" path="member.rsl" placeholder="馬啟明" />
+        <Line label="團長姓名 Name of RSL" path="member.rsl" placeholder="陳大文" />
         <Line label="團集會地點 Place of Crew Meeting" path="member.meetingPlace" placeholder="黃埔社區中心禮堂" />
         <div className="fduo">
           <Line label="入團日期 Date Joined" type="date" path="member.dateJoined" />
@@ -259,7 +260,7 @@ export function Changes() {
       <Bilingual as="h4" className="pgh" zh="轉旅" en="TRANSFER OF GROUP" />
       <Rows
         path="transfers"
-        min={3}
+        min={PAGE_ROWS.transfers}
         addLabel={null}
         cols={[
           { k: 'date', label: '日期', en: 'Date', type: 'date' },
@@ -270,7 +271,7 @@ export function Changes() {
       <Bilingual as="h4" className="pgh" zh="遷移地址" en="CHANGE OF ADDRESS" />
       <Rows
         path="addressChanges"
-        min={3}
+        min={PAGE_ROWS.addressChanges}
         addLabel={null}
         cols={[
           { k: 'date', label: '日期', en: 'Date', type: 'date' },
@@ -281,7 +282,7 @@ export function Changes() {
       <Bilingual as="h4" className="pgh" zh="更改個人摘要" en="CHANGE OF PERSONAL PARTICULARS" />
       <Rows
         path="detailChanges"
-        min={3}
+        min={PAGE_ROWS.detailChanges}
         addLabel={null}
         layout="detail"
         cols={[
@@ -301,7 +302,8 @@ export function Renewals({ part = 0 }) {
   const { isEn } = useLang();
   const list = book.renewals || [];
   const id = part === 0 ? 'renewals-1' : 'renewals-2';
-  const start = part * 5;
+  const start = part === 0 ? 0 : PAGE_ROWS.renewals[0];
+  const rowCount = PAGE_ROWS.renewals[part] || PAGE_ROWS.renewals[0];
 
   const setRow = (index, key, value) => {
     update((b) => {
@@ -324,7 +326,7 @@ export function Renewals({ part = 0 }) {
           <Bilingual zh="有效日期至" en="Valid Until" />
           <Bilingual zh="旅印及簽署" en="Group Chop and Signature" />
         </div>
-        {Array.from({ length: 5 }).map((_, i) => {
+        {Array.from({ length: rowCount }).map((_, i) => {
           const index = start + i;
           const row = list[index] || {};
           return (
@@ -364,7 +366,7 @@ export function ServiceAwards() {
       <H en="SERVICE RECORD">服務紀錄</H>
       <Rows
         path="service"
-        min={7}
+        min={PAGE_ROWS.service}
         addLabel={null}
         layout="service"
         cols={[
@@ -381,7 +383,7 @@ export function ServiceAwards() {
       <Bilingual as="h4" className="pgh pgh--tight" zh="獎章及獎勵記錄" en="RECORD OF AWARD AND COMMENDATION" />
       <Rows
         path="awards"
-        min={3}
+        min={PAGE_ROWS.awards}
         addLabel={null}
         layout="awards"
         cols={[
@@ -498,7 +500,7 @@ export function BadgeTable({ id, title, en, path }) {
       <H en={en}>{title}</H>
       <Rows
         path={path}
-        min={9}
+        min={PAGE_ROWS.badges}
         addLabel={null}
         layout="badges"
         cols={[
@@ -513,7 +515,7 @@ export function BadgeTable({ id, title, en, path }) {
 
 /* -------------------------------------------------------------- 經驗表格頁 */
 
-export function Experience({ id, title, en, path, lead, leadEn, min = 11 }) {
+export function Experience({ id, title, en, path, lead, leadEn, min = PAGE_ROWS.additional }) {
   return (
     <Page id={id} className="p-exp">
       <H en={en}>{title}</H>
@@ -583,7 +585,7 @@ export function Uniform() {
   );
 }
 
-/* ------------------------------------- 第 42 頁 · 童軍誓詞與規律（單語） */
+/* ------------------------------------- 第 41 頁 · 童軍誓詞與規律（單語） */
 
 const PROMISE_ZH = [
   '我願以信譽為誓，竭盡所能；',
@@ -651,7 +653,7 @@ export function PromiseLaw() {
   );
 }
 
-/* ------------------------------------------------------------ 第 43 頁 · 徽章 */
+/* ------------------------------------------------------------ 第 42 頁 · 徽章 */
 
 export function Emblem() {
   const { isEn } = useLang();
@@ -662,7 +664,7 @@ export function Emblem() {
   );
 }
 
-/* -------------------------------------------------------------- 空白頁 42／43 */
+/* -------------------------------------------------------------- 備用空白頁 */
 
 export function Notes({ id }) {
   return (

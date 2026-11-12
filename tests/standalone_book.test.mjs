@@ -2,7 +2,7 @@
 //   node tests/standalone_book.test.mjs
 
 import assert from 'node:assert/strict';
-import { newBook, demoBook, exportForRoverBadge } from '../shared/book.js';
+import { newBook, demoBook, exportForRoverBadge, isDemoBook, collectPendingForRoverBadge } from '../shared/book.js';
 import {
   DEFAULT_ROVERBADGE_URL,
   TROOP_NOT_FOUND,
@@ -36,7 +36,19 @@ async function main() {
   check(isBadgeProgressFile(blank) === false && isBadgeProgressFile(demo) === false, '完整紀錄冊不會誤判為 ROVERBADGE 進度檔');
 
   // 2. ROVERBADGE 進度檔辨識（不得當作完整紀錄冊備份直接還原）
-  const pendingExport = exportForRoverBadge(demo, '0082');
+  // 示範紀錄冊受保護，不可直接匯出；用一個非示範副本測試進度檔辨識。
+  let demoExportBlocked = false;
+  try {
+    exportForRoverBadge(demo, '0082');
+  } catch {
+    demoExportBlocked = true;
+  }
+  check(demoExportBlocked, '示範紀錄冊被禁止匯出至 ROVERBADGE');
+  check(isDemoBook(demo) === true && isDemoBook(blank) === false, 'isDemoBook 只識別示範紀錄冊');
+  check(collectPendingForRoverBadge(demo).count === 0, '示範紀錄冊不會產生待送交待核實項目');
+  const progressBook = structuredClone(demo);
+  progressBook.meta.demo = false;
+  const pendingExport = exportForRoverBadge(progressBook, '0082');
   const confirmedPayload = { progress: { '0000081420': { 'L1-ACT-01': '2026-04-01' } } };
   const multiMemberPayload = { members: [{ scoutId: '0000081420', progress: {} }] };
   const flatPayload = { flatProgress: { 'L1-ACT-01': '2026-04-01' } };

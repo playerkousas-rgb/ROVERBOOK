@@ -257,7 +257,19 @@ export function formData(book, id) {
     name: clean(book?.holderSignature?.name) || personal.nameZh,
     date: clean(book?.holderSignature?.at),
   };
-  return { id, personal, components, chosen, remaining, rsl, holder, firstAid: firstAidCert(book), rsa: roverAwardRecord(book) };
+  return {
+    id,
+    personal,
+    components,
+    chosen,
+    remaining,
+    rsl,
+    holder,
+    firstAid: firstAidCert(book),
+    rsa: roverAwardRecord(book),
+    demo: book?.meta?.demo === true,
+    demoLabel: book?.meta?.demoLabel || '示範樣本，只供測試，不可遞交',
+  };
 }
 
 export const FORM_META = {

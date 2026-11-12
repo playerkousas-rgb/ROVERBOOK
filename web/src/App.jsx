@@ -4,7 +4,7 @@ import { BookCtx } from './bookContext.js';
 import { loadBook, persistBook, loadShares } from './bookStore.js';
 import { ToastProvider, useToast, Crest, Icon, Modal, cx } from './ui.jsx';
 import { Pager, CoverPage } from './components/Paper.jsx';
-import { APP_VERSION, SECTIONS, PAGE_TOTAL, allStats, syncIdentity } from '@shared/book.js';
+import { APP_VERSION, SECTIONS, PAGE_TOTAL, SHEET_TOTAL, PAGE_ROWS, allStats, syncIdentity } from '@shared/book.js';
 import Contents from './pages/Contents.jsx';
 import { Emblem, PromiseLaw, Cover, Colophon, Particulars1, Particulars2, GroupInfo, Scouting, Changes, Renewals, ServiceAwards, Scheme, Plan, BadgeTable, Experience, Uniform } from './pages/Book.jsx';
 import {
@@ -92,6 +92,7 @@ const PAGES = {
       title="遠足及海外活動"
       en="EXPEDITIONS AND OVERSEAS ACTIVITIES"
       path="expeditions"
+      min={PAGE_ROWS.expeditions}
       lead="在此紀錄你在本港或海外進行遠足或參與國際童軍活動。"
       leadEn="Record here any expeditions in Hong Kong or overseas or international Scouting activities undertaken abroad."
     />
@@ -102,7 +103,7 @@ const PAGES = {
       title="遠足及海外活動（續）"
       en="EXPEDITIONS AND OVERSEAS ACTIVITIES"
       path="pages.expeditions-2.rows"
-      min={12}
+      min={PAGE_ROWS.expeditions}
       lead="在此紀錄你在本港或海外進行遠足或參與國際童軍活動。"
       leadEn="Record here any expeditions in Hong Kong or overseas or International Scouting activities undertaken abroad."
     />
@@ -124,12 +125,16 @@ function IndexSheet({ open, onClose, current }) {
       onClose={onClose}
       eyebrow="CONTENTS"
       title={isEn ? 'Contents' : '目錄'}
-      subtitle={isEn ? '43 printed pages, one to one; plus a digital appendix.' : '紙本 43 頁，逐頁對應；另設數位附錄。'}
+      subtitle={
+        isEn
+          ? `Cover (unnumbered) + printed pages 1–${PAGE_TOTAL} = ${SHEET_TOTAL} sheets; plus a digital appendix.`
+          : `封面不計頁碼 + 內頁第 1–${PAGE_TOTAL} 頁 = ${SHEET_TOTAL} 張紙；另設數位附錄。`
+      }
       wide
     >
       <div className="indexlist">
         <Link to="/p/cover" className="indexrow indexrow--cover" onClick={onClose}>
-          <span className="indexrow__no">1</span>
+          <span className="indexrow__no">{isEn ? 'Cov.' : '封面'}</span>
           <span className="indexrow__title">{isEn ? 'Rover Scout Record Book' : '樂行童軍紀錄冊'}</span>
           <Icon name="book" size={14} />
         </Link>
@@ -298,7 +303,19 @@ function BookApp({ book, saveIssue }) {
 
         {section && (
           <button className="chipbar__page" onClick={() => setIndexOpen(true)}>
-            <span>{meta?.page === '—' ? (isEn ? 'Digital' : '數位') : isEn ? `Page ${meta?.page}` : `第 ${meta?.page} 頁`}</span>
+            <span>
+              {typeof meta?.page === 'number'
+                ? isEn
+                  ? `Page ${meta.page}`
+                  : `第 ${meta.page} 頁`
+                : meta?.page === '—'
+                  ? isEn
+                    ? 'Digital'
+                    : '數位'
+                  : isEn
+                    ? 'Cover'
+                    : '封面'}
+            </span>
             <strong>{isEn ? meta?.en || meta?.label : meta?.label}</strong>
             <Icon name="down" size={12} />
           </button>
@@ -449,7 +466,7 @@ function BookApp({ book, saveIssue }) {
       ) : (
         <div className="coverhint">
           <span className="coverhint__dot" />
-          {formId ? '三張官方表格 · 資料由紀錄冊自動帶入' : `${PAGE_TOTAL} 頁 · 點擊「打開紀錄冊」或按 → 開始`}
+          {formId ? '三張官方表格 · 資料由紀錄冊自動帶入' : `內頁 ${PAGE_TOTAL} 頁 · 共 ${SHEET_TOTAL} 張 · 點擊「打開紀錄冊」或按 → 開始`}
         </div>
       )}
 

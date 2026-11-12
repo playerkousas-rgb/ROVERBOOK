@@ -9,6 +9,7 @@ import {
   collectPendingForRoverBadge,
   exportForRoverBadge,
   importFromRoverBadge,
+  isDemoBook,
   normalizeScoutId,
   scoutId,
 } from '@shared/book.js';
@@ -74,6 +75,9 @@ const T = {
     offlineExport: '已匯出「待領袖核實」純進度檔（status: pending，不含個人資料）',
     offlineImport: '已從 ROVERBADGE 匯入 {n} 項領袖已核實進度',
     signedOut: '已登出 ROVERBADGE（本機紀錄冊資料完全保留）',
+    demoLock: '示範紀錄冊不可與 ROVERBADGE 同步',
+    demoLockBody:
+      '目前載入的是示範樣本（只供測試，不可遞交）。為免虛構資料進入正式系統，登入、送交待核實、匯出及匯入進度檔一律停用；完整紀錄冊備份與還原仍可在下方離線使用。',
   },
   en: {
     cardTitle: 'Optional: Sync Personal Progress with ROVERBADGE (Progress Only · Zero PII)',
@@ -107,6 +111,9 @@ const T = {
     offlineExport: 'Exported Pending submission JSON (status: pending, zero personal data)',
     offlineImport: 'Imported {n} leader-confirmed items from ROVERBADGE',
     signedOut: 'Signed out of ROVERBADGE (your local record book is untouched)',
+    demoLock: 'Demo record book cannot sync with ROVERBADGE',
+    demoLockBody:
+      'This is a demo sample (for testing only, not for submission). Sign-in, pending submission, progress export and import are disabled so fictional data cannot enter the live system. Full record-book backup and restore remain available offline below.',
   },
 };
 
@@ -118,6 +125,7 @@ export default function RoverBadgeSyncCard({ readOnly: readOnlyProp = false } = 
   const fileRef = useRef(null);
   const troopFieldId = useId();
 
+  const demo = isDemoBook(book);
   const mySid = scoutId(book?.member);
   const [bridge, setBridge] = useState('checking'); // 'checking' | 'ready' | 'unavailable'
   const [troops, setTroops] = useState({});
@@ -160,8 +168,9 @@ export default function RoverBadgeSyncCard({ readOnly: readOnlyProp = false } = 
   }, []);
 
   useEffect(() => {
+    if (demo) return;
     probeBridge();
-  }, [probeBridge]);
+  }, [demo, probeBridge]);
 
   const verifiedCount = useMemo(
     () =>
@@ -177,6 +186,10 @@ export default function RoverBadgeSyncCard({ readOnly: readOnlyProp = false } = 
   );
 
   const handleLoadConfirmed = async (activeSession = session) => {
+    if (demo) {
+      push(t.demoLock, 'error');
+      return;
+    }
     if (!activeSession?.token || !activeSession?.ymis || !activeSession?.troopId) return;
     if (leaderMode) {
       push(t.leaderReadonly, 'error');
@@ -241,6 +254,10 @@ export default function RoverBadgeSyncCard({ readOnly: readOnlyProp = false } = 
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (demo) {
+      push(t.demoLock, 'error');
+      return;
+    }
     const cleanTroop = troopId.trim();
     const cleanScout = (loginScoutId || mySid || '').trim();
     if (!cleanTroop || cleanTroop === TROOP_NOT_FOUND || !cleanScout || !password) {
@@ -312,6 +329,10 @@ export default function RoverBadgeSyncCard({ readOnly: readOnlyProp = false } = 
   };
 
   const handleSubmitPending = async () => {
+    if (demo) {
+      push(t.demoLock, 'error');
+      return;
+    }
     if (!session?.token || !session?.ymis || !session?.troopId) {
       setShowLogin(true);
       push(
@@ -353,6 +374,10 @@ export default function RoverBadgeSyncCard({ readOnly: readOnlyProp = false } = 
   // ROVERBADGE 進度檔交換（匯出「待領袖核實」／匯入「領袖已核實」）必須先連接並登入 ROVERBADGE。
   // 完整紀錄冊備份與還原不經這裡，永遠可離線使用。
   const onExportFile = () => {
+    if (demo) {
+      push(t.demoLock, 'error');
+      return;
+    }
     if (!session?.token || !session?.ymis) {
       push(
         isEn
@@ -371,6 +396,10 @@ export default function RoverBadgeSyncCard({ readOnly: readOnlyProp = false } = 
   };
 
   const onImportFile = (e) => {
+    if (demo) {
+      push(t.demoLock, 'error');
+      return;
+    }
     const file = e?.target?.files?.[0];
     if (e?.target) e.target.value = '';
     if (!file) return;
@@ -417,6 +446,24 @@ export default function RoverBadgeSyncCard({ readOnly: readOnlyProp = false } = 
   const listUnreachable = bridge === 'ready' && !upstreamOk;
   const showOpenAccountNotice =
     bridge === 'ready' && !hasBadgeSession && ((noTroopsFound && !manualTroop) || (troopNotListed && showLogin));
+
+  if (demo) {
+    return (
+      <section className="appendix-card appendix-card--dark roversync">
+        <h4>
+          <Icon name="seam" size={13} /> {t.cardTitle}
+        </h4>
+        <p className="roversync__sub">{t.cardSub}</p>
+        <div className="roversync__demo" role="alert">
+          <Icon name="lock" size={15} />
+          <div>
+            <strong>{t.demoLock}</strong>
+            <p>{t.demoLockBody}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="appendix-card appendix-card--dark roversync">
