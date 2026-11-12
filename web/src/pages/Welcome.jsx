@@ -110,7 +110,7 @@ export default function Welcome({ onReady }) {
           <div className="welcome__row">
             <label className="field">
               <span className="field__label">姓名（中文）</span>
-              <input className="welcome__input" value={form.nameZh} onChange={set('nameZh')} placeholder="林卓瑤" required />
+              <input className="welcome__input" value={form.nameZh} onChange={set('nameZh')} placeholder="陳大文" required />
             </label>
             <label className="field">
               <span className="field__label">姓名（英文）</span>
@@ -131,13 +131,13 @@ export default function Welcome({ onReady }) {
             </label>
             <label className="field">
               <span className="field__label">旅 Group</span>
-              <input className="welcome__input" value={form.group} onChange={set('group')} placeholder="九龍第 145 旅" />
+              <input className="welcome__input" value={form.group} onChange={set('group')} placeholder="九龍第 001 旅" />
             </label>
           </div>
           <div className="welcome__row">
             <label className="field">
               <span className="field__label">樂行童軍團 Crew</span>
-              <input className="welcome__input" value={form.crew} onChange={set('crew')} placeholder="九龍第 145 旅樂行童軍團" />
+              <input className="welcome__input" value={form.crew} onChange={set('crew')} placeholder="九龍第 001 旅樂行童軍團" />
             </label>
             <label className="field">
               <span className="field__label">區 District</span>
@@ -154,10 +154,10 @@ export default function Welcome({ onReady }) {
               className="btn btn--onblue"
               onClick={() => {
                 start(demoBook(), '/p/contents');
-                push('已載入示範紀錄冊');
+                push('已載入示範紀錄冊（只供測試，不可遞交）');
               }}
             >
-              用示範資料看看
+              用示範資料看看（只供測試）
             </button>
             <button type="button" className="btn btn--onblue" onClick={() => fileRef.current?.click()}>
               匯入備份

@@ -5,6 +5,7 @@ import { EpauletteArt, AwardArt } from './Book.jsx';
 import { useBook, useField } from '../bookContext.js';
 import { navigate } from '../router.jsx';
 import { FORM_META, formStatus } from '@shared/forms.js';
+import { PAGE_ROWS } from '@shared/book.js';
 import { useLang } from '../i18n.jsx';
 
 /* 完成頒發後，直接一鍵生成對應申請表 */
@@ -59,7 +60,7 @@ export function MbActivities() {
       <Bilingual as="p" className="pglead" zh="參與最少三次團活動" en="Take part in the crew activities at least 3 times" />
       <Rows
         path="pages.mb-activities.rows"
-        min={3}
+        min={PAGE_ROWS.activities}
         addLabel={null}
         del={false}
         layout="activities"
@@ -385,7 +386,7 @@ export function Wellness1() {
       <Bilingual as="p" className="pglead" zh="精神健康" en="Mental Health" />
       <Rows
         path="pages.wellness-1.certs"
-        min={4}
+        min={PAGE_ROWS.wellnessCerts}
         addLabel={null}
         layout="wellness"
         cols={[

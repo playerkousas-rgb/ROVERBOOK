@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useBook } from '../bookContext.js';
 import { useToast, Icon, Modal } from '../ui.jsx';
 import { download, clearBook, slugify } from '../bookStore.js';
-import { APP_VERSION, demoBook, newBook, today } from '@shared/book.js';
+import { APP_VERSION, PAGE_TOTAL, SHEET_TOTAL, demoBook, newBook, today } from '@shared/book.js';
 import { LegalNote } from './Legal.jsx';
 import { navigate } from '../router.jsx';
 import { useLang } from '../i18n.jsx';
@@ -181,8 +181,8 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
             <strong>{isEn ? 'Print whole book / Save PDF' : '列印整本 / 儲存 PDF'}</strong>
             <em>
               {isEn
-                ? '43 sheets, one per record-book page; the page number is printed on each page.'
-                : '43 頁一次過，每頁對應紙本一頁（頁碼印在右上角，可直接對回 PDF）。'}
+                ? `${SHEET_TOTAL} sheets: unnumbered cover + printed pages 1–${PAGE_TOTAL}; page numbers print top-right.`
+                : `${SHEET_TOTAL} 張紙：封面不印頁碼 + 內頁第 1–${PAGE_TOTAL} 頁；內頁右上角印有頁碼，可直接對回 PDF。`}
             </em>
           </span>
         </button>
@@ -216,7 +216,7 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
           onClick={() => {
             if (!confirm('載入示範紀錄冊會覆蓋目前內容，確定嗎？')) return;
             replace(demoBook());
-            push('已載入示範紀錄冊');
+            push('已載入示範紀錄冊（只供測試，不可遞交）');
             navigate('/p/contents');
             onClose();
           }}
@@ -224,7 +224,7 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
           <Icon name="book" size={18} />
           <span>
             <strong>載入示範紀錄冊</strong>
-            <em>以林卓瑤的資料試玩所有功能</em>
+            <em>陳大文（示範）· 貝登堡獎章申請狀態 · 不會同步至 ROVERBADGE</em>
           </span>
         </button>
 

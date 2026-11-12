@@ -10,7 +10,7 @@ import { JSDOM } from 'jsdom';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { demoBook, buildSnapshot, DEFAULT_SHARE, SECTIONS, PAGE_TOTAL } from '../shared/book.js';
+import { demoBook, buildSnapshot, DEFAULT_SHARE, SECTIONS, PAGE_TOTAL, SHEET_TOTAL } from '../shared/book.js';
 import { scanImages, storageUsage, stripFieldInk } from '../web/src/storageHealth.js';
 import {
   encodeTransfer,
@@ -160,18 +160,18 @@ await screen({
 await screen({
   name: '已有紀錄冊：整版封面',
   path: '/',
-  expect: ['打開紀錄冊', '林卓瑤', '九龍第 145', 'RECORD BOOK'],
+  expect: ['打開紀錄冊', '陳大文', '示範第 001 旅', 'RECORD BOOK'],
 });
 
-// ------------------------------------------- 2. 逐頁掃描（紙本 41 頁 + 附錄）
+// ------------------------------------------- 2. 逐頁掃描（封面 + 內頁 42 頁 + 附錄）
 
 const PAGE_TEXT = {
   cover: '樂行童軍紀錄冊',
-  contents: '本電子版逐頁對應',
+  contents: '本電子版逐張對應',
   colophon: '九龍柯士甸道',
-  'particulars-1': '林卓瑤',
+  'particulars-1': '陳大文',
   'particulars-2': '持有人簽署',
-  group: '黃埔宣道會',
+  group: '示範機構',
   scouting: '深資童軍',
   changes: '遷移地址',
   'renewals-1': '旅印及簽署',
@@ -217,7 +217,8 @@ report(SECTIONS.length === Object.keys(PAGE_TEXT).length, `章節數目 ${SECTIO
 
 for (const section of SECTIONS) {
   const expect = [PAGE_TEXT[section.id]].filter(Boolean);
-  if (typeof section.page === 'number') expect.push(`第 ${section.page} 頁`, `${section.page} / 43`);
+  if (typeof section.page === 'number') expect.push(`第 ${section.page} 頁`, `${section.page} / ${PAGE_TOTAL}`);
+  else if (section.sheet === 1) expect.push(`封面 · 共 ${SHEET_TOTAL} 張`);
   await screen({ name: '頁面', path: `/p/${section.id}`, expect, wait: 340 });
 }
 
@@ -231,7 +232,7 @@ report(
 );
 const qrBack = await decodeTransfer(qrSample.value);
 report(
-  qrBack.member?.nameZh === '林卓瑤' && Object.keys(qrBack.progress || {}).length > 10,
+  qrBack.member?.nameZh === '陳大文' && Object.keys(qrBack.progress || {}).length > 10,
   'QR：內容可解碼還原',
   `${Object.keys(qrBack.progress || {}).length} 項進度`,
 );
@@ -292,7 +293,7 @@ await screen({
     },
   });
   report(
-    html.includes('二維碼接收') && html.includes('林卓瑤'),
+    html.includes('二維碼接收') && html.includes('陳大文'),
     '掃描（貼上內容）→ 讀到成員的紀錄冊',
   );
 }
@@ -445,7 +446,7 @@ await screen({
     .map(([id, v]) => ({ id, date: v.date }));
   const signoff = await encodeSignoff({
     member: book.member,
-    leader: { name: '馬啟明', title: '樂行童軍團長', at: '2026-11-04', png: book.endorsement.png },
+    leader: { name: '測試領袖', title: '樂行童軍團長', at: '2026-11-04', png: book.endorsement.png },
     items,
   });
   report(
@@ -465,12 +466,16 @@ await screen({
   const { book: merged, changes } = applySignoff(target, decoded);
   report(
     changes.length === items.length &&
-      merged.progress['L1-ACT-01'].assessor === '馬啟明' &&
+      merged.progress['L1-ACT-01'].assessor === '測試領袖' &&
       !!merged.progress['L1-ACT-01'].signature,
     '核簽單：寫入紀錄冊後有審核員及簽名',
   );
+  const untouched = target.progress['L3-LEADER-01'];
   report(
-    merged.progress['L3-LEADER-01'].signature?.name === '馬啟明',
+    !items.some((i) => i.id === 'L3-LEADER-01') &&
+      merged.progress['L3-LEADER-01'].assessor === untouched.assessor &&
+      JSON.stringify(merged.progress['L3-LEADER-01'].signature) ===
+        JSON.stringify(untouched.signature),
     '核簽單：只改有核簽的項目',
   );
 }
@@ -491,7 +496,7 @@ await screen({
   const items = [{ id: 'L1-ACT-01', date: '2024-10-05' }];
   const signoff = await encodeSignoff({
     member: book.member,
-    leader: { name: '馬啟明', title: '樂行童軍團長', at: '2026-11-04', png: book.endorsement.png },
+    leader: { name: '測試領袖', title: '樂行童軍團長', at: '2026-11-04', png: book.endorsement.png },
     items,
   });
   window.sessionStorage.clear();
@@ -510,7 +515,7 @@ await screen({
   });
   const storedBook = JSON.parse(localStorage.getItem('roverbook.book.v3'));
   report(
-    html.includes('已寫入') && storedBook.progress['L1-ACT-01'].assessor === '馬啟明',
+    html.includes('已寫入') && storedBook.progress['L1-ACT-01'].assessor === '測試領袖',
     '成員端：掃入核簽單後寫入紀錄冊',
   );
   window.sessionStorage.clear();
@@ -518,8 +523,10 @@ await screen({
 
 {
   reset();
-  seed(demoBook());
-  const memberPayload = (await encodeTransfer(demoBook(), ['particulars', 'progress'])).payload;
+  const viewBook = demoBook();
+  delete viewBook.progress['L1-UND-01'].assessor;
+  seed(viewBook);
+  const memberPayload = (await encodeTransfer(viewBook, ['particulars', 'progress'])).payload;
   localStorage.setItem('roverbook.leader.v1', String(Date.now()));
   window.sessionStorage.setItem('roverbook.scan.v1', JSON.stringify(memberPayload));
   const html = await renderPath('/scan/view', {
@@ -658,14 +665,14 @@ await screen({
 await screen({
   name: '表格首頁',
   path: '/forms',
-  expect: ['一鍵生成', 'PT/69', 'PT/21', 'PT/22', '補充資料'],
+  expect: ['一鍵生成', 'PT/69', 'PT/21', 'PT/22', '補充資料', '示範樣本，只供測試，不可遞交'],
   wait: 520,
 });
 
 const form21 = await screen({
   name: 'PT/21 樂行童軍獎章申請表',
   path: '/forms/pt21',
-  expect: ['樂行童軍獎章及證書申請表', '林卓瑤', '準領袖培訓', '申請者簽署', '提名', '回郵地址'],
+  expect: ['樂行童軍獎章及證書申請表', '陳大文', '準領袖培訓', '申請者簽署', '提名', '回郵地址'],
   wait: 520,
 });
 report(
@@ -684,8 +691,19 @@ await screen({
 await screen({
   name: 'PT/22 貝登堡獎章申請表',
   path: '/forms/pt22',
-  expect: ['貝登堡獎章及證書申請表', '有效急救證書編號', '樂行童軍獎章'],
+  expect: [
+    '貝登堡獎章及證書申請表',
+    '有效急救證書編號',
+    '樂行童軍獎章',
+    '示範樣本，只供測試，不可遞交',
+    'DEMO SAMPLE — FOR TESTING ONLY — NOT FOR SUBMISSION',
+  ],
   wait: 520,
+  interact: async (doc) => {
+    if (!doc.querySelector('.fd-demo-banner')) throw new Error('缺少示範橫額');
+    if (!doc.querySelector('.fd-demo-watermark')) throw new Error('缺少示範水印');
+    if (doc.querySelector('[data-demo="true"]') === null) throw new Error('文件沒有 data-demo 標記');
+  },
 });
 
 {
@@ -738,6 +756,28 @@ await screen({
     '一次列印三張：三份文件同頁',
   );
   report(docs === 3, '全部列印：文件數目', `${docs} 份`);
+  const banners = (all.match(/fd-demo-banner/g) || []).length;
+  const marks = (all.match(/fd-demo-watermark/g) || []).length;
+  report(
+    banners >= 3 && marks >= 3 && all.includes('示範樣本，只供測試，不可遞交'),
+    '全部列印：三張表格均顯示示範橫額及水印',
+    `橫額 ${banners} · 水印 ${marks}`,
+  );
+}
+
+{
+  reset();
+  const real = demoBook();
+  real.meta.demo = false;
+  delete real.meta.demoLabel;
+  seed(real);
+  const html = await renderPath('/forms/pt22', { wait: 520 });
+  report(
+    !html.includes('示範樣本，只供測試，不可遞交') &&
+      !html.includes('data-demo="true"') &&
+      !html.includes('fd-demo-watermark'),
+    '真實紀錄冊的表格不顯示示範標示',
+  );
 }
 
 {
@@ -822,7 +862,7 @@ await screen({
     const field = doc.querySelector('.zoomfield');
     if (!field) throw new Error('未彈出放大輸入框');
     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-    setter.call(field, '林卓瑤（測試）');
+    setter.call(field, '陳大文（測試）');
     field.dispatchEvent(new window.Event('input', { bubbles: true }));
     doc.querySelector('.modal__actions .btn--primary').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     await new Promise((r) => setTimeout(r, 400));
@@ -911,7 +951,7 @@ const snapshot = buildSnapshot(demoBook(), { ...DEFAULT_SHARE, contact: false })
 
   const got = await api(`/api/share/${body.id}`);
   report(
-    got.res.ok && got.body.snapshot.member.nameZh === '林卓瑤' && got.body.snapshot.member.phone === '',
+    got.res.ok && got.body.snapshot.member.nameZh === '陳大文' && got.body.snapshot.member.phone === '',
     'API GET /api/share/:id（私隱欄位已剔除）',
     `views=${got.body.views}`,
   );
@@ -927,7 +967,7 @@ const snapshot = buildSnapshot(demoBook(), { ...DEFAULT_SHARE, contact: false })
   errors.length = 0;
   const sharedHtml = await renderPath(`/v/${body.id}`, { wait: 900 });
   const ok =
-    sharedHtml.includes('林卓瑤') &&
+    sharedHtml.includes('陳大文') &&
     sharedHtml.includes('公開分享') &&
     sharedHtml.includes('訓練進度') &&
     sharedHtml.includes('data:image/svg+xml') &&
@@ -989,7 +1029,7 @@ const snapshot = buildSnapshot(demoBook(), { ...DEFAULT_SHARE, contact: false })
 {
   const book = demoBook();
   report(
-    book.member.scoutId === '24010001' && book.member.memberNo === book.member.scoutId && !('ymis' in book.member),
+    book.member.scoutId === '0000000000' && book.member.memberNo === book.member.scoutId && !('ymis' in book.member),
     '身份：紀錄冊編號 ＝ 童軍成員編號 SCOUT ID（舊 YMIS 欄位已淘汰）',
   );
 }
@@ -1040,21 +1080,41 @@ await screen({
   seed(demoBook());
   localStorage.setItem('roverbook.lang', 'en');
   const html = await renderPath('/p/particulars-1', {});
-  report(html.includes('PAGE 3') && html.includes('PERSONAL PARTICULARS'), '語言：重新載入後仍為英文');
+  report(html.includes('PAGE 2') && html.includes('PERSONAL PARTICULARS'), '語言：重新載入後仍為英文');
   localStorage.removeItem('roverbook.lang');
 }
 
 // --------------------------------------------------------- v13 整本列印對頁
 
 await screen({
-  name: '整本列印：43 頁紙對 43 頁紀錄冊',
+  name: `整本列印：${SHEET_TOTAL} 張紙（封面 + 內頁 1–${PAGE_TOTAL}）`,
   path: '/print',
-  expect: ['第 2 頁 · 共 43 頁', '第 43 頁 · 共 43 頁'],
+  expect: [`封面 · 共 ${SHEET_TOTAL} 張`, `第 ${PAGE_TOTAL} 頁 · 共 ${PAGE_TOTAL} 頁`],
   interact: async (doc) => {
     const n = doc.querySelectorAll('.printall__one .sheet').length;
-    if (n !== 43) throw new Error(`列印頁數 ${n}，應為 43`);
+    if (n !== SHEET_TOTAL) throw new Error(`列印張數 ${n}，應為 ${SHEET_TOTAL}`);
+    const first = doc.querySelector('.printall__one .sheet__pageno')?.textContent || '';
+    if (!first.includes('封面')) throw new Error(`封面頁眉不是封面標示：${first}`);
+    const numbered = [...doc.querySelectorAll('.printall__one .sheet__pageno')].map((el) => el.textContent);
+    if (numbered.some((t) => t.includes('第 null') || t.includes('PAGE null'))) {
+      throw new Error('有頁面印出 null 頁碼');
+    }
   },
 });
+
+{
+  reset();
+  seed(demoBook());
+  localStorage.setItem('roverbook.lang', 'en');
+  const html = await renderPath('/print', { wait: 900 });
+  report(
+    html.includes(`COVER · ${SHEET_TOTAL} SHEETS`) &&
+      html.includes(`PAGE ${PAGE_TOTAL} / ${PAGE_TOTAL}`) &&
+      !html.includes('第 null 頁'),
+    '整本列印：英文模式封面及末頁頁眉正確',
+  );
+  localStorage.removeItem('roverbook.lang');
+}
 
 // ------------------------------------------------------- v12 圖示 · 聲明 · 頂欄
 
@@ -1105,12 +1165,12 @@ await screen({
   const { APP_VERSION } = await import('../shared/book.js');
   const installBlock = swSrc.match(/addEventListener\('install'[\s\S]*?\}\);/)?.[0] || '';
   const noAutoSkip = !installBlock.includes('skipWaiting');
-  const swV4 = swSrc.includes("VERSION = 'v4'") && swSrc.includes('roverbook-');
+  const swV5 = swSrc.includes("VERSION = 'v5'") && swSrc.includes('roverbook-');
   const verMatch =
     `v${pkg.version}` === APP_VERSION &&
     html.includes(`content="${APP_VERSION}"`) &&
     html.includes(`window.APP_VERSION = '${APP_VERSION}'`);
-  report(verMatch && swV4 && noAutoSkip, `版本同步：package / APP_VERSION / index.html / sw.js (${APP_VERSION})`);
+  report(verMatch && swV5 && noAutoSkip, `版本同步：package / APP_VERSION / index.html / sw.js (${APP_VERSION})`);
 }
 
 {
@@ -1126,10 +1186,35 @@ await screen({
   );
 }
 
+{
+  const post = (body) =>
+    api('/api/roverbadge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  const flagged = await post({ action: 'login', demo: true, troopId: '0082', scoutId: '0000000000' });
+  const zeroId = await post({ action: 'submitPending', troopId: '0082', scoutId: '0000000000', items: [] });
+  const demoItem = await post({
+    action: 'submitPending',
+    troopId: '0082',
+    scoutId: '12345678',
+    items: [{ id: 'L3-LEADER-01', demo: true }],
+  });
+  report(
+    flagged.res.status === 403 &&
+      flagged.body?.code === 'DEMO_BLOCKED' &&
+      zeroId.res.status === 403 &&
+      demoItem.res.status === 403 &&
+      String(flagged.body?.error || '').includes('示範樣本'),
+    'API 防護：示範標記、全零成員編號及示範項目一律 403 DEMO_BLOCKED',
+  );
+}
+
 await screen({
-  name: '附錄：ROVERBADGE 進度檔未登入鎖定＋開戶提示＋離線完整備份維持可用',
+  name: '附錄：示範紀錄冊鎖定 ROVERBADGE＋離線完整備份維持可用',
   path: '/p/appendix',
-  expect: ['ROVERBADGE 進度檔匯出／匯入已鎖定', '匯出完整備份 JSON', '還原備份 JSON', '前往 ROVERBADGE 開戶'],
+  expect: ['示範紀錄冊不可與 ROVERBADGE 同步', '匯出完整備份 JSON', '還原備份 JSON'],
   wait: 520,
 });
 
@@ -1145,7 +1230,7 @@ await screen({
 await screen({
   name: '簽署視窗：不預填職銜，頁面顯示純姓名',
   path: '/p/particulars-2',
-  expect: ['林卓瑤'],
+  expect: ['陳大文'],
   interact: async (doc) => {
     const meta = doc.querySelector('.sigblock__meta')?.textContent || '';
     if (meta.includes('持有人') || meta.includes('RSL')) throw new Error(`簽署欄仍顯示職銜：${meta}`);
@@ -1163,12 +1248,13 @@ await screen({
   const row2 = b.pages?.['mb-activities']?.rows?.[2]?.certifiedBy || '';
   const rsaBy = b.pages?.['rsa-presented']?.by || '';
   report(
-    b.member.emergencyName === '林美珍' &&
-      row2 === '陳詠詩' &&
-      rsaBy === '陳國強' &&
+    b.meta.demo === true &&
+      b.member.emergencyName === '陳小文（示範）' &&
+      row2 === '示範審核員' &&
+      rsaBy === '示範總監' &&
       !b.holderSignature.title &&
-      !b.endorsement.title,
-    '示範資料：人名欄與簽署只放純姓名',
+      b.endorsement.name.includes('示範'),
+    '示範資料：人名欄與簽署只放示範名稱，不冒用真人',
   );
 }
 

@@ -212,7 +212,7 @@ export function SignModal({ open, onClose, onSave, title = '簽署', subtitle, d
           <div className="sign-grid">
             <label className="field">
               <span className="field__label">簽署人姓名</span>
-              <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="例：馬啟明" />
+              <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="例：陳大文" />
             </label>
             {allowTitle && (
               <label className="field">

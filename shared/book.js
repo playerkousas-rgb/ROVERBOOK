@@ -8,7 +8,7 @@ export { BADGE_SYLLABUS, SYLLABUS_ITEMS, ITEM_INDEX, TOTAL_ITEMS, SYLLABUS_META 
 export const STORE_KEY = 'roverbook.book.v3';
 export const LEGACY_STORE_KEYS = ['roverbook.book.v2'];
 export const SHARE_KEY = 'roverbook.shares.v2';
-export const APP_VERSION = 'v2.1.1';
+export const APP_VERSION = 'v2.2.0';
 
 export const uid = (p = 'r') => `${p}_${Math.random().toString(36).slice(2, 9)}`;
 
@@ -236,6 +236,8 @@ export function shareUrlOf(id) {
  * @returns {{ pendingRequests: {itemId:string, date:string}[], count: number }}
  */
 export function collectPendingForRoverBadge(book, remoteConfirmed = [], remotePendingIds = []) {
+  // 示範資料只供測試，永遠不會產生送往正式系統的待核實項目。
+  if (isDemoBook(book)) return { pendingRequests: [], count: 0, demo: true };
   const confirmedSet = new Set((remoteConfirmed || []).map((x) => String(x)));
   const pendingSet = new Set((remotePendingIds || []).map((x) => String(x)));
   const pendingRequests = [];
@@ -255,6 +257,9 @@ export function collectPendingForRoverBadge(book, remoteConfirmed = [], remotePe
  * schema: 'roverbadge.pending.v1' / status: 'pending' / confirmed: false
  */
 export function exportForRoverBadge(book, troopId = '') {
+  if (isDemoBook(book)) {
+    throw new Error('示範紀錄冊不可匯出至 ROVERBADGE；請先建立自己的紀錄冊。');
+  }
   const sid = normalizeScoutId(scoutId(book.member));
   const { pendingRequests } = collectPendingForRoverBadge(book);
   const payload = {
@@ -291,6 +296,9 @@ export function exportForRoverBadge(book, troopId = '') {
  */
 export function importFromRoverBadge(json, book) {
   if (!json || typeof json !== 'object') throw new Error('檔案格式不正確');
+  if (isDemoBook(book)) {
+    throw new Error('示範紀錄冊不可從 ROVERBADGE 匯入；請先建立自己的紀錄冊。');
+  }
   const member = { ...book.member };
   const localSid = normalizeScoutId(scoutId(member));
   let progressMap = null;
@@ -398,54 +406,58 @@ export function progressedCount(book) {
   return Object.values(book.progress || {}).filter((p) => p?.date).length;
 }
 
-// 逐頁對應《Rover Scout Record Book (v 20260727).pdf》第 1–41 頁。
-// page = 紙本頁碼（封面為 1，內頁由 2 開始）。
+// 紙本結構（唯一真相）。
+// 官方《Rover Scout Record Book (v 20260727)》共 43 個 PDF 頁／43 張紙：
+//   * 第 1 張 = 封面，官方不印頁碼，電子版亦不計入印刷頁；
+//   * 內頁印刷頁 1–42（PDF 第 2–43 頁），即 PDF 頁碼 = 印刷頁 + 1。
+// 因此「封面」page = null；其他紙本頁 page = 1–42；sheet = PDF 張次 1–43。
+// 目錄與數位附錄不佔紙本頁。
 export const SECTIONS = [
-  { id: 'cover', label: '封面', en: 'Cover', page: 1 },
-  { id: 'contents', label: '目錄', en: 'Contents', page: '—', digital: true },
-  { id: 'colophon', label: '出版資料', en: 'Publication', page: 2 },
-  { id: 'particulars-1', label: '個人資料', en: 'Personal Particulars', page: 3 },
-  { id: 'particulars-2', label: '個人資料（續）', en: 'Personal Particulars', page: 4 },
-  { id: 'group', label: '旅部資料', en: 'Group Information', page: 5 },
-  { id: 'scouting', label: '童軍紀錄', en: 'Scouting Experience', page: 6 },
-  { id: 'changes', label: '轉旅 · 遷移地址 · 更改摘要', en: 'Transfer / Change of Address', page: 7 },
-  { id: 'renewals-1', label: '會員資格', en: 'Renewal of Membership', page: 8 },
-  { id: 'renewals-2', label: '會員資格（續）', en: 'Renewal of Membership', page: 9 },
-  { id: 'service-awards', label: '服務紀錄 · 獎章及獎勵', en: 'Service Record / Awards', page: 10 },
-  { id: 'scheme', label: '訓練綱要', en: 'Training Scheme', page: 11 },
-  { id: 'plan', label: '樂行童軍訓練計劃', en: 'Rover Scout Training Scheme', page: 12 },
-  { id: 'mb-intro', label: '會員章', en: 'Membership Badge', page: 13, badge: 'L1' },
-  { id: 'mb-activities', label: '會員章 (1) 活動', en: 'Activities', page: 14, badge: 'L1' },
-  { id: 'mb-understanding', label: '會員章 (2) 理解 · (3) 禮節', en: 'Understanding / Ceremonial', page: 15, badge: 'L1' },
-  { id: 'mb-commitment', label: '會員章 (4) 許諾 · (5) 保護童軍成員', en: 'Commitment / Safe From Harm', page: 16, badge: 'L1' },
-  { id: 'mb-presented', label: '會員章頒發', en: 'Membership Badge · Presented', page: 17, badge: 'L1' },
-  { id: 'ep-intro', label: '樂行童軍肩章', en: 'Rover Scout Epaulettes', page: 18, badge: 'L2' },
-  { id: 'ep-presented', label: '樂行童軍肩章頒發', en: 'Epaulettes · Presented', page: 19, badge: 'L2' },
-  { id: 'rsa-intro', label: '樂行童軍獎章及貝登堡獎章簡介', en: 'Award Introduction', page: 20, badge: 'L3' },
-  { id: 'rsa-awards', label: '樂行童軍獎章 · 貝登堡獎章', en: 'Awards', page: 21, badge: 'L3' },
-  { id: 'dedication', label: '(1) 準領袖培訓', en: 'Dedication', page: 22, badge: 'L3' },
-  { id: 'scoutcraft', label: '(2) 童軍技能', en: 'Scoutcraft', page: 23, badge: 'L3' },
-  { id: 'volunteerism', label: '(3) 服務', en: 'Volunteerism', page: 24, badge: 'L3' },
-  { id: 'global-vision', label: '(4) 國際視野', en: 'Global Vision', page: 25, badge: 'L3' },
-  { id: 'tenacity', label: '(5) 興趣及技能', en: 'Tenacity', page: 26, badge: 'L3' },
-  { id: 'wellness-1', label: '(6) 身心健康（一）', en: 'Mental and Physical Wellness', page: 27, badge: 'L3' },
-  { id: 'wellness-2', label: '(6) 身心健康（二）', en: 'Mental and Physical Wellness', page: 28, badge: 'L3' },
-  { id: 'intrepidity', label: '(7) 挑戰', en: 'Intrepidity', page: 29, badge: 'L3' },
-  { id: 'rsa-presented', label: '樂行童軍獎章頒發', en: 'Rover Scout Award · Presented', page: 30, badge: 'L3' },
-  { id: 'interview-district', label: '貝登堡獎章申請前會面（一）', en: 'Interview · District', page: 31, badge: 'L4' },
-  { id: 'interview-region', label: '貝登堡獎章申請前會面（二）', en: 'Interview · Region', page: 32, badge: 'L4' },
-  { id: 'bpa-presented', label: '貝登堡獎章頒發', en: 'Baden-Powell Award · Presented', page: 33, badge: 'L4' },
-  { id: 'wosm', label: '世界童軍組織獎章', en: 'Badges from the WOSM', page: 34 },
-  { id: 'other-badges-1', label: '其他獎章', en: 'Other Badges', page: 35 },
-  { id: 'other-badges-2', label: '其他獎章（續）', en: 'Other Badges', page: 36 },
-  { id: 'additional-1', label: '其他經驗', en: 'Additional Experiences', page: 37 },
-  { id: 'additional-2', label: '其他經驗（續）', en: 'Additional Experiences', page: 38 },
-  { id: 'expeditions-1', label: '遠足及海外活動', en: 'Expeditions and Overseas Activities', page: 39 },
-  { id: 'expeditions-2', label: '遠足及海外活動（續）', en: 'Expeditions and Overseas Activities', page: 40 },
-  { id: 'uniform', label: '樂行童軍制服', en: 'Rover Scout Uniform', page: 41 },
-  { id: 'promise', label: '童軍誓詞與規律', en: 'Scout Promise and Law', page: 42 },
-  { id: 'crest', label: '徽章圖', en: 'Emblem', page: 43 },
-  { id: 'appendix', label: '數位附錄', en: 'Digital Appendix', page: '—', digital: true },
+  { id: 'cover', label: '封面', en: 'Cover', page: null, sheet: 1 },
+  { id: 'contents', label: '目錄', en: 'Contents', page: '—', sheet: null, digital: true },
+  { id: 'colophon', label: '出版資料', en: 'Publication', page: 1, sheet: 2 },
+  { id: 'particulars-1', label: '個人資料', en: 'Personal Particulars', page: 2, sheet: 3 },
+  { id: 'particulars-2', label: '個人資料（續）', en: 'Personal Particulars', page: 3, sheet: 4 },
+  { id: 'group', label: '旅部資料', en: 'Group Information', page: 4, sheet: 5 },
+  { id: 'scouting', label: '童軍紀錄', en: 'Scouting Experience', page: 5, sheet: 6 },
+  { id: 'changes', label: '轉旅 · 遷移地址 · 更改摘要', en: 'Transfer / Change of Address', page: 6, sheet: 7 },
+  { id: 'renewals-1', label: '會員資格', en: 'Renewal of Membership', page: 7, sheet: 8 },
+  { id: 'renewals-2', label: '會員資格（續）', en: 'Renewal of Membership', page: 8, sheet: 9 },
+  { id: 'service-awards', label: '服務紀錄 · 獎章及獎勵', en: 'Service Record / Awards', page: 9, sheet: 10 },
+  { id: 'scheme', label: '訓練綱要', en: 'Training Scheme', page: 10, sheet: 11 },
+  { id: 'plan', label: '樂行童軍訓練計劃', en: 'Rover Scout Training Scheme', page: 11, sheet: 12 },
+  { id: 'mb-intro', label: '會員章', en: 'Membership Badge', page: 12, sheet: 13, badge: 'L1' },
+  { id: 'mb-activities', label: '會員章 (1) 活動', en: 'Activities', page: 13, sheet: 14, badge: 'L1' },
+  { id: 'mb-understanding', label: '會員章 (2) 理解 · (3) 禮節', en: 'Understanding / Ceremonial', page: 14, sheet: 15, badge: 'L1' },
+  { id: 'mb-commitment', label: '會員章 (4) 許諾 · (5) 保護童軍成員', en: 'Commitment / Safe From Harm', page: 15, sheet: 16, badge: 'L1' },
+  { id: 'mb-presented', label: '會員章頒發', en: 'Membership Badge · Presented', page: 16, sheet: 17, badge: 'L1' },
+  { id: 'ep-intro', label: '樂行童軍肩章', en: 'Rover Scout Epaulettes', page: 17, sheet: 18, badge: 'L2' },
+  { id: 'ep-presented', label: '樂行童軍肩章頒發', en: 'Epaulettes · Presented', page: 18, sheet: 19, badge: 'L2' },
+  { id: 'rsa-intro', label: '樂行童軍獎章及貝登堡獎章簡介', en: 'Award Introduction', page: 19, sheet: 20, badge: 'L3' },
+  { id: 'rsa-awards', label: '樂行童軍獎章 · 貝登堡獎章', en: 'Awards', page: 20, sheet: 21, badge: 'L3' },
+  { id: 'dedication', label: '(1) 準領袖培訓', en: 'Dedication', page: 21, sheet: 22, badge: 'L3' },
+  { id: 'scoutcraft', label: '(2) 童軍技能', en: 'Scoutcraft', page: 22, sheet: 23, badge: 'L3' },
+  { id: 'volunteerism', label: '(3) 服務', en: 'Volunteerism', page: 23, sheet: 24, badge: 'L3' },
+  { id: 'global-vision', label: '(4) 國際視野', en: 'Global Vision', page: 24, sheet: 25, badge: 'L3' },
+  { id: 'tenacity', label: '(5) 興趣及技能', en: 'Tenacity', page: 25, sheet: 26, badge: 'L3' },
+  { id: 'wellness-1', label: '(6) 身心健康（一）', en: 'Mental and Physical Wellness', page: 26, sheet: 27, badge: 'L3' },
+  { id: 'wellness-2', label: '(6) 身心健康（二）', en: 'Mental and Physical Wellness', page: 27, sheet: 28, badge: 'L3' },
+  { id: 'intrepidity', label: '(7) 挑戰', en: 'Intrepidity', page: 28, sheet: 29, badge: 'L3' },
+  { id: 'rsa-presented', label: '樂行童軍獎章頒發', en: 'Rover Scout Award · Presented', page: 29, sheet: 30, badge: 'L3' },
+  { id: 'interview-district', label: '貝登堡獎章申請前會面（一）', en: 'Interview · District', page: 30, sheet: 31, badge: 'L4' },
+  { id: 'interview-region', label: '貝登堡獎章申請前會面（二）', en: 'Interview · Region', page: 31, sheet: 32, badge: 'L4' },
+  { id: 'bpa-presented', label: '貝登堡獎章頒發', en: 'Baden-Powell Award · Presented', page: 32, sheet: 33, badge: 'L4' },
+  { id: 'wosm', label: '世界童軍組織獎章', en: 'Badges from the WOSM', page: 33, sheet: 34 },
+  { id: 'other-badges-1', label: '其他獎章', en: 'Other Badges', page: 34, sheet: 35 },
+  { id: 'other-badges-2', label: '其他獎章（續）', en: 'Other Badges', page: 35, sheet: 36 },
+  { id: 'additional-1', label: '其他經驗', en: 'Additional Experiences', page: 36, sheet: 37 },
+  { id: 'additional-2', label: '其他經驗（續）', en: 'Additional Experiences', page: 37, sheet: 38 },
+  { id: 'expeditions-1', label: '遠足及海外活動', en: 'Expeditions and Overseas Activities', page: 38, sheet: 39 },
+  { id: 'expeditions-2', label: '遠足及海外活動（續）', en: 'Expeditions and Overseas Activities', page: 39, sheet: 40 },
+  { id: 'uniform', label: '樂行童軍制服', en: 'Rover Scout Uniform', page: 40, sheet: 41 },
+  { id: 'promise', label: '童軍誓詞與規律', en: 'Scout Promise and Law', page: 41, sheet: 42 },
+  { id: 'crest', label: '徽章圖', en: 'Emblem', page: 42, sheet: 43 },
+  { id: 'appendix', label: '數位附錄', en: 'Digital Appendix', page: '—', sheet: null, digital: true },
 ];
 
 export const SCOUTING_UNITS = [
@@ -457,8 +469,31 @@ export const SCOUTING_UNITS = [
   { key: 'leader', label: '領袖', en: 'Leader' },
 ];
 
-export const PAGE_TOTAL = 43;
+/** 已印刷頁碼的內頁數（封面不計頁碼）。 */
+export const PAGE_TOTAL = SECTIONS.filter((s) => typeof s.page === 'number').length; // 42
+/** 實際列印張數 = 封面 + 內頁。 */
+export const SHEET_TOTAL = SECTIONS.filter((s) => !s.digital).length; // 43
 export const PRINT_PAGES = SECTIONS.filter((s) => !s.digital);
+
+/** 紙本行數（照官方 PDF 量度；不得自行加減）。 */
+export const PAGE_ROWS = {
+  transfers: 3,
+  addressChanges: 5,
+  detailChanges: 3,
+  renewals: [5, 6], // 第 7 頁 5 行、第 8 頁 6 行 = 官方 11 行
+  service: 6,
+  awards: 3,
+  activities: 4,
+  wellnessCerts: 4,
+  badges: 9,
+  additional: 11,
+  expeditions: 12,
+};
+
+/** 示範紀錄冊：只供測試，禁止與正式系統同步。 */
+export function isDemoBook(book) {
+  return book?.meta?.demo === true;
+}
 
 // ------------------------------------------------------------------ 示範資料
 
@@ -467,6 +502,7 @@ const inkSvg = (path, tint = '#1c2b41') =>
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 80"><path d="${path}" fill="none" stroke="${tint}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   )}`;
 
+/* 示範用「墨跡」：抽象線條，不是任何真人簽名。 */
 const SIG_A = inkSvg(
   'M14 58 C 34 20, 52 14, 58 32 C 63 47, 46 60, 40 47 C 35 36, 54 30, 70 40 C 84 49, 88 60, 104 50 C 118 41, 112 24, 128 28 C 143 32, 132 56, 150 52 C 166 48, 168 30, 184 34 C 198 38, 196 52, 214 44',
 );
@@ -475,98 +511,214 @@ const SIG_B = inkSvg(
   '#22324d',
 );
 
-  const leaderSig = (at) => ({ png: SIG_A, name: '馬啟明', title: '', at });
+const DEMO = {
+  nameZh: '陳大文',
+  nameEn: 'Chan Tai-man',
+  scoutId: '0000000000',
+  crew: '示範第 001 旅樂行童軍團',
+  group: '示範第 001 旅',
+  district: '九龍城',
+  region: '九龍',
+  issueDate: '2024-09-08',
+  dob: '2004-03-18',
+  gender: '男 Male',
+  placeOfBirth: '香港',
+  phone: '0000 0000',
+  email: 'demo@example.org',
+  address: '九龍紅磡示範路 1 號示範大廈 1 樓 A 室',
+  addressEn: 'Flat A, 1/F, 1 Demo Road, Hung Hom, Kowloon',
+  bloodType: 'O+',
+  emergencyName: '陳小文（示範）',
+  emergencyPhone: '0000 0000',
+  sponsoringAuthority: '示範機構',
+  groupAddress: '九龍紅磡示範路 1 號',
+  gsl: '示範旅長',
+  rsl: '示範團長',
+  meetingPlace: '示範社區中心禮堂',
+  dateJoined: '2024-09-01',
+  dateScoutMovement: '2016-10-02',
+};
+
+/* 示範簽署：只顯示職位，不冒用任何真人姓名。 */
+const demoSig = (role, at, png = SIG_A) => ({ png, name: role, title: role, at, demo: true });
+const leaderSig = (at) => demoSig('示範團長', at);
+const assessorSig = (at) => demoSig('示範審核員', at);
 
 export function demoBook() {
   const book = newBook({
-    member: {
-      nameZh: '林卓瑤',
-      nameEn: 'Lam Cheuk-yiu',
-      scoutId: '24010001',
-      crew: '九龍第 145 旅樂行童軍團',
-      group: '九龍第 145 旅',
-      district: '九龍城',
-      region: '九龍',
-      issueDate: '2024-09-08',
-      dob: '2003-05-14',
-      placeOfBirth: '香港',
-      phone: '9876 5432',
-      email: 'cy.lam@example.org',
-      address: '九龍紅磡黃埔花園 5 座 12A',
-      bloodType: 'O+',
-      emergencyName: '林美珍',
-      emergencyPhone: '9012 3456',
-      sponsoringAuthority: '黃埔宣道會',
-      groupAddress: '九龍紅磡黃埔花園社區中心 3 樓',
-      gsl: '何志強',
-      rsl: '馬啟明',
-      meetingPlace: '黃埔社區中心禮堂',
-      dateJoined: '2024-09-01',
-      dateScoutMovement: '2015-10-04',
-    },
+    member: { ...DEMO },
     scouting: [
-      { id: uid('sco'), unit: 'grasshopper', post: '小童軍', highestAward: '金箭章', from: '2015-10', to: '2017-08' },
-      { id: uid('sco'), unit: 'cub', post: '六仔隊長', highestAward: '金紫荊章', from: '2017-09', to: '2020-08' },
-      { id: uid('sco'), unit: 'scout', post: '小隊副隊長', highestAward: '童軍標準章', from: '2020-09', to: '2022-08' },
-      { id: uid('sco'), unit: 'venture', post: '副主席', highestAward: '深資童軍獎章', from: '2022-09', to: '2024-08' },
-      { id: uid('sco'), unit: 'leader', post: '小隊教練', highestAward: '—', from: '2025-01', to: '2025-08' },
-      { id: uid('sco'), unit: 'instructor', post: '小隊教練', highestAward: '—', from: '2025-09', to: '' },
+      { id: uid('sco'), unit: 'grasshopper', post: '小童軍', highestAward: '金箭章（示範）', from: '2016-10', to: '2018-08' },
+      { id: uid('sco'), unit: 'cub', post: '六仔隊長', highestAward: '金紫荊章（示範）', from: '2018-09', to: '2021-08' },
+      { id: uid('sco'), unit: 'scout', post: '小隊副隊長', highestAward: '童軍標準章（示範）', from: '2021-09', to: '2023-08' },
+      { id: uid('sco'), unit: 'venture', post: '副主席', highestAward: '深資童軍獎章（示範）', from: '2023-09', to: '2024-08' },
+      { id: uid('sco'), unit: 'instructor', post: '小隊教練', highestAward: '—', from: '2024-09', to: '2025-08' },
+      { id: uid('sco'), unit: 'leader', post: '小隊教練', highestAward: '—', from: '2025-09', to: '' },
     ],
     service: [
-      { id: uid('srv'), post: '團秘書 Crew Secretary', from: '2025-01', to: '2025-12', appointedBy: '馬啟明', signature: leaderSig('2025-02-01') },
-      { id: uid('srv'), post: '小隊長 Patrol Leader', from: '2025-09', to: '', appointedBy: '馬啟明', signature: null },
-      { id: uid('srv'), post: '黃埔長者中心義工', from: '2025-03', to: '', appointedBy: '黃埔宣道會', signature: null },
+      { id: uid('srv'), post: '團秘書 Crew Secretary', from: '2025-01', to: '2025-12', appointedBy: '示範團長', signature: leaderSig('2025-02-01') },
+      { id: uid('srv'), post: '小隊長 Patrol Leader', from: '2025-09', to: '', appointedBy: '示範團長', signature: null },
+      { id: uid('srv'), post: '示範社區中心義工', from: '2025-03', to: '', appointedBy: '示範機構', signature: null },
     ],
     awards: [
-      { id: uid('awd'), name: '會員章 Membership Badge', summary: '完成啟導班及三次團活動', date: '2024-12-15', org: '九龍第 145 旅', signature: leaderSig('2024-12-16') },
-      { id: uid('awd'), name: '樂行童軍肩章 Rover Scout Epaulettes', summary: '完成啟導項目', date: '2025-06-21', org: '九龍地域', signature: leaderSig('2025-06-22') },
-      { id: uid('awd'), name: '地域優秀服務獎', summary: '2025 年度紅磡區長者家居維修服務', date: '2025-11-02', org: '九龍地域', signature: null },
+      { id: uid('awd'), name: '會員章 Membership Badge（示範）', summary: '完成啟導班及三次團活動（示範）', date: '2024-12-15', org: '示範第 001 旅', signature: leaderSig('2024-12-16') },
+      { id: uid('awd'), name: '樂行童軍肩章 Rover Scout Epaulettes（示範）', summary: '完成啟導項目（示範）', date: '2025-06-21', org: '九龍地域', signature: leaderSig('2025-06-22') },
+      { id: uid('awd'), name: '示範地域優秀服務獎', summary: '2025 年度示範長者家居維修服務', date: '2025-11-02', org: '九龍地域', signature: null },
     ],
     expeditions: [
-      { id: uid('exp'), period: '2025-12-27 至 2025-12-31', item: '台灣陽明山跨年遠足', description: '五天四夜，與台北市第 12 團交流，完成 32 公里縱走。' },
-      { id: uid('exp'), period: '2025-04-18 至 2025-04-19', item: '鳳凰徑第一至三段', description: '大嶼山，負重 12 公斤，兩日一夜露營。' },
+      { id: uid('exp'), period: '2025-12-27 至 2025-12-31', item: '示範台北交流團（示範）', description: '五天四夜，與示範童軍團交流，完成 32 公里縱走（示範資料）。' },
+      { id: uid('exp'), period: '2026-04-04 至 2026-04-06', item: '示範三日兩夜遠足考驗（示範）', description: '西貢示範路線，3 日 2 夜，完成兩項事工（示範資料）。' },
     ],
     additional: [
-      { id: uid('add'), period: '2025-05', item: '聖約翰急救證書', description: '持有至 2028 年 5 月。' },
+      { id: uid('add'), period: '2026-03', item: '示範急救證書', description: '示範證書編號 DEMO-FA-0001，持有至 2028 年 3 月（示範資料）。' },
     ],
     progress: {},
     badges: {
       L1: { date: '2024-12-15', signature: leaderSig('2024-12-16') },
       L2: { date: '2025-06-21', signature: leaderSig('2025-06-22') },
+      L3: { date: '2026-05-16', signature: leaderSig('2026-05-17') },
+      // L4 貝登堡獎章尚未頒發：示範資料停留在「最高獎章申請」狀態。
     },
     renewals: [
       { id: uid('rnw'), year: 2025, validUntil: '2025-12-31', signature: leaderSig('2025-01-11') },
       { id: uid('rnw'), year: 2026, validUntil: '2026-12-31', signature: leaderSig('2026-01-04') },
     ],
+    transfers: [{ id: uid('trf'), date: '2024-09-01', groupNo: '示範第 001 旅' }],
+    addressChanges: [
+      {
+        id: uid('adr'),
+        date: '2025-08-15',
+        address: '九龍紅磡示範路 1 號示範大廈 1 樓 A 室（示範）',
+      },
+    ],
+    detailChanges: [
+      { id: uid('chg'), date: '2025-02-01', item: '電話', content: '0000 0000（示範）' },
+    ],
     pages: {
       'mb-activities': {
         rows: [
-          { id: uid('act'), date: '2024-09-21', place: '黃埔社區中心', summary: '迎新營火晚會', certifiedBy: '馬啟明' },
-          { id: uid('act'), date: '2024-10-05', place: '大埔滘', summary: '夜行訓練（戶外活動）', certifiedBy: '馬啟明' },
-          { id: uid('act'), date: '2024-10-19', place: '西貢', summary: '獨木舟體驗（海上活動）', certifiedBy: '陳詠詩' },
+          { id: uid('act'), date: '2024-09-21', place: '示範社區中心', summary: '迎新營火晚會（示範）', certifiedBy: '示範團長' },
+          { id: uid('act'), date: '2024-10-05', place: '大埔滘', summary: '夜行訓練（戶外活動・示範）', certifiedBy: '示範團長' },
+          { id: uid('act'), date: '2024-10-19', place: '西貢', summary: '獨木舟體驗（海上活動・示範）', certifiedBy: '示範審核員' },
+          { id: uid('act'), date: '', place: '', summary: '', certifiedBy: '' },
         ],
       },
-      'mb-presented': { presentedOn: '2024-12-15', place: '旅部週年大會', by: '馬啟明', comment: '會員章已完成' },
-      'ep-presented': { presentedOn: '2025-06-21', place: '九龍地域樂行童軍大會', by: '何志強' },
-      'mb-commitment': { investiture: '2024-12-15' },
-      'mb-understanding': {},
-      dedication: { comment: '木章第一、二階段已完成，在職輔導至 2026 年 3 月。', assessor: '馬啟明', post: '樂行童軍團長', date: '2025-11-20' },
-      scoutcraft: { traditional: 'expedition', course1: '領袖遠足訓練班', course2: '教練員訓練班' },
-      volunteerism: { summary: '黃埔長者中心家居維修服務，全年 12 次。' },
-      'global-vision': { selected: 'exchange', activity: '台北市第 12 團交流', duration: '2025-12-27 至 2025-12-31', summary: '五日四夜交流，與當地樂行童軍合作完成社區服務。' },
-      tenacity: { activity: '攝影', duration: '2025-01 至 2025-12', summary: '完成 52 小時攝影課程及社區展覽。' },
-      'wellness-1': { certs: [{ id: uid('cert'), item: 'SOUL Keeper 精神健康守護者計劃', cert: 'SK-2025-0117', hours: '30', date: '2025-05-10' }], serviceHours: '22', summary: '於學校分享精神健康訊息 3 次。' },
-      'wellness-2': { activity: '長跑', hours: '52', summary: '全年每週兩課，完成半馬。' },
-      intrepidity: { selected: 'wilderness', activity: '鳳凰徑全走', duration: '2026-01-02 至 2026-01-04', summary: '3 日 2 夜，與 4 位團員完成 70 公里。' },
-      'rsa-presented': { presentedOn: '2026-03-14', place: '九龍地域總部', by: '陳國強' },
-      'interview-district': { comment: '表現成熟，對樂行童軍支部有清晰認識。', name: '梁淑儀', unit: '紅磡區', date: '2026-05-09' },
-      'interview-region': { comment: '推薦申請貝登堡獎章。', name: '陳國強', unit: '九龍地域', date: '2026-06-13' },
+      'mb-presented': {
+        presentedOn: '2024-12-15',
+        place: '示範旅部週年大會',
+        by: '示範主席',
+        chair: demoSig('示範主席', '2024-12-15', SIG_B),
+        sig: leaderSig('2024-12-15'),
+        comment: '會員章已完成（示範）',
+      },
+      'mb-commitment': { investiture: '2024-12-15', rsl: leaderSig('2024-12-15') },
+      'ep-intro': { chair: demoSig('示範主席', '2025-06-21', SIG_B) },
+      'ep-presented': { presentedOn: '2025-06-21', place: '九龍地域樂行童軍大會（示範）', by: '示範總監', sig: leaderSig('2025-06-21') },
+      dedication: {
+        comment: '木章第一、二階段已完成，在職輔導至 2026 年 3 月（示範）。',
+        sig: assessorSig('2026-02-01'),
+        post: '示範審核員',
+        date: '2026-02-01',
+      },
+      scoutcraft: {
+        traditional: 'expedition',
+        course1: '示範領袖遠足訓練班',
+        cert1: 'DEMO-EXP-0001',
+        date1: '2025-10-04',
+        course2: '示範教練員訓練班',
+        cert2: 'DEMO-INS-0001',
+        date2: '2025-10-18',
+        comment: '技能及教學法達標（示範）。',
+        sig: assessorSig('2025-10-18'),
+        post: '示範審核員',
+        date: '2025-10-18',
+      },
+      volunteerism: {
+        summary: '示範社區中心家居維修服務，全年 12 次（示範）。',
+        comment: '服務態度良好（示範）。',
+        sig: assessorSig('2025-11-29'),
+        post: '示範審核員',
+        date: '2025-11-29',
+      },
+      'global-vision': {
+        selected: 'exchange',
+        activity: '示範台北交流團（示範）',
+        duration: '2025-12-27 至 2025-12-31',
+        summary: '五日四夜交流，與當地示範樂行童軍合作完成社區服務（示範）。',
+        comment: '具國際視野（示範）。',
+        sig: assessorSig('2026-01-24'),
+        post: '示範審核員',
+        date: '2026-01-24',
+      },
+      tenacity: {
+        activity: '攝影',
+        duration: '2025-01 至 2025-12',
+        summary: '完成 52 小時攝影課程及社區展覽（示範）。',
+        comment: '持續進步（示範）。',
+        sig: assessorSig('2026-02-07'),
+        post: '示範審核員',
+        date: '2026-02-07',
+      },
+      'wellness-1': {
+        certs: [
+          { id: uid('cert'), item: 'SOUL Keeper 精神健康守護者計劃（示範）', cert: 'DEMO-SK-0001', hours: '30', date: '2026-02-21' },
+          { id: uid('cert'), item: '', cert: '', hours: '', date: '' },
+          { id: uid('cert'), item: '', cert: '', hours: '', date: '' },
+          { id: uid('cert'), item: '', cert: '', hours: '', date: '' },
+        ],
+        serviceHours: '22',
+        summary: '於學校分享精神健康訊息 3 次（示範）。',
+        comment: '課程及服務時數達標（示範）。',
+        sig: assessorSig('2026-02-21'),
+        post: '示範審核員',
+        date: '2026-02-21',
+      },
+      'wellness-2': {
+        activity: '長跑',
+        hours: '52',
+        summary: '全年每週兩課，完成半馬（示範）。',
+        comment: '體能持續進步（示範）。',
+        sig: assessorSig('2026-03-07'),
+        post: '示範審核員',
+        date: '2026-03-07',
+      },
+      intrepidity: {
+        selected: 'wilderness',
+        activity: '示範三日兩夜遠足考驗（示範）',
+        duration: '2026-04-04 至 2026-04-06',
+        summary: '3 日 2 夜，與 4 位團員完成 70 公里及兩項事工（示範）。',
+        comment: '團隊合作及領導表現良好（示範）。',
+        sig: assessorSig('2026-04-18'),
+        post: '示範遠足審核員',
+        date: '2026-04-18',
+      },
+      'rsa-presented': {
+        presentedOn: '2026-05-16',
+        place: '九龍地域總部（示範）',
+        by: '示範總監',
+        certNo: 'DEMO-RSA-0001',
+        sig: leaderSig('2026-05-16'),
+      },
+      'interview-district': {
+        comment: '表現成熟，對樂行童軍支部有清晰認識（示範）。',
+        name: '示範區總監',
+        unit: '九龍城區',
+        date: '2026-06-13',
+      },
+      'interview-region': {
+        comment: '推薦申請貝登堡獎章（示範）。',
+        name: '示範地域總監',
+        unit: '九龍地域',
+        date: '2026-07-11',
+      },
+      'bpa-presented': {},
       uniform: { notes: '' },
     },
-    holderSignature: { png: SIG_B, name: '林卓瑤', title: '', at: '2024-09-08' },
-    endorsement: { ...leaderSig('2026-09-20'), validUntil: '2026-12-31' },
+    holderSignature: { png: SIG_B, name: '陳大文（示範）', title: '', at: '2024-09-08', demo: true },
+    endorsement: { ...leaderSig('2026-07-20'), validUntil: '2026-12-31' },
     meta: {
       demo: true,
+      demoLabel: '示範樣本，只供測試，不可遞交',
       signLog: [],
       createdAt: '2024-09-08T02:00:00.000Z',
       updatedAt: new Date().toISOString(),
@@ -575,11 +727,8 @@ export function demoBook() {
 
   const fill = (ids, dateList) => {
     ids.forEach((id, i) => {
-      const date = dateList[i] || '2026-09-20';
-      const sig = leaderSig(date);
-      const entry = { date, signature: sig };
-      if (/^L[34]-/.test(id)) entry.assessor = '馬啟明';
-      book.progress[id] = entry;
+      const date = dateList[i] || '2026-07-01';
+      book.progress[id] = { date, signature: leaderSig(date), assessor: '示範審核員' };
     });
   };
 
@@ -602,18 +751,27 @@ export function demoBook() {
       'L3-SERVICE-01', 'L3-SERVICE-02', 'L3-SERVICE-03',
       'L3-INTL-01', 'L3-INTL-02',
       'L3-INT-01',
+      'L3-HEALTH-01', 'L3-HEALTH-02',
+      'L3-CHALLENGE-01', 'L3-CHALLENGE-02',
     ],
     [
-      '2025-08-16', '2025-09-20',
+      '2025-08-16', '2026-02-01',
       '2025-10-04', '2025-10-18', '2025-10-25',
       '2025-11-01', '2025-11-15', '2025-11-29',
       '2026-01-10', '2026-01-24',
       '2026-02-07',
+      '2026-02-21', '2026-03-07',
+      '2026-04-18', '2026-04-18',
     ],
   );
-  book.progress['L3-SERVICE-01'].cert = 'FA-2025-0042';
-  book.progress['L3-INT-01'].signature = null;
-  book.progress['L4-ALL-01'] = { date: '', note: '待完成' };
+  book.progress['L3-SERVICE-01'].cert = 'DEMO-FA-0001';
+  book.progress['L3-SERVICE-02'].cert = 'DEMO-SWA-0001';
+  book.progress['L3-SERVICE-03'].cert = 'DEMO-SWA-0002';
+  book.progress['L3-INT-01'].cert = '';
+  book.progress['L3-HEALTH-01'].cert = 'DEMO-SK-0001';
+  book.progress['L4-ALL-01'] = { date: '2026-04-18', signature: leaderSig('2026-04-18'), assessor: '示範審核員' };
+  book.progress['L4-ALL-02'] = { date: '2026-07-11', signature: leaderSig('2026-07-11'), assessor: '示範區總監' };
+  book.progress['L4-ALL-03'] = { date: '', note: '已備妥申請表，待正式遞交（示範）' };
 
   return book;
 }

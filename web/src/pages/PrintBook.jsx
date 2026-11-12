@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { navigate } from '../router.jsx';
 import { Icon } from '../ui.jsx';
-import { SECTIONS } from '@shared/book.js';
+import { SECTIONS, PAGE_TOTAL, SHEET_TOTAL } from '@shared/book.js';
 import { useLang } from '../i18n.jsx';
 
 /* A4 直向、上下邊界各 10mm → 內文高度 = 277mm */
@@ -10,7 +10,7 @@ const MIN_ZOOM = 0.62;
 
 /**
  * 一次過印出整本：一節一張 .sheet，一張紙對一頁紀錄冊。
- * 每頁右上角印有「第 N 頁 · 共 41 頁」，可以直接對回紙本／PDF 頁數。
+ * 封面不印頁碼；內頁右上角印有「第 N 頁 · 共 42 頁」，可直接對回紙本／PDF 頁數。
  * 內容超出一頁 A4 的頁面會自動縮小少許，確保一頁紙 = 一頁紀錄冊。
  */
 export default function PrintBook({ pages, auto = true }) {
@@ -66,11 +66,11 @@ export default function PrintBook({ pages, auto = true }) {
           <Icon name="back" size={14} /> {isEn ? 'Back' : '返回'}
         </button>
         <div className="printall__text">
-          <strong>{isEn ? 'Whole book · 43 sheets' : '整本 · 43 頁'}</strong>
+          <strong>{isEn ? `Whole book · ${SHEET_TOTAL} sheets` : `整本 · ${SHEET_TOTAL} 張紙`}</strong>
           <em>
             {isEn
-              ? 'One sheet = one page of the record book; the page number is printed top-right.'
-              : '一頁紙 = 一頁紀錄冊；右上角印有頁碼，可直接對回紙本／PDF 第幾頁。'}
+              ? `Cover is unnumbered + printed pages 1–${PAGE_TOTAL}; one sheet = one PDF page, page number printed top-right.`
+              : `封面不印頁碼 + 內頁第 1–${PAGE_TOTAL} 頁；一張紙 = 一個 PDF 頁，內頁右上角印有頁碼。`}
           </em>
         </div>
         <button type="button" className="btn btn--gold btn--sm" onClick={() => window.print()}>
