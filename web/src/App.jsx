@@ -27,6 +27,7 @@ import LeaderGate from './components/LeaderGate.jsx';
 import { isLeader, onLeaderChange, leaderAvailable } from './leader.js';
 import { UPDATE_EVENT, applyPwaUpdate, hasPendingPwaUpdate } from './pwa.js';
 import { LangProvider, useLang } from './i18n.jsx';
+import { EmbedRibbon } from './components/EmbedNotice.jsx';
 
 const PAGES = {
   cover: Cover,
@@ -365,6 +366,8 @@ function BookApp({ book, saveIssue }) {
           </button>
         </div>
       </header>
+
+      <EmbedRibbon book={book} />
 
       {!online && (
         <div className="offlinebar" role="status">

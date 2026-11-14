@@ -8,7 +8,7 @@ export { BADGE_SYLLABUS, SYLLABUS_ITEMS, ITEM_INDEX, TOTAL_ITEMS, SYLLABUS_META 
 export const STORE_KEY = 'roverbook.book.v3';
 export const LEGACY_STORE_KEYS = ['roverbook.book.v2'];
 export const SHARE_KEY = 'roverbook.shares.v2';
-export const APP_VERSION = 'v2.2.0';
+export const APP_VERSION = 'v2.2.1';
 
 export const uid = (p = 'r') => `${p}_${Math.random().toString(36).slice(2, 9)}`;
 

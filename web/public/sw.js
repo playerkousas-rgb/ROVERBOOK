@@ -1,4 +1,4 @@
-/* ROVERBOOK service worker — 配合 APP_VERSION = v2.2.0
+/* ROVERBOOK service worker — 配合 APP_VERSION = v2.2.1
  *
  * 策略：
  *   導航請求（/、/p/…、/forms/…、/scan）→ network-first，失敗時用快取的 index.html
@@ -9,7 +9,7 @@
  *       activate 時清走舊版本 cache。
  */
 
-const VERSION = 'v5';
+const VERSION = 'v6';
 const CACHE = `roverbook-${VERSION}`;
 const SHELL = [
   '/',

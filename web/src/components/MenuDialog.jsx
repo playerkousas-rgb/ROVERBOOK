@@ -8,6 +8,8 @@ import { navigate } from '../router.jsx';
 import { useLang } from '../i18n.jsx';
 import { exitLeaderMode } from '../leader.js';
 import { isBadgeProgressFile, isBookBackupFile } from '../roverbadgeBridge.js';
+import { StandaloneLink } from './EmbedNotice.jsx';
+import { isEmbedded } from '@shared/embed.js';
 
 export default function MenuDialog({ open, onClose, onShowQr, leader = false, leaderReady = null }) {
   const { book, replace } = useBook();
@@ -18,6 +20,8 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
   const [showHome, setShowHome] = useState(false);
 
   if (!open) return null;
+
+  const embedded = isEmbedded();
 
   const backup = () => {
     download(`roverbook-${slugify(book.member.nameZh)}-${today()}.json`, book);
@@ -54,21 +58,21 @@ export default function MenuDialog({ open, onClose, onShowQr, leader = false, le
   return (
     <Modal open={open} onClose={onClose} eyebrow="MENU" title="紀錄冊選項">
       <div className="menu">
-        <button
-          className="menu__item menu__item--accent"
-          onClick={() => setShowHome((v) => !v)}
-        >
-          <Icon name={showHome ? 'down' : 'download'} size={18} />
-          <span>
-            <strong>{isEn ? 'Add to home screen' : '加到手機主畫面'}</strong>
-            <em>
-              {isEn
-                ? 'One tap to open; no certificate, no fee, no server.'
-                : '一按即開，毋須憑證、毋須付費、毋須伺服器'}
-            </em>
-          </span>
-        </button>
-        {showHome && (
+        {embedded ? (
+          <StandaloneLink className="menu__item menu__item--accent">
+            <Icon name="external" size={18} />
+            <span>
+              <strong>{isEn ? 'Open standalone site (new tab)' : '開啟獨立版（新分頁）'}</strong>
+              <em>{isEn ? 'Portal storage is separate; use backup export/import to move data.' : '平台內資料與獨立版分開；請以匯出／匯入備份搬移資料'}</em>
+            </span>
+          </StandaloneLink>
+        ) : (
+          <button className="menu__item menu__item--accent" onClick={() => setShowHome((v) => !v)}>
+            <Icon name={showHome ? 'down' : 'download'} size={18} />
+            <span><strong>{isEn ? 'Add to home screen' : '加到手機主畫面'}</strong><em>{isEn ? 'One tap to open; no certificate, no fee, no server.' : '一按即開，毋須憑證、毋須付費、毋須伺服器'}</em></span>
+          </button>
+        )}
+        {!embedded && showHome && (
           <div className="menuguide">
             <ol>
               <li>
