@@ -15,6 +15,28 @@
 
 ---
 
+## 服務平台 iframe 嵌入
+
+部署會在全站回應以下安全標頭，只允許 ROVERBOOK 自身及正式服務平台嵌入：
+
+```text
+Content-Security-Policy: frame-ancestors 'self' https://member-portal-sigma-swart.vercel.app
+```
+
+服務平台須使用：
+
+```html
+<iframe src="https://roverbook.vercel.app/" allow="camera; clipboard-write"></iframe>
+```
+
+- **相機掃描**：獨立版不變；iframe 必須有 `allow="camera"`，而服務平台自身不可用 `Permissions-Policy` 禁止 camera。
+- **本機儲存**：跨網站 iframe 的 `localStorage` 可能按頂層網站分割，因此平台內與獨立版是兩份資料，舊資料不會自動共用。Safari／iPhone／iPad 的第三方儲存亦可能較短暫。
+- **搬移資料**：在舊資料所在版本開啟選單 →「匯出備份」下載 JSON；再於另一版本按「匯入備份」還原。建議平台內每次填寫後匯出備份。
+- **離線**：Service Worker 仍可使用，但須先在平台內連網載入一次；平台本身也必須仍可開啟。需要可靠長期離線使用時，建議開啟獨立版並加到主畫面。
+- 如平台設定 iframe `sandbox`，須允許 scripts、same-origin、forms、popups、modals 及 downloads，否則儲存、備份和確認對話框可能失效。
+
+---
+
 ## 1. 紙本頁碼（封面不計頁碼 + 內頁 1–42）
 
 官方《Rover Scout Record Book（v 20260727）》共 **43 張紙**：第 1 張是封面（官方不印頁碼），內頁印刷頁 **1–42**。

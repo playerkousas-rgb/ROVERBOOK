@@ -5,6 +5,7 @@ import { persistBook } from '../bookStore.js';
 import { navigate } from '../router.jsx';
 import { isBadgeProgressFile, isBookBackupFile } from '../roverbadgeBridge.js';
 import { useLang } from '../i18n.jsx';
+import { EmbedWelcomeNote } from '../components/EmbedNotice.jsx';
 
 export default function Welcome({ onReady }) {
   const { isEn } = useLang();
@@ -105,6 +106,8 @@ export default function Welcome({ onReady }) {
           不需要帳號、不需要登入。整本冊子存在你這部裝置；逐頁點擊就可以填寫，領袖可以即場簽名，
           亦可以生成二維碼讓領袖查看你選擇分享的章節。
         </p>
+
+        <EmbedWelcomeNote />
 
         <form className="welcome__form" onSubmit={create}>
           <div className="welcome__row">

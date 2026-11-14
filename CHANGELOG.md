@@ -1,5 +1,11 @@
 # Changelog · ROVERBOOK 樂行童軍紀錄冊
 
+## v2.2.1 (2026-11-14)
+
+- 全站設定 `Content-Security-Policy: frame-ancestors 'self' https://member-portal-sigma-swart.vercel.app`，只允許 ROVERBOOK 自身及正式服務平台嵌入；保留相機 `Permissions-Policy`。
+- 嵌入模式加入分割儲存、備份還原及 Safari 限制提示；選單可開啟獨立版，已有紀錄冊可直接匯出備份。
+- 相機掃描、完整備份／還原及 Service Worker 離線功能維持；快取升至 `v6`，加入 iframe 部署合約測試。
+
 ## v2.2.0 (2026-11-12)
 
 ### 紙本頁碼全面校正（以官方《Rover Scout Record Book v20260727》為唯一依據）

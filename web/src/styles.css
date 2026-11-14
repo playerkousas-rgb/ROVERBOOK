@@ -9701,3 +9701,18 @@ html[data-lang='en'] .fareas .frow__label {
 @media print {
   .fd-demo-watermark{position:fixed;inset:0}
 }
+
+/* 服務平台 iframe 嵌入提示；獨立版不渲染。 */
+.embednote { margin: 0 0 16px; padding: 12px 14px; border: 1.5px solid #87661f; border-left-width: 5px; border-radius: 8px; background: #f7efd6; color: #17213a; font-size: 12.5px; line-height: 1.55; }
+.embednote h2 { margin: 0 0 4px; font-family: var(--serif); font-size: 15px; }
+.embednote p, .embednote ol { margin: 0 0 6px; }
+.embednote ol { padding-left: 20px; }
+.embednote__warn { font-weight: 700; }
+.embedbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; padding: 7px 14px; background: #101a35; border-bottom: 1px solid rgba(216,184,113,.55); color: #f7f1df; font-size: 12px; line-height: 1.45; }
+.embedbar > span:first-child { flex: 1 1 260px; min-width: 0; }
+.embedbar strong { color: #e3c97c; }
+.embedbar__actions { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.embedbar__btn { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 4px 11px; border: 1px solid rgba(216,184,113,.65); border-radius: 999px; background: transparent; color: #f7f1df; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+.embedbar__btn--main { background: #d8b871; border-color: #d8b871; color: #101a35; }
+a.menu__item { color: inherit; text-decoration: none; }
+@media print { .embedbar, .embednote { display: none !important; } }
