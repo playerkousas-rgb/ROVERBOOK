@@ -46,7 +46,7 @@ const T = {
   zh: {
     cardTitle: '可選：與 ROVERBADGE 同步個人進度（只同步進度 · 零個人資料）',
     cardSub:
-      '不連接 ROVERBADGE 亦可使用完整紀錄冊、簽名、表格、列印與二維碼。連接後可免除重複輸入：由 BOOK 送往 ROVERBADGE 一律轉為「待領袖核實（pending）」；由 ROVERBADGE 錄入回 BOOK 時，只無條件相信領袖已核實的資料，未核實項目絕不錄入。',
+      '不連接 ROVERBADGE 亦可使用完整紀錄冊、簽名、表格、列印與二維碼。連接後可免除重複輸入：BOOK 主要是檢視端，ROVERBADGE 的服務紀錄會匯入本冊供檢視；由 BOOK 送往 ROVERBADGE 一律轉為「待領袖核實（pending）」，必須由領袖在 ROVERBADGE 內核實（CONFIRM）才可寫入；由 ROVERBADGE 錄入回 BOOK 時，只無條件相信領袖已核實的資料，未核實項目絕不錄入。',
     statsVerified: '已獲核實／簽署項目',
     statsPending: '本機新填待送交',
     statsAwaiting: 'ROVERBADGE 等候領袖 CONFIRM',
@@ -65,6 +65,8 @@ const T = {
     loggedInAs: '已連接 ROVERBADGE：{name}（{troop}）',
     imported: '已從 ROVERBADGE 錄入 {n} 項領袖已核實進度',
     importedNone: '沒有新的領袖已核實進度可錄入',
+    serviceImported: '（已錄入服務紀錄 {n} 筆）',
+    serviceOnly: '已從 ROVERBADGE 錄入服務紀錄 {n} 筆',
     submitted: '已送交 {n} 項進度至 ROVERBADGE 待領袖核實',
     submittedNone: '紀錄冊內的項目均已在 ROVERBADGE 核實或等候批核，無須重複送交',
     skippedPending: '（另有 {n} 項待領袖核實，未錄入）',
@@ -82,7 +84,7 @@ const T = {
   en: {
     cardTitle: 'Optional: Sync Personal Progress with ROVERBADGE (Progress Only · Zero PII)',
     cardSub:
-      'Everything works without ROVERBADGE: full record book, signatures, forms, printing, and QR. Connecting saves double typing: BOOK → ROVERBADGE always submits as “Pending Leader Confirmation”; ROVERBADGE → BOOK trusts only leader-confirmed items.',
+      'Everything works without ROVERBADGE: full record book, signatures, forms, printing, and QR. Connecting saves double typing: BOOK is primarily for viewing — ROVERBADGE service records are imported into this book for viewing; BOOK → ROVERBADGE always submits as “Pending Leader Confirmation” and a leader must CONFIRM in ROVERBADGE before anything is written; ROVERBADGE → BOOK trusts only leader-confirmed items.',
     statsVerified: 'Leader-verified items',
     statsPending: 'Locally filled, pending submission',
     statsAwaiting: 'Awaiting leader CONFIRM in ROVERBADGE',
@@ -101,6 +103,8 @@ const T = {
     loggedInAs: 'Connected to ROVERBADGE: {name} ({troop})',
     imported: 'Imported {n} leader-verified items from ROVERBADGE',
     importedNone: 'No new leader-verified progress to import',
+    serviceImported: ' ({n} service record(s) imported)',
+    serviceOnly: 'Imported {n} service record(s) from ROVERBADGE',
     submitted: 'Sent {n} items to ROVERBADGE for leader confirmation',
     submittedNone: 'All recorded items are already confirmed or pending in ROVERBADGE',
     skippedPending: ' ({n} pending items skipped)',
@@ -212,7 +216,12 @@ export default function RoverBadgeSyncCard({ readOnly: readOnlyProp = false } = 
       setRemoteConfirmed(confirmedIds);
       setRemotePendingIds(pendingIds);
 
-      const json = { progress: { [sid]: progress } };
+      // 服務紀錄由代理層經獨立 getServiceRecords 附在 load 回應，
+      // 必須一併傳入匯入邏輯，否則 BOOK 內會看不到服務紀錄（唯讀檢視）。
+      const json = {
+        progress: { [sid]: progress },
+        serviceRecords: Array.isArray(data.serviceRecords) ? data.serviceRecords : [],
+      };
       const previewDraft = structuredClone(book);
       if (!previewDraft.member.scoutId) {
         previewDraft.member.scoutId = sid;
@@ -234,8 +243,13 @@ export default function RoverBadgeSyncCard({ readOnly: readOnlyProp = false } = 
       const pendingSuffix = result.skippedPending?.length
         ? t.skippedPending.replace('{n}', result.skippedPending.length)
         : '';
+      const serviceSuffix = result.serviceImported
+        ? t.serviceImported.replace('{n}', result.serviceImported)
+        : '';
       if (result.imported) {
-        push(t.imported.replace('{n}', result.imported) + pendingSuffix);
+        push(t.imported.replace('{n}', result.imported) + serviceSuffix + pendingSuffix);
+      } else if (result.serviceImported) {
+        push(t.serviceOnly.replace('{n}', result.serviceImported) + pendingSuffix);
       } else {
         push(t.importedNone + pendingSuffix);
       }
@@ -431,7 +445,11 @@ export default function RoverBadgeSyncCard({ readOnly: readOnlyProp = false } = 
         const pendingSuffix = result.skippedPending?.length
           ? t.skippedPending.replace('{n}', result.skippedPending.length)
           : '';
-        if (result.imported) push(t.offlineImport.replace('{n}', result.imported) + pendingSuffix);
+        const serviceSuffix = result.serviceImported
+          ? t.serviceImported.replace('{n}', result.serviceImported)
+          : '';
+        if (result.imported) push(t.offlineImport.replace('{n}', result.imported) + serviceSuffix + pendingSuffix);
+        else if (result.serviceImported) push(t.serviceOnly.replace('{n}', result.serviceImported) + pendingSuffix);
         else push(t.importedNone + pendingSuffix);
       } catch (err) {
         push(t.errImport.replace('{m}', err.message || ''), 'error');

@@ -211,6 +211,9 @@ const setNativeInput = (el, val) => {
             success: true,
             progress: { 'L1-ACT-01': { date: '2026-09-01', confirmedByBadge: true } },
             pendingRequests: [],
+            serviceRecords: [
+              { id: 'svc-ui-1', activity: '賣旗日', date: '2026-04-01', hours: 4, place: '紅磡' },
+            ],
           }),
         };
       }
@@ -275,6 +278,11 @@ const setNativeInput = (el, val) => {
     '登入後解鎖兩個 ROVERBADGE 進度檔交換按鈕',
   );
   ok(mounted.getBook().progress['L1-ACT-01']?.confirmedByBadge === true, '登入後自動從 ROVERBADGE 錄入領袖已核實項目');
+  ok(
+    mounted.getBook().service?.some((r) => r.badgeRecordId === 'svc-ui-1' && r.post === '賣旗日' && r.from === '2026-04-01'),
+    '登入後自動把 ROVERBADGE 服務紀錄匯入本冊 service 供檢視',
+  );
+  ok(host.textContent.includes('已錄入服務紀錄 1 筆'), '同步提示訊息顯示已錄入服務紀錄筆數');
   ok(JSON.parse(window.sessionStorage.getItem('roverbook.roverbadge.member.v1') || 'null')?.ymis === '0000081420', 'sessionStorage 保存正規化 ymis');
 
   // 登出後重新鎖定

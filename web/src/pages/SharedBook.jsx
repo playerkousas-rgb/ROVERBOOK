@@ -213,6 +213,8 @@ export function SnapshotView({ snapshot: s, createdAt, views = 0, flag = '公開
                     <strong>{r.post}</strong>
                     <span>{[r.from, r.to].filter(Boolean).join(' – ')}</span>
                     {r.appointedBy && <em>委任：{r.appointedBy}</em>}
+                    {r.place && <em>地點：{r.place}</em>}
+                    {(r.hours !== '' && r.hours != null) && <em>時數：{r.hours}</em>}
                     <Sig sig={r.signature} />
                   </li>
                 ))}
