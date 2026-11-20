@@ -10,6 +10,14 @@
    直接寫入動作（save / saveOtherBadge / reviewRequest …）一律 403 Forbidden，
    杜絕成員將自填進度偽裝成已核實。
 
+   服務紀錄：上游 Apps Script 的 action:'load' 只回傳進度與活動徽章，
+   不含服務紀錄；服務紀錄必須以獨立的 action:'getServiceRecords'
+   （{ token, target_ymis }）讀取。因此本代理的 load 會在伺服器端
+   同步多呼叫一次 getServiceRecords，清洗後附在回應的 serviceRecords。
+   getServiceRecords 只供本代理內部使用，不對客戶端開放（直接呼叫仍 403）：
+   BOOK 是檢視端，BOOK → BADGE 的任何寫入仍只可經 submitPending
+   轉為「待領袖核實（pending）」，須領袖在 BADGE 內 CONFIRM 才算完成。
+
    已登記旅團清單（GET）：
    - 回傳 `upstreamOk` 供前端區分「清單真的為空」與「暫時讀不到清單」；
    - 略過 `connected === false` 的未接通項目；
@@ -271,6 +279,39 @@ function filterPersonalConfirmedLoad(json, scoutId) {
   return out;
 }
 
+/**
+ * 清洗上游 getServiceRecords 的紀錄為「零個人資料」格式。
+ * 上游格式：{ id, activity, date, hours, place, detail, status, note, … }
+ * 規則：
+ *  - 排除 status === 'rejected'（被退回的紀錄不應出現在紀錄冊）；
+ *  - 只保留 id / activity / date / hours / place，detail、status、note
+ *    及任何其他欄位（姓名、電郵等）一律剝除；
+ *  - 沒有活動名稱亦沒有日期的空紀錄略過。
+ * @param {unknown} records 上游 records 陣列
+ * @returns {{ id: string, activity: string, date: string, hours: (string|number), place: string }[]}
+ */
+export function cleanServiceRecords(records) {
+  if (!Array.isArray(records)) return [];
+  const out = [];
+  for (const rec of records) {
+    if (!rec || typeof rec !== 'object' || Array.isArray(rec)) continue;
+    if (String(rec.status ?? '').trim().toLowerCase() === 'rejected') continue;
+    const cleaned = {
+      id: String(rec.id ?? '').trim(),
+      activity: String(rec.activity ?? '').trim(),
+      date: String(rec.date ?? '').trim(),
+      hours:
+        typeof rec.hours === 'number' && Number.isFinite(rec.hours)
+          ? rec.hours
+          : String(rec.hours ?? '').trim(),
+      place: String(rec.place ?? '').trim(),
+    };
+    if (!cleaned.activity && !cleaned.date) continue;
+    out.push(cleaned);
+  }
+  return out;
+}
+
 // 小幫手：此模組內用的正規化（避免跨模組相依）
 function normalizeScoutIdInFn(id) {
   const raw = String(id === undefined || id === null ? '' : id).trim();
@@ -401,13 +442,30 @@ export default async function handler(req, res) {
       }
       const up = await forwardProxy('load', { token }, troopId);
       const filtered = filterPersonalConfirmedLoad(up, normalizeScoutIdInFn(scoutId));
+      // 上游 load 不含服務紀錄，須同步另呼叫 getServiceRecords 讀取本人紀錄。
+      // 此為唯讀檢視資料（BADGE → BOOK）；失敗時安全降級為 []，
+      // 絕不可令整個 load 失敗，亦不可因此開放任何直接寫入 BADGE 的路徑。
+      let serviceRecords = [];
+      try {
+        const svc = await forwardProxy(
+          'getServiceRecords',
+          { token, target_ymis: filtered.ymis },
+          troopId,
+        );
+        if (svc && svc.success !== false) {
+          serviceRecords = cleanServiceRecords(svc.records);
+        }
+      } catch {
+        serviceRecords = [];
+      }
       return sendJson(res, 200, {
         success: true,
         ymis: filtered.ymis,
         progress: filtered.progress,
         otherBadges: filtered.otherBadges,
         pendingRequests: filtered.pendingRequests,
-        _note: '僅回傳本人已核實進度與本人待批請求，已剝除 members 與所有其他團員資料',
+        serviceRecords,
+        _note: '僅回傳本人已核實進度、本人待批請求與本人服務紀錄（已剔除 rejected 及個人資料）；BOOK 為檢視端，BOOK → BADGE 寫入仍須經待領袖核實',
       });
     }
 

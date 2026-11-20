@@ -254,6 +254,10 @@ export function collectPendingForRoverBadge(book, remoteConfirmed = [], remotePe
  * 匯出供 ROVERBADGE 使用的進度檔（離線輔助）。
  * 鐵律：只輸出「待領袖核實」進度，零個人資料，不含已核實 progress，
  * 防止成員把自填檔案偽裝成已核實進度倒灌回 ROVERBADGE。
+ * BOOK 是檢視端：由 BADGE 匯入的服務紀錄（book.service 内
+ * source: 'roverbadge' 的行）只供本冊檢視，絕不經此匯出寫回 BADGE；
+ * BOOK → BADGE 的一切寫入只可走 pendingRequests，須領袖在 BADGE
+ * 內 CONFIRM 才算完成（成員不可自行寫入已核實資料）。
  * schema: 'roverbadge.pending.v1' / status: 'pending' / confirmed: false
  */
 export function exportForRoverBadge(book, troopId = '') {
@@ -293,6 +297,12 @@ export function exportForRoverBadge(book, troopId = '') {
  *  - 移除「找不到 sid fallback 到第一位成員」及「按中文姓名配對」的危險邏輯；
  *  - 本機空白簿尚未填 SCOUT ID 時，只在匯入單一本人資料（如雲端登入本人 ymis）
  *    時自動綁定該 SCOUT ID。
+ *  - 服務紀錄：讀取 json.serviceRecords（上游須經獨立 getServiceRecords
+ *    取得，load 本身不含），寫入本冊服務紀錄 book.service 作檢視；
+ *    以 badgeRecordId 及「date|活動名稱」去重，絕不覆寫或修改本機手寫行；
+ *    status === 'rejected' 一律略過（代理層已清洗，前端再防禦一次）。
+ *    此為單向唯讀匯入（BADGE → BOOK）：匯入的服務紀錄不會經
+ *    exportForRoverBadge / collectPendingForRoverBadge 寫回 BADGE。
  */
 export function importFromRoverBadge(json, book) {
   if (!json || typeof json !== 'object') throw new Error('檔案格式不正確');
@@ -346,15 +356,22 @@ export function importFromRoverBadge(json, book) {
     }
   }
 
+  const rawServiceRecords = Array.isArray(json.serviceRecords) ? json.serviceRecords : [];
+
   if (!progressMap) {
     if (Object.keys(direct).length) {
       progressMap = direct;
       matchedBy = '直接進度表';
+    } else if (rawServiceRecords.length) {
+      // 只有服務紀錄、沒有進度時亦可匯入（例如成員暫未有已核實進度）
+      progressMap = {};
+      matchedBy = '服務紀錄';
     } else {
       throw new Error('找不到進度資料（需要 progress / progress_mock 或 {項目ID: 日期}）');
     }
   }
 
+  if (!book.progress || typeof book.progress !== 'object') book.progress = {};
   const imported = [];
   const skipped = [];
   const skippedPending = [];
@@ -386,6 +403,71 @@ export function importFromRoverBadge(json, book) {
     imported.push(itemId);
   });
 
+  // ------------------------------------------------------------ 服務紀錄
+  // BADGE → BOOK 唯讀檢視：寫入 book.service（服務紀錄表），只新增、不覆寫。
+  if (!Array.isArray(book.service)) book.service = [];
+  const serviceTextOf = (row) =>
+    String(row?.post || row?.activity || row?.text || '').trim();
+  const serviceDateOf = (row) => String(row?.from || row?.date || '').trim();
+  const seenBadgeIds = new Set(
+    book.service.map((r) => String(r?.badgeRecordId ?? '').trim()).filter(Boolean),
+  );
+  const seenDateText = new Set(
+    book.service.map((r) => `${serviceDateOf(r)}|${serviceTextOf(r)}`).filter((k) => k !== '|'),
+  );
+  let serviceImported = 0;
+  let serviceSkipped = 0;
+  for (const rec of rawServiceRecords) {
+    if (!rec || typeof rec !== 'object' || Array.isArray(rec)) {
+      serviceSkipped++;
+      continue;
+    }
+    // 代理層已剔除 rejected；檔案匯入未經代理時在此再防禦一次
+    if (String(rec.status ?? '').trim().toLowerCase() === 'rejected') {
+      serviceSkipped++;
+      continue;
+    }
+    const badgeRecordId = String(rec.id ?? rec.badgeRecordId ?? '').trim();
+    const activity = String(rec.activity ?? rec.post ?? rec.text ?? '').trim();
+    const date = String(rec.date ?? rec.from ?? '').trim();
+    if (!activity && !date) {
+      serviceSkipped++;
+      continue;
+    }
+    // 去重（一）：上游紀錄 ID 已匯入過
+    if (badgeRecordId && seenBadgeIds.has(badgeRecordId)) {
+      serviceSkipped++;
+      continue;
+    }
+    // 去重（二）：同日同活動已存在（包括本機手寫行）→ 保留手寫行，不覆寫、不重複新增
+    const dateTextKey = `${date}|${activity}`;
+    if (activity && seenDateText.has(dateTextKey)) {
+      serviceSkipped++;
+      continue;
+    }
+    book.service.push({
+      id: uid('srv'),
+      badgeRecordId,
+      post: activity,
+      activity,
+      from: date,
+      date,
+      to: '',
+      appointedBy: '',
+      place: String(rec.place ?? '').trim(),
+      hours:
+        typeof rec.hours === 'number' && Number.isFinite(rec.hours)
+          ? rec.hours
+          : String(rec.hours ?? '').trim(),
+      // 只攜帶清洗後的檢視欄位：detail / status / note 等不會寫入本冊
+      source: 'roverbadge',
+      signature: null,
+    });
+    if (badgeRecordId) seenBadgeIds.add(badgeRecordId);
+    seenDateText.add(dateTextKey);
+    serviceImported++;
+  }
+
   // Zero PII：絕不從 json.members 抄寫姓名、團籍、入團日期等個人資料。
   // 僅在本機空白簿且無 SCOUT ID 時，自動綁定單一來源的 SCOUT ID。
   if (!scoutId(member) && sourceSid) {
@@ -399,6 +481,9 @@ export function importFromRoverBadge(json, book) {
     skipped,
     skippedPending,
     matchedBy,
+    serviceImported,
+    serviceSkipped,
+    serviceRecords: serviceImported,
   };
 }
 

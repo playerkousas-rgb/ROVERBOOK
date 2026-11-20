@@ -1,5 +1,9 @@
 # Changelog · ROVERBOOK 樂行童軍紀錄冊
 
+## 未發布
+
+- **修復 ROVERBADGE 服務紀錄同步／匯入後在 BOOK 看不到**：上游 `action: 'load'` 本身不含服務紀錄，`api/roverbadge.js` 的 `load` 現同步另呼叫上游 `getServiceRecords`（`{ token, target_ymis }`），失敗時安全降級為 `[]`；清洗時剔除 `status === 'rejected'`，只保留 `id / activity / date / hours / place`（零個人資料）附於回應 `serviceRecords`。`shared/book.js` 的 `importFromRoverBadge` 將其寫入本冊 `book.service` 服務紀錄供檢視，以 `badgeRecordId` 及 `date|活動名稱` 去重且不覆寫本機手寫行，並回傳 `serviceImported`；同步卡提示會顯示已錄入服務紀錄筆數。BOOK 為檢視端：服務紀錄只作 BADGE → BOOK 唯讀匯入，BOOK → BADGE 的寫入仍只經「待領袖核實（pending）」，須領袖在 BADGE 內 CONFIRM；客戶端直接呼叫 `getServiceRecords` 仍為 403。
+
 ## v2.2.1 (2026-11-14)
 
 - 全站設定 `Content-Security-Policy: frame-ancestors 'self' https://member-portal-sigma-swart.vercel.app`，只允許 ROVERBOOK 自身及正式服務平台嵌入；保留相機 `Permissions-Policy`。

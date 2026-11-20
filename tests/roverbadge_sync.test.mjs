@@ -22,7 +22,7 @@ import {
   scoutId,
   ITEM_INDEX,
 } from '../shared/book.js';
-import roverbadgeHandler, { DEFAULT_BADGE_ORIGIN, resolveBadgeOrigin } from '../api/roverbadge.js';
+import roverbadgeHandler, { DEFAULT_BADGE_ORIGIN, resolveBadgeOrigin, cleanServiceRecords } from '../api/roverbadge.js';
 
 process.env.ROVERBADGE_ORIGIN = 'https://roverbadge.vercel.app';
 
@@ -227,6 +227,83 @@ async function main() {
     expectThrows(() => importFromRoverBadge(json, b), '未找到本機 sid 時不誤抓第一位成員／按姓名配對（應拋錯）');
   }
 
+  // ================================================================ 3b. 服務紀錄 BADGE → BOOK（唯讀檢視，不覆寫手寫，不寫回 BADGE）
+  {
+    const b = makeBook();
+    // 本機手寫服務紀錄（不應被覆寫或重複匯入）
+    const handwritten = {
+      id: 'local-1',
+      post: '社區清潔',
+      from: '2026-03-01',
+      to: '',
+      appointedBy: '示範團長',
+      signature: { png: 'data:image/svg+xml;base64,handwritten' },
+    };
+    b.service = [handwritten];
+    const json = {
+      progress: { '0000081420': { [ACT]: '2026-01-10' } },
+      serviceRecords: [
+        // 與手寫行同日同活動 → date|text 去重，保留手寫行
+        { id: 'svc-1', activity: '社區清潔', date: '2026-03-01', hours: 3, place: '社區中心', detail: '不應寫入', status: 'approved', note: '不應寫入' },
+        { id: 'svc-2', activity: '賣旗日', date: '2026-04-01', hours: '4', place: '紅磡', detail: '不應寫入', status: 'approved', note: '不應寫入' },
+        { id: 'svc-3', activity: '被退回活動', date: '2026-05-01', hours: 2, place: '旅部', status: 'rejected' },
+      ],
+    };
+    const result = importFromRoverBadge(json, b);
+    ok(result.serviceImported === 1, `服務紀錄只新增未重複／未被退回的 1 筆（serviceImported = ${result.serviceImported}）`);
+    ok(result.serviceRecords === 1, '回傳 serviceRecords 筆數與 serviceImported 一致');
+    ok(b.service.length === 2, '服務紀錄寫入 book.service（手寫 1 + 匯入 1）');
+    ok(b.service[0] === handwritten && b.service[0].signature.png.includes('handwritten'), '本機手寫服務紀錄原封不動（不覆寫）');
+    const added = b.service.find((r) => r.badgeRecordId === 'svc-2');
+    ok(Boolean(added), '匯入行以 badgeRecordId 記錄上游 id 去重');
+    ok(added.post === '賣旗日' && added.from === '2026-04-01', '匯入行映射至服務紀錄 post／from 欄位供檢視');
+    ok(added.place === '紅磡' && String(added.hours) === '4', '匯入行保留 place／hours 檢視欄位');
+    ok(added.source === 'roverbadge', '匯入行標記 source = roverbadge（唯讀檢視來源）');
+    ok(!('detail' in added) && !('status' in added) && !('note' in added), '匯入行不攜帶 detail／status／note（零多餘資料）');
+
+    // 重複匯入同一批 → badgeRecordId 去重，冪等
+    const again = importFromRoverBadge(json, b);
+    ok(again.serviceImported === 0 && b.service.length === 2, '重複匯入同一批服務紀錄不重複新增（冪等）');
+
+    // 只有服務紀錄、沒有進度時亦可匯入，不應拋錯
+    const b2 = makeBook();
+    const onlySvc = importFromRoverBadge(
+      { serviceRecords: [{ id: 'svc-9', activity: '探訪長者', date: '2026-06-01', hours: 2, place: '安老院' }] },
+      b2,
+    );
+    ok(onlySvc.serviceImported === 1 && b2.service[0].post === '探訪長者', '只有服務紀錄（無進度）時亦可匯入');
+  }
+
+  // cleanServiceRecords：剔除 rejected、只保留 id/activity/date/hours/place
+  {
+    const cleaned = cleanServiceRecords([
+      { id: 'a', activity: '賣旗日', date: '2026-04-01', hours: 4, place: '紅磡', detail: 'x', status: 'approved', note: 'y', name: '某人', email: 'a@example.com' },
+      { id: 'b', activity: '被退回', date: '2026-05-01', hours: 2, place: '旅部', status: 'rejected' },
+      null,
+      'junk',
+      { id: 'c', activity: '', date: '', hours: '', place: '' },
+    ]);
+    ok(cleaned.length === 1 && cleaned[0].id === 'a', 'cleanServiceRecords 剔除 rejected／空紀錄／非物件');
+    ok(
+      JSON.stringify(Object.keys(cleaned[0]).sort()) === JSON.stringify(['activity', 'date', 'hours', 'id', 'place']),
+      'cleanServiceRecords 只保留 id／activity／date／hours／place（零個人資料）',
+    );
+    ok(cleanServiceRecords(null).length === 0 && cleanServiceRecords('x').length === 0, 'cleanServiceRecords 非陣列安全降級為 []');
+  }
+
+  // BOOK → BADGE 鐵律不變：匯入的服務紀錄不會被匯出寫回 BADGE，只產生 pending 待領袖核實
+  {
+    const b = makeBook();
+    b.progress[ACT] = { date: '2026-03-01' };
+    importFromRoverBadge(
+      { serviceRecords: [{ id: 'svc-2', activity: '賣旗日', date: '2026-04-01', hours: 4, place: '紅磡' }] },
+      b,
+    );
+    const out = exportForRoverBadge(b);
+    ok(!('serviceRecords' in out) && !('service' in out), '匯出往 BADGE 不含服務紀錄（BOOK 只檢視，不直接寫入 BADGE）');
+    ok(out.status === 'pending' && out.confirmed === false, 'BOOK → BADGE 仍只產生 pending，須領袖核實才寫入');
+  }
+
   // ================================================================ 4. /api/roverbadge 守衛
   restoreFetch();
   // GET 旅團清單
@@ -245,9 +322,9 @@ async function main() {
 
   // 直接寫入動作一律 403
   installFetch(() => jsonResponse({ success: true })); // 不應被呼叫
-  for (const action of ['save', 'saveOtherBadge', 'reviewRequest']) {
+  for (const action of ['save', 'saveOtherBadge', 'reviewRequest', 'getServiceRecords']) {
     const { res } = await post(action, { troopId: '0082', token: 'tok' });
-    ok(res.statusCode === 403, `POST action=${action} 回傳 403 Forbidden`);
+    ok(res.statusCode === 403, `POST action=${action} 回傳 403 Forbidden（getServiceRecords 只供代理內部同步呼叫，不對客戶端開放直接寫入／讀取）`);
   }
 
   // submitPending：硬性轉發為 requestComplete，狀態 pending
@@ -300,6 +377,67 @@ async function main() {
     ok(Array.isArray(res.body.pendingRequests) && res.body.pendingRequests.some((p) => p.itemId === LEADER), 'load 回傳本人 pendingRequests');
     ok(!res.body.members, 'load 徹底剝除 members 名單');
     ok(res.body.progress['9999999999'] === undefined, 'load 不洩漏其他成員進度');
+    ok(Array.isArray(res.body.serviceRecords), 'load 回應附有 serviceRecords 陣列（上游未支援時安全降級）');
+  }
+
+  // load 同步呼叫上游 getServiceRecords：以 { token, target_ymis } 讀取，清洗後附在 serviceRecords
+  {
+    const upstreamCalls = [];
+    installFetch((url, init) => {
+      const body = JSON.parse(init.body || '{}');
+      upstreamCalls.push(body);
+      // 相容兩種轉發形狀：遠端 proxy { action, troopId, data } / 本地旅團 { ...data, action, apiKey }
+      const action = body.action;
+      const data = body.data && typeof body.data === 'object' ? body.data : body;
+      if (action === 'load') {
+        return jsonResponse({
+          members: [
+            {
+              scoutId: '0000081420',
+              progress: { [ACT]: '2026-01-10' },
+              otherBadges: {},
+              pendingRequests: [],
+            },
+          ],
+        });
+      }
+      if (action === 'getServiceRecords') {
+        ok(data.token === 'tok', '代理以 token 呼叫上游 getServiceRecords');
+        ok(data.target_ymis === '0000081420', '代理以 target_ymis（本人 ymis）呼叫上游 getServiceRecords');
+        return jsonResponse({
+          success: true,
+          records: [
+            { id: 'svc-1', activity: '賣旗日', date: '2026-04-01', hours: 4, place: '紅磡', detail: '不應外洩', status: 'approved', note: '不應外洩', name: '某人' },
+            { id: 'svc-2', activity: '被退回活動', date: '2026-05-01', hours: 2, place: '旅部', status: 'rejected' },
+          ],
+        });
+      }
+      return jsonResponse({ error: 'unexpected action: ' + action }, 400);
+    });
+    const { res } = await post('load', { troopId: '0082', scoutId: '0000081420', token: 'tok' });
+    ok(res.statusCode === 200, 'load（連同服務紀錄）回傳 200');
+    ok(upstreamCalls.some((c) => c.action === 'getServiceRecords'), 'load 有同步呼叫上游 getServiceRecords（load 本身不含服務紀錄）');
+    ok(Array.isArray(res.body.serviceRecords) && res.body.serviceRecords.length === 1, 'load 附回已清洗服務紀錄 1 筆（rejected 已剔除）');
+    const rec = res.body.serviceRecords?.[0] || {};
+    ok(rec.id === 'svc-1' && rec.activity === '賣旗日' && rec.date === '2026-04-01' && rec.place === '紅磡', 'serviceRecords 保留 id／activity／date／place');
+    ok(!('detail' in rec) && !('status' in rec) && !('note' in rec) && !('name' in rec), 'serviceRecords 剝除 detail／status／note／姓名（零個人資料）');
+  }
+
+  // getServiceRecords 失敗時安全降級為 []，load 本身仍成功
+  installFetch((url, init) => {
+    const body = JSON.parse(init.body || '{}');
+    if (body.action === 'load') {
+      return jsonResponse({
+        members: [{ scoutId: '0000081420', progress: { [ACT]: '2026-01-10' }, otherBadges: {}, pendingRequests: [] }],
+      });
+    }
+    if (body.action === 'getServiceRecords') return jsonResponse({ success: false, error: 'gas down' }, 500);
+    return jsonResponse({ error: 'unexpected action' }, 400);
+  });
+  {
+    const { res } = await post('load', { troopId: '0082', scoutId: '0000081420', token: 'tok' });
+    ok(res.statusCode === 200 && res.body.progress?.[ACT] === '2026-01-10', 'getServiceRecords 失敗時 load 進度仍成功回傳');
+    ok(Array.isArray(res.body.serviceRecords) && res.body.serviceRecords.length === 0, 'getServiceRecords 失敗時 serviceRecords 安全降級為 []');
   }
 
   // login：轉發 proxy login，回傳 {success, token, ymis}，剝除姓名與電郵

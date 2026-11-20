@@ -364,6 +364,7 @@ Content-Security-Policy: frame-ancestors 'self' https://member-portal-sigma-swar
   - **純靜態／離線環境**下會自動顯示「獨立模式」，不影響任何本機填寫、簽名、表格與列印功能。
 - **ROVERBADGE 進度檔交換鎖定原則**：匯出「待領袖核實」進度檔與從 ROVERBADGE 匯入「領袖已核實」進度檔，必須先在數位附錄連接並登入 ROVERBADGE 帳戶後方可使用；封面「匯入備份」、目錄選單與附錄「本機儲存」的完整紀錄冊備份 JSON／還原備份 JSON 會明確拒絕 ROVERBADGE 進度檔並引導至數位附錄登入，而**完整紀錄冊備份與還原永遠維持 100% 離線可用**。
 - 匯入時先配 SCOUT ID（自動補齊 10 位數字前導零）、再配姓名，不會覆寫本機已有的日期與簽名；只交換「項目＋日期」，不交換個人資料或簽名。
+- **服務紀錄（BADGE → BOOK 唯讀檢視）**：上游 `load` 不含服務紀錄，橋接層會同步另呼叫 `getServiceRecords`（`{ token, target_ymis }`，失敗降級 `[]`），剔除 `rejected` 並只保留 `id / activity / date / hours / place` 附於 `load` 回應的 `serviceRecords`；前端匯入後寫入本冊服務紀錄（`book.service`），以 `badgeRecordId` 及 `date|活動名稱` 去重、不覆寫手寫行，同步提示會顯示錄入筆數。BOOK 主要是檢視端：若要由 BOOK 寫往 BADGE，一律只可送「待領袖核實（pending）」，必須由領袖在 BADGE 內核實（CONFIRM）才會寫入，成員不可直接寫入已核實資料。
 
 ## 21. 開始使用
 
