@@ -6,6 +6,7 @@ import { download, clearBook, latestShare, slugify } from '../bookStore.js';
 import { navigate } from '../router.jsx';
 import { APP_VERSION, today, progressedCount, newBook } from '@shared/book.js';
 import RoverBadgeSyncCard from '../components/RoverBadgeSyncCard.jsx';
+import EmbedWhitelistCard from '../components/EmbedWhitelistCard.jsx';
 import { isBadgeProgressFile, isBookBackupFile } from '../roverbadgeBridge.js';
 import { FORM_META, FORM_ORDER, formStatus } from '@shared/forms.js';
 import { ShowQrButton } from '../components/ShowQrDialog.jsx';
@@ -148,6 +149,8 @@ export default function Appendix() {
             </div>
 
             <RoverBadgeSyncCard />
+
+            <EmbedWhitelistCard />
 
             <div className="appendix-card">
               <h4>

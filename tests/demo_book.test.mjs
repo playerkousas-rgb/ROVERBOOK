@@ -5,6 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  APP_VERSION,
+  SW_VERSION,
   demoBook,
   newBook,
   isDemoBook,
@@ -141,10 +143,10 @@ const lock = JSON.parse(read('package-lock.json'));
 const bookSrc = read('shared/book.js');
 const sw = read('web/public/sw.js');
 const html = read('web/index.html');
-check(pkg.version === '2.2.1' && lock.version === '2.2.1', 'package.json 及 package-lock.json 已升至 2.2.1');
-check(bookSrc.includes("APP_VERSION = 'v2.2.1'"), 'APP_VERSION = v2.2.1');
-check(sw.includes("VERSION = 'v6'"), 'Service Worker 快取版本已升至 v6');
-check(html.includes('v2.2.1'), 'index.html 版本已同步');
+check(pkg.version === '2.3.0' && lock.version === '2.3.0', 'package.json 及 package-lock.json 已升至 2.3.0');
+check(bookSrc.includes(`APP_VERSION = '${APP_VERSION}'`), `APP_VERSION = ${APP_VERSION}`);
+check(sw.includes(`VERSION = '${SW_VERSION}'`), `Service Worker 快取版本已升至 ${SW_VERSION}`);
+check(html.includes(APP_VERSION), 'index.html 版本已同步');
 
 console.log(`\n${pass} 項通過、${fail} 項失敗`);
 process.exit(fail === 0 ? 0 : 1);

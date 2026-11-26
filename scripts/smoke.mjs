@@ -1162,15 +1162,15 @@ await screen({
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
   const html = fs.readFileSync(path.join(ROOT, 'web', 'index.html'), 'utf8');
   const swSrc = fs.readFileSync(path.join(ROOT, 'web', 'public', 'sw.js'), 'utf8');
-  const { APP_VERSION } = await import('../shared/book.js');
+  const { APP_VERSION, SW_VERSION } = await import('../shared/book.js');
   const installBlock = swSrc.match(/addEventListener\('install'[\s\S]*?\}\);/)?.[0] || '';
   const noAutoSkip = !installBlock.includes('skipWaiting');
-  const swV5 = swSrc.includes("VERSION = 'v5'") && swSrc.includes('roverbook-');
+  const swOk = swSrc.includes(`VERSION = '${SW_VERSION}'`) && swSrc.includes('roverbook-');
   const verMatch =
     `v${pkg.version}` === APP_VERSION &&
     html.includes(`content="${APP_VERSION}"`) &&
     html.includes(`window.APP_VERSION = '${APP_VERSION}'`);
-  report(verMatch && swV5 && noAutoSkip, `版本同步：package / APP_VERSION / index.html / sw.js (${APP_VERSION})`);
+  report(verMatch && swOk && noAutoSkip, `版本同步：package / APP_VERSION / index.html / sw.js (${APP_VERSION} / sw ${SW_VERSION})`);
 }
 
 {
@@ -1216,6 +1216,29 @@ await screen({
   path: '/p/appendix',
   expect: ['示範紀錄冊不可與 ROVERBADGE 同步', '匯出完整備份 JSON', '還原備份 JSON'],
   wait: 520,
+});
+
+await screen({
+  name: '附錄：嵌入白名單卡顯示清單、CSP 與核實結果',
+  path: '/p/appendix',
+  expect: ['嵌入白名單', 'member-portal-sigma-swart.vercel.app', 'frame-ancestors', 'iframe'],
+  wait: 520,
+  interact: async (doc) => {
+    const input = doc.querySelector('#embedwl-origin');
+    if (!input) throw new Error('找不到白名單核實輸入框');
+    Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(
+      input,
+      'https://evil.example.com',
+    );
+    input.dispatchEvent(new window.Event('input', { bubbles: true }));
+    const go = [...doc.querySelectorAll('.embedwl__checkrow button')].find((b) => b.textContent.includes('核實'));
+    if (!go) throw new Error('找不到核實按鈕');
+    go.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 300));
+    const res = doc.querySelector('.embedwl__result');
+    if (!res || !res.textContent.includes('未列入白名單')) throw new Error('核實結果未顯示「未列入白名單」');
+    if (!res.className.includes('embedwl__result--no')) throw new Error('未列入來源應顯示紅色結果');
+  },
 });
 
 {

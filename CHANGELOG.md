@@ -1,6 +1,18 @@
 # Changelog · ROVERBOOK 樂行童軍紀錄冊
 
-## 未發布
+## v2.3.0 (2026-11-26)
+
+### 嵌入白名單系統（iframe embed whitelist）
+
+- **單一真相**：`shared/embed.js` 新增 `EMBED_WHITELIST`（預設只含正式服務平台 `https://member-portal-sigma-swart.vercel.app`）、`normalizeEmbedOrigin`／`parseEmbedWhitelist`／`buildFrameAncestors`／`isOriginAllowed` 等純函式；`FRAME_ANCESTORS` 改由白名單推導（向後兼容）。只接受 https 來源（路徑自動剝除），拒絕萬用字元、帳密、非 http(s) scheme 與 `null`；`http://localhost`／`127.0.0.1` 只在非 Vercel 開發環境或 `ROVERBOOK_PROXY_TEST=1` 自架測試容許。
+- **自架伺服器即時生效**：`server/whitelist.js` 合併預設清單 + 環境變數 `EMBED_WHITELIST`（逗號／分號／空白分隔，不合格項目剔除並報告）；`server/index.js` 新增全站安全標頭中介層，把由白名單推導的 CSP `frame-ancestors`、`X-Content-Type-Options`、`Referrer-Policy`、`Permissions-Policy` 套到每個回應（包括靜態檔與 Vite dev）——自架部署首次與 Vercel 有同一套嵌入管制。啟動時印出生效白名單。
+- **Vercel 部署烤同步**：`scripts/sync-embed-headers.mjs`（`npm run sync:embed`，另支援 `-- --check`）把 `shared/embed.js` 白名單烤入 `vercel.json` 全站 CSP；Vercel 靜態標頭在部署時讀取，故 `VERCEL=1` 時不讀 `EMBED_WHITELIST`，API 與 CSP 保持一致，避免「API 話得、CSP 唔俾」。
+- **公開查詢 API**：`api/embed.js`（Vercel Serverless + Express 同一處理器）——`GET /api/embed` 回傳生效白名單、CSP 值、iframe allow 契約與管理提示；`GET /api/embed?origin=…`／`POST /api/embed { origin }` 核實來源是否獲准嵌入；只讀不寫、零金鑰、零個人資料，其餘方法 405。`vite.config.js` 獨立 dev/preview 亦掛載同一 API 與標頭。
+- **介面**：數位附錄新增「嵌入白名單 · 服務平台」卡（`EmbedWhitelistCard`）——生效清單（正式平台／環境變數追加／預設徽章）、複製 CSP 與平台 iframe 範例、即場核實任何來源、離線自動退回內建預設；平台內開啟時 `EmbedWelcomeNote` 經 `document.referrer` 顯示嵌入來源並標示「已在白名單」（標頭未同步時提出警告）。新增 `web/src/embedWhitelist.js` 橋接與 `.embedwl__*` 樣式；補回 `.no-print` 的列印隱藏定義。
+- **文件與測試**：README「服務平台 iframe 嵌入（白名單系統）」整節重寫（管理方法、驗證規則、API、指令），`.env.example` 新增 `EMBED_WHITELIST`；新增 `tests/embed_whitelist.test.mjs`（純函式、環境變數合併、Vercel／本機門檻、API、烤同步冪等與漂移修復、接線與文件合約）並加入 `npm test`。
+- **版本同步修正**：版號升至 `2.3.0`／`v2.3.0`，Service Worker 快取升至 `v7`；`shared/book.js` 新增 `SW_VERSION` 作單一真相，`demo_book`／`ui_contracts` 測試與 `smoke.mjs` 改由它核對（修正 smoke 殘留的 `v5` 硬編碼漂移）。
+
+### ROVERBADGE 服務紀錄同步修復（原未發布項）
 
 - **修復 ROVERBADGE 服務紀錄同步／匯入後在 BOOK 看不到**：上游 `action: 'load'` 本身不含服務紀錄，`api/roverbadge.js` 的 `load` 現同步另呼叫上游 `getServiceRecords`（`{ token, target_ymis }`），失敗時安全降級為 `[]`；清洗時剔除 `status === 'rejected'`，只保留 `id / activity / date / hours / place`（零個人資料）附於回應 `serviceRecords`。`shared/book.js` 的 `importFromRoverBadge` 將其寫入本冊 `book.service` 服務紀錄供檢視，以 `badgeRecordId` 及 `date|活動名稱` 去重且不覆寫本機手寫行，並回傳 `serviceImported`；同步卡提示會顯示已錄入服務紀錄筆數。BOOK 為檢視端：服務紀錄只作 BADGE → BOOK 唯讀匯入，BOOK → BADGE 的寫入仍只經「待領袖核實（pending）」，須領袖在 BADGE 內 CONFIRM；客戶端直接呼叫 `getServiceRecords` 仍為 403。
 

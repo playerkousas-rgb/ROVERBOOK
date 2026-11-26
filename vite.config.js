@@ -3,15 +3,22 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import roverbadgeHandler from './api/roverbadge.js';
+import embedHandler from './api/embed.js';
+import { securityHeadersMiddleware } from './server/whitelist.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 
-// 單獨以 `vite` 開發或預覽時，於本地掛載與 Vercel 相同的 `/api/roverbadge` 橋接處理器。
+// 單獨以 `vite` 開發或預覽時，於本地掛載與 Vercel 相同的 `/api/roverbadge` 橋接處理器、
+// `/api/embed` 白名單查詢，以及由白名單推導的全站安全標頭。
 // 正式環境與 `npm run dev` 皆以 `server/api.js` 的 Express 路由處理（不經此 middleware）。
 function roverbadgeDevPlugin() {
   const attach = (middlewares) => {
+    middlewares.use(securityHeadersMiddleware());
     middlewares.use('/api/roverbadge', (req, res, next) => {
       Promise.resolve(roverbadgeHandler(req, res)).catch(next);
+    });
+    middlewares.use('/api/embed', (req, res, next) => {
+      Promise.resolve(embedHandler(req, res)).catch(next);
     });
   };
 

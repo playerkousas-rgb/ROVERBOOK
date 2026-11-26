@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { EMBED_ACK_KEY, isEmbedded, standaloneHost, standaloneUrl } from '@shared/embed.js';
 import { today } from '@shared/book.js';
 import { download, slugify } from '../bookStore.js';
+import { checkEmbedOrigin, embedderOrigin } from '../embedWhitelist.js';
 import { useLang } from '../i18n.jsx';
 import { Icon, useToast } from '../ui.jsx';
 
@@ -18,11 +19,48 @@ export function StandaloneLink({ className = 'btn btn--onpaper', children }) {
 
 export function EmbedWelcomeNote() {
   const { isEn } = useLang();
-  if (!isEmbedded()) return null;
+  const embedded = isEmbedded();
+  const [embedder, setEmbedder] = useState('');
+  const [verified, setVerified] = useState(null);
+
+  useEffect(() => {
+    if (!embedded) return undefined;
+    const ref = embedderOrigin();
+    if (!ref) return undefined;
+    setEmbedder(ref);
+    let alive = true;
+    checkEmbedOrigin(ref).then((r) => {
+      if (alive) setVerified(r);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [embedded]);
+
+  if (!embedded) return null;
   const host = standaloneHost();
   return (
     <section className="embednote" role="note">
       <h2>{isEn ? 'Opened inside the Service Portal' : '你正在服務平台內開啟 ROVERBOOK'}</h2>
+      {embedder && (
+        <p className="embednote__origin">
+          <Icon name="external" size={12} />{' '}
+          {isEn ? 'Embedded by ' : '嵌入來源：'}
+          <code>{embedder}</code>
+          {verified ? (
+            verified.allowed ? (
+              <span className="embednote__ok">
+                <Icon name="check" size={11} /> {isEn ? 'whitelisted' : '已在白名單'}
+              </span>
+            ) : (
+              <span className="embednote__warn">
+                <Icon name="alert" size={11} />{' '}
+                {isEn ? 'not in the deployed whitelist — headers may be out of sync' : '未列入部署白名單 — 標頭可能未同步'}
+              </span>
+            )
+          ) : null}
+        </p>
+      )}
       <p>{isEn
         ? `This record book is stored separately from the standalone site (${host}). Existing data there will not appear here automatically.`
         : `平台內的紀錄冊與獨立版（${host}）分開儲存，原有資料不會自動出現在這裏。`}</p>
