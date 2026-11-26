@@ -29,7 +29,7 @@ ROVERBOOK 用家手上係**真實紀錄**（成員進度、考章、服務、頒
      appKey: 'roverbook',
      mode: localDev ? 'open' : 'entry-gate',
      portalIds: ['appstore'],
-     silentPortalIds: ['member'],
+     silentPortalIds: ['library', 'member'],
      allowStandalone: true,
      autoRedirectSeconds: 0,
    });
@@ -38,9 +38,12 @@ ROVERBOOK 用家手上係**真實紀錄**（成員進度、考章、服務、頒
    - `appKey: 'roverbook'`：工作階段通行證存於 `sessionStorage['roverbook.store_pass']`，不寫入紀錄冊，
      亦不會與其他 BOOK 互通。
    - `portalIds: ['appstore']`（SG17）：BOOK 類只認 APP STORE 做入口；分享連結／QR 由 APP STORE 產生（SG9）。
-   - `silentPortalIds: ['member']`：成員系統是**唯一例外**——`Referer` 照樣放行，但**卡上唔提、唔畫掣**。
-     成員系統本身公開，又已內置四本 BOOK，成員永遠有路入；一旦寫成白名單卡上的按鈕，普通人就會學到
-     「可以由成員系統入」，落架開關即失效。圖書館、區管理系統、GEMINI 一律**不**放行。
+   - `silentPortalIds: ['library', 'member']`（**SG19，2026-11-17 定案**）：圖書館與成員系統的 `Referer`
+     **照樣放行**（並正確回報 `matchedPortalId`，SG10 統計靠佢），但**卡上唔提、唔畫掣**——
+     攔截卡只出 APP STORE 一粒掣，免得兩粒掣並排令用家唔知撳邊個，亦避免攤薄主站。
+     圖書館是**引流入口**（每日通告），子 App 預設應同時放行（`library.admit` 的 `noreferrer` 條件已於
+     `89ef3cf1` 滿足）；成員系統本身公開又已內置四本紀錄冊，成員永遠有路入。
+     區管理系統、GEMINI 及任何陌生來源仍**不**放行（唔在清單內）；日後要開，只加一個 id，唔使改閘邏輯。
    - `allowStandalone: true`（SG11-a）：已加入主畫面的用家、以及直接開網址的現有用戶，紀錄照用得；
      閘只擋「新開、無入口、無通行證」的工作階段。
    - `autoRedirectSeconds: 0`：不自動跳轉，用家自己揀。
@@ -67,8 +70,9 @@ ROVERBOOK 用家手上係**真實紀錄**（成員進度、考章、服務、頒
 
 | 動作 | 效果 |
 | :--- | :--- |
-| APP STORE 落架（Delist） | 卡上唯一按鈕帶去 APP STORE 亦搵唔到本 App → 普通人沒有入口，`entry-gate` 擋住直開 |
-| 成員系統（例外，靜默） | 本身公開、又內置四本 BOOK，成員仍可由 `/books` 內嵌或開啟 BOOK 進入；**卡上永不顯示** |
+| APP STORE 落架（Delist） | 卡上唯一按鈕帶去 APP STORE 亦搵唔到本 App → 只靠搜尋／舊書籤的普通人沒有主站入口（SG19 的圖書館引流仍在，屬治理倉預設的取捨） |
+| 圖書館（靜默放行） | 由每日通告撳入照樣放行（SG19 引流入口）；**卡上唔畫掣** |
+| 成員系統（靜默放行） | 本身公開、又已內置四本紀錄冊，成員仍可由 `/books` 內嵌或開啟本冊進入；**卡上唔畫掣** |
 | 已加入主畫面（`allowStandalone`） | 已裝用家照用 —— 佢哋手上有真實紀錄，唔可以因為落架而失去更新／匯出（SG11-a） |
 | 要連例外都關 | 改用 `mode: 'closed'`（維護卡）或 Vercel Pause；**落架前先叫用家匯出 JSON 備份** |
 | 不可用 | `iframe-only`（會踢走已裝主畫面用家，亦令儲存分家） |
@@ -84,6 +88,13 @@ ROVERBOOK 用家手上係**真實紀錄**（成員進度、考章、服務、頒
 | 對儲存的影響 | 平台內與獨立版**分開儲存** | **零影響**（子站自己一等網域） |
 | 本機開發 | Vite dev 由 `server/whitelist.js` 一併套用 | `localhost`／`127.0.0.1` 自動用 `open` |
 | 可否當安全邊界 | 是（瀏覽器強制） | **否**（前端導流，可被繞過） |
+
+## 為何圖書館照放行、但卡上唔畫掣（SG19）
+
+治理倉 2026-11-17 定案：`appstore` 係唯一**主站**，`library` 係**引流入口**。子 App 預設應同時放行兩者直入，
+但直開網址被攔截時，提示卡**只顯示 `appstore` 一粒掣**——兩粒掣並排會令用家唔知撳邊個，亦會攤薄主站。
+實作就是 `silentPortalIds: ['library', 'member']`：清單內的入口照加入白名單放行（`matchedPortalId` 正常回報），
+但唔會渲染成按鈕。先前版本照抄了把圖書館也擋掉的做法，屬**收窄過頭**，已按治理倉改回。
 
 ## 設計目標：擋一般用家，唔係擋技術人員
 
@@ -105,7 +116,9 @@ ROVERBOOK 用家手上係**真實紀錄**（成員進度、考章、服務、頒
 - **`#v=`／`/v/<id>` 分享連結**：會被攔截，收件人須先經 APP STORE 進入；返回主站不會失去片段
   （片段在網址列，重新開啟即可），但要多一步。
 - **成員系統入口**：成員系統現時連結帶 `noreferrer`（清空 `Referer`），由 `/books` 直接跳入有機會被擋；
-  可在成員系統內以內嵌方式使用本冊，或先由 APP STORE 進入一次（治理倉 §4.4-11 有記錄）。
+  可在成員系統內以內嵌方式使用本冊，或先由 APP STORE／圖書館進入一次（治理倉 §4.4-11 有記錄）。
+- **圖書館入口**：已在 `89ef3cf1` 改好 `noreferrer`，所以由通告撳入放行得到；但通告 PDF 對外連結仍帶
+  `noreferrer`，若用家由該處跳回本冊，會沒有 `Referer` 而被當成直開。
 - **離線與舊版**：舊版已安裝的 Service Worker 要連網更新一次，才會快取到閘檔案；之後離線開 App
   一樣判斷得到入口。
 - **不可用此閘保護未備份的資料**：下架前仍須保留可達入口、開 `allowStandalone`、並先叫用家匯出 JSON 備份（SG11-a）。

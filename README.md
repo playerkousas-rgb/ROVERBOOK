@@ -81,8 +81,8 @@ node tests/embed_whitelist.test.mjs  # 白名單單元測試與部署合約（�
 initStoreGate({
   appKey: 'roverbook',
   mode: localDev ? 'open' : 'entry-gate',   // 本機開發（localhost）直接開放
-  portalIds: ['appstore'],                   // SG17：BOOK 類只需認 APP STORE
-  silentPortalIds: ['member'],               // 唯一例外：成員系統照放行，但卡上唔提、唔畫掣
+  portalIds: ['appstore'],                   // SG17：主站＝APP STORE（卡上第一粒掣）
+  silentPortalIds: ['library', 'member'],    // SG19：圖書館（引流）＋成員系統照放行，但卡上唔畫掣
   allowStandalone: true,                     // SG11-a：已裝主畫面／現有用戶照用
   autoRedirectSeconds: 0,
 });
@@ -91,14 +91,16 @@ initStoreGate({
 | 情況 | 結果 |
 | :--- | :--- |
 | 由 SCOUT APP STORE 進入（含 `?app=roverbook` 深層連結） | 放行，並在本分頁以 `sessionStorage['roverbook.store_pass']` 記住通行 |
-| 由成員系統進入（例外，靜默） | 放行，但**卡上永不顯示**該入口；成員系統本身公開並已內置四本 BOOK，成員唔會冇路入 |
-| 由通告圖書館、區管理系統、GEMINI 等其他網站進入 | 不放行：任何多餘公開入口都會令「落架後普通人入唔到」失效 |
+| 由**通告圖書館**進入（SG19，靜默） | **放行**（`matchedPortalId: 'library'`，本分頁記住通行）；圖書館是引流入口，卡上**唔畫圖書館掣**，免得兩粒掣並排令用家唔知撳邊個 |
+| 由成員系統進入（靜默） | 放行；成員系統本身公開並已內置四本紀錄冊，成員唔會冇路入，所以卡上亦唔畫掣 |
+| 由區管理系統、GEMINI 或其他網站進入 | 不放行（不在 `portalIds`／`silentPortalIds` 內）；日後要開，只在 `silentPortalIds` 加一個 id，唔使改閘邏輯 |
 | 已加入主畫面（standalone PWA） | 直接放行；紀錄照用 |
 | 直接開啟網址（新工作階段、無入口） | 顯示白名單提示卡（治理倉預設文案，與其他 App 一致），只有一粒「前往 APP STORE」按鈕；**不**自動跳轉 |
 | 開啟分享連結 `/v/<id>` | **同樣先見白名單卡**（用戶定案 2026-11-26，與其他支部紀錄冊一致）；按掣由 APP STORE 進入後即可看到已分享章節 |
 | 離線開啟 | 閘檔案在 Service Worker 的 `SHELL` 內並以 cache-first 提供，照樣判斷得到；紀錄冊功能不變 |
 | 本機開發（`npm run dev`） | `localhost`／`127.0.0.1`／`[::1]` 自動用 `mode: 'open'`，不會被自己的閘擋住；Vercel Production／Preview 仍行 `entry-gate` |
 
+- **圖書館（SG19）**：治理倉 2026-11-17 定案——子 App **預設同時放行 `appstore` 同 `library`**，但攔截卡**只顯示 APP STORE 一粒掣**（兩粒掣並排＝用家唔知撳邊個，亦會攤薄主站）。圖書館已於 `89ef3cf1` 改好 `noreferrer`（`rel="${isTool ? 'noopener' : 'noopener noreferrer'}"`），所以由通告撳入本冊放行得到，並會正確回報入口（SG10 統計靠佢）。要改成「圖書館都畫掣」或多開一個入口，只改 `silentPortalIds`／`portalIds`，**唔使改閘邏輯**。
 - **設計目標**：擋**一般用家**（收到轉發連結、開舊書籤／搜尋結果、唔知要由 APP STORE 入嘅成員同家長），
   **唔係擋技術人員**。識用 DevTools 改 `sessionStorage`、或自行偽造 `Referer` 嘅人一定入得到 —— 呢點係
   已知並接受，所以唔會加後端驗票、唔會加反調試；閘腳本載入失敗時亦 fail-open，寧願放行都唔鎖死用家

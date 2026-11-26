@@ -37,7 +37,7 @@ const OPTIONS = {
   appKey: 'roverbook',
   mode: 'entry-gate',
   portalIds: ['appstore'],
-  silentPortalIds: ['member'],
+  silentPortalIds: ['library', 'member'],
   allowStandalone: true,
   autoRedirectSeconds: 0,
 };
@@ -114,6 +114,8 @@ function page(referrer = '', { pass: hasPass = false, standalone = false, sessio
   for (const [origin, id] of [
     ['https://scoutappstore.vercel.app/', 'appstore'],
     ['https://scoutappstore.vercel.app/?app=roverbook', 'appstore'],
+    // SG19：圖書館係引流入口，預設照放行（只係卡上唔畫掣）
+    ['https://scout-circulars.vercel.app/', 'library'],
     ['https://member-portal-sigma-swart.vercel.app/books', 'member'],
   ]) {
     const p = page(origin);
@@ -123,20 +125,20 @@ function page(referrer = '', { pass: hasPass = false, standalone = false, sessio
       console.log(`  · ${origin} → ${JSON.stringify(decision)}`);
     }
   }
-  ok(allAllowed, 'APP STORE（含 ?app= 深層連結）與成員系統放行，並記住本分頁通行');
+  ok(allAllowed, 'APP STORE（含 ?app= 深層連結）、圖書館與成員系統放行，並記住本分頁通行');
 
-  // 偽造前綴（scoutappstore.vercel.app.evil.com）、圖書館、區管理系統、GEMINI 一律攔截：
-  // 落架開關要「APP STORE 一落架，普通人都入唔到」，任何額外公開入口都會令它失效。
+  // 偽造前綴（scoutappstore.vercel.app.evil.com）、未列入 portalIds／silentPortalIds 的入口
+  // （區管理系統、GEMINI）以及任何陌生來源一律攔截：佢哋都唔係本冊的放行來源。
   const blocked = [
     '',
     'https://scoutappstore.vercel.app.evil.com/',
+    'https://scout-circulars.vercel.app.evil.com/',
     'https://scout-district-portal.vercel.app/',
-    'https://scout-circulars.vercel.app/',
     'https://gemini-woad-sigma.vercel.app/',
     'https://roverbook.example.com/',
   ];
   const blockedOk = blocked.every((referrer) => gate.evaluateStoreGate(OPTIONS, { referrer }).allowed === false);
-  ok(blockedOk, '直開、偽造前綴、圖書館／區管理系統／GEMINI 一律攔截');
+  ok(blockedOk, '直開、偽造前綴（含圖書館前綴）、區管理系統、GEMINI 一律攔截');
 
   ok(gate.initStoreGate(OPTIONS, page('', { pass: true }).win).reason === 'session-pass', '同分頁重整沿用 sessionStorage 通行');
   ok(gate.initStoreGate(OPTIONS, page('', { standalone: true }).win).reason === 'standalone-pwa', '已加入主畫面 PWA 豁免（SG11-a）');
@@ -191,10 +193,13 @@ function page(referrer = '', { pass: hasPass = false, standalone = false, sessio
   ok(/mode: localDev \? 'open' : 'entry-gate'/.test(html), '本機開發 open、其餘 entry-gate');
   const localRx = '/^(localhost|127\\.0\\.0\\.1|\\[::1\\])$/';
   ok(html.includes(localRx), 'localhost／127.0.0.1／[::1] 偵測正確');
-  ok(/portalIds: \['appstore'\],[\s\S]{0,400}?silentPortalIds: \['member'\]/.test(html), 'portalIds: [appstore]、silentPortalIds: [member]');
+  ok(/portalIds: \['appstore'\],[\s\S]{0,400}?silentPortalIds: \['library', 'member'\]/.test(html), 'portalIds: [appstore]、silentPortalIds: [library, member]（SG19）');
   ok(/allowStandalone: true/.test(html), 'allowStandalone: true（已裝主畫面／現有用戶照用）');
   ok(!/member-portal/.test(html), '成員系統只放行、不宣傳（index.html 不出現其網址）');
-  ok(!/圖書館|通告圖書館/.test(html) && !/['"]library['"]/.test(html), '圖書館不是放行來源（落架開關成立）');
+  // SG19：圖書館照放行，但只可以靜默（唔可以出現在 portalIds 而畫成掣）
+  ok(/silentPortalIds: \['library', 'member'\]/.test(html), '圖書館以 silentPortalIds 放行（照放行、唔畫掣）');
+  ok(/portalIds: \['appstore'\]/.test(html), 'portalIds 只有 APP STORE（卡上第一粒掣永遠係主站）');
+  ok(!/labelZh|labelEn|https?:\/\/[a-z.-]*scout-circulars/.test(html), 'index.html 唔會自行列出/寫死圖書館網址（由治理倉註冊表提供）');
   ok(!/customTitle|customMessage/.test(html), '不加自訂卡片文案（沿用治理倉預設）');
   ok(!/supportNudge:/.test(html), '唔開 supportNudge（改用 SG18 常駐讚好／收藏掣，免重複騷擾）');
   ok(html.indexOf("mode: localDev ? 'open' : 'entry-gate'") < html.indexOf("portalIds: ['appstore']"), '模式設定先於入口設定');
@@ -255,6 +260,7 @@ function page(referrer = '', { pass: hasPass = false, standalone = false, sessio
   ok(readme.includes('不是身份驗證或安全邊界'), 'README：明言閘不是安全邊界');
   ok(readme.includes('擋**一般用家**') && readme.includes('唔係擋技術人員'), 'README：擋一般用家、唔係擋技術人員（用戶定案）');
   ok(readme.includes('落架開關'), 'README：記錄落架開關用途');
+  ok(readme.includes('silentPortalIds') && /library/.test(readme), 'README：記錄圖書館以 silentPortalIds 放行（SG19）');
   ok(readme.includes('store_gate_v1.0.js'), 'README：記錄閘檔案位置');
   ok(!/\/api\/enter/.test(readme), '不加後端驗票（唔為「防技術人員」過度工程）');
 

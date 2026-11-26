@@ -12,11 +12,12 @@
         initStoreGate({
           appKey: 'roverbook',
           mode: localDev ? 'open' : 'entry-gate',
-          // 唯一公開入口 = SCOUT APP STORE，即「落架開關」：APP STORE 一落架，普通人就冇入口。
-          // 成員系統係唯一例外：本身公開、又內置四本 BOOK，成員唔會冇路入；但卡上唔提、唔畫掣
-          // （silent = 照放行但唔顯示），免得白名單卡教普通人「可以由成員系統入」。
+          // 唯一公開「主站」＝ SCOUT APP STORE；圖書館係引流入口（SG19：預設同時放行）。
+          // 兩者都照放行，但攔截卡**只畫 APP STORE 一粒掣**——兩粒掣並排會令用家唔知撳邊個，
+          // 亦會攤薄主站；silent = 放行但唔畫掣（matchedPortalId 照樣回報 'library'）。
+          // 成員系統同樣靜默放行：本身公開、又內置四本紀錄冊，成員唔會冇路入。
           portalIds: ['appstore'],
-          silentPortalIds: ['member'],
+          silentPortalIds: ['library', 'member'],
           // SG11-a：已加入主畫面嘅用戶、以及直接開網址嘅現有用戶照用（唔會鎖死自己嘅紀錄）。
           allowStandalone: true,
           autoRedirectSeconds: 0,
