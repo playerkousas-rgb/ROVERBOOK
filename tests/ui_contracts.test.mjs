@@ -38,7 +38,7 @@ const swSrc = read('web/public/sw.js');
 const htmlSrc = read('web/index.html');
 const pkg = JSON.parse(read('package.json'));
 const pkgLock = JSON.parse(read('package-lock.json'));
-const { APP_VERSION } = await import('../shared/book.js');
+const { APP_VERSION, SW_VERSION } = await import('../shared/book.js');
 
 // 1. 橋接網址一致性
 ok(bridgeSrc.includes('https://roverbadge.vercel.app'), '前端橋接預設 ROVERBADGE 網址為 https://roverbadge.vercel.app');
@@ -106,13 +106,13 @@ ok(/\.toasts\s*\{[^}]*left:\s*12px;[^}]*right:\s*12px;/.test(cssSrc), '.toasts �
 // 5. 版本號與 CHANGELOG 同步
 ok(
   `v${pkg.version}` === APP_VERSION &&
-    pkg.version === '2.2.1' &&
-    pkgLock.version === '2.2.1' &&
+    pkg.version === '2.3.0' &&
+    pkgLock.version === '2.3.0' &&
     htmlSrc.includes(`content="${APP_VERSION}"`) &&
     htmlSrc.includes(`window.APP_VERSION = '${APP_VERSION}'`) &&
-    swSrc.includes("VERSION = 'v6'") &&
+    swSrc.includes(`VERSION = '${SW_VERSION}'`) &&
     fs.existsSync(path.join(ROOT, 'CHANGELOG.md')),
-  `版本號與 CHANGELOG 同步（${APP_VERSION} / sw v6）`,
+  `版本號與 CHANGELOG 同步（${APP_VERSION} / sw ${SW_VERSION}）`,
 );
 
 console.log(`\n${pass} 項通過、${fail} 項失敗`);

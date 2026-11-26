@@ -3,12 +3,16 @@ import crypto from 'node:crypto';
 import QRCode from 'qrcode';
 import { createShare, getShare, deleteShare, touchShare } from './store.js';
 import roverbadgeHandler from '../api/roverbadge.js';
+import embedHandler from '../api/embed.js';
 
 export const api = express.Router();
 api.use(express.json({ limit: '8mb' }));
 
 // ROVERBOOK ⇄ ROVERBADGE 個人純進度雲端直連橋接（伺服器端，ROVERBADGE_ORIGIN）
 api.use('/roverbadge', (req, res, next) => roverbadgeHandler(req, res).catch(next));
+
+// 嵌入白名單系統：公開查詢生效白名單與來源核實（零金鑰、零個人資料）
+api.use('/embed', (req, res, next) => Promise.resolve(embedHandler(req, res)).catch(next));
 
 const baseUrl = (req) =>
   process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;

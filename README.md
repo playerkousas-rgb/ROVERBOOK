@@ -15,9 +15,9 @@
 
 ---
 
-## 服務平台 iframe 嵌入
+## 服務平台 iframe 嵌入（白名單系統）
 
-部署會在全站回應以下安全標頭，只允許 ROVERBOOK 自身及正式服務平台嵌入：
+部署會在全站回應以下安全標頭，只允許 ROVERBOOK 自身及**白名單內**的服務平台嵌入：
 
 ```text
 Content-Security-Policy: frame-ancestors 'self' https://member-portal-sigma-swart.vercel.app
@@ -34,6 +34,35 @@ Content-Security-Policy: frame-ancestors 'self' https://member-portal-sigma-swar
 - **搬移資料**：在舊資料所在版本開啟選單 →「匯出備份」下載 JSON；再於另一版本按「匯入備份」還原。建議平台內每次填寫後匯出備份。
 - **離線**：Service Worker 仍可使用，但須先在平台內連網載入一次；平台本身也必須仍可開啟。需要可靠長期離線使用時，建議開啟獨立版並加到主畫面。
 - 如平台設定 iframe `sandbox`，須允許 scripts、same-origin、forms、popups、modals 及 downloads，否則儲存、備份和確認對話框可能失效。
+
+### 白名單系統（v2.3.0）
+
+白名單由 **`shared/embed.js` 的 `EMBED_WHITELIST`** 作單一真相：`vercel.json` 的全站 CSP、自架 Node 伺服器的安全標頭、`/api/embed` 回應與前端顯示全部由它推導，測試守住一致。
+
+| 層面 | 做法 |
+| --- | --- |
+| 預設白名單 | `EMBED_WHITELIST = ['https://member-portal-sigma-swart.vercel.app']`（正式服務平台永遠在列） |
+| 自架伺服器追加 | 環境變數 `EMBED_WHITELIST="https://a.app https://b.app"`（逗號／分號／空白分隔），重啟即生效；`server/index.js` 會把由白名單推導的 CSP 等安全標頭套到**每個回應**（包括靜態檔與 Vite dev） |
+| Vercel 追加 | 改 `shared/embed.js` → `npm run sync:embed`（更新 `vercel.json`）→ commit + redeploy。Vercel 靜態標頭在部署時讀取，所以**環境變數對 Vercel 無效**，`/api/embed` 在 Vercel 亦只回報已烤入的清單，避免「API 話得、CSP 唔俾」 |
+| 查詢／核實 | `GET /api/embed`（生效清單 + CSP 值 + iframe allow 契約）；`GET /api/embed?origin=https://…` 或 `POST /api/embed { origin }`（該來源是否獲准嵌入）。平台整合前可先核實自己已在白名單 |
+| 介面 | 數位附錄「**嵌入白名單 · 服務平台**」卡：生效清單、複製 CSP／iframe 範例、即場核實來源、離線自動退回預設；平台內開啟時歡迎提示會顯示嵌入來源並標示「已在白名單」 |
+
+**驗證規則（全部來源一律嚴格）：**
+
+- 只接受 `https://host[:port]`；路徑／查詢／片段自動剝除（CSP `frame-ancestors` 只比對來源）。
+- 拒絕萬用字元 `*`、帳號密碼、`javascript:`／`data:` 等任何非 http(s) scheme、`null` 來源。
+- `http://localhost`／`http://127.0.0.1` 只在**非 Vercel 的開發環境**，或 `ROVERBOOK_PROXY_TEST=1` 的自架測試環境容許。
+- 不合格的環境變數項目會被剔除，並在 `/api/embed` 的 `invalid` 如實報告。
+- 白名單屬公開資訊（CSP 標頭本身就公開），API **只讀不寫**、零金鑰、零個人資料；管理只經環境變數／部署。
+- 未列入白名單的來源會被瀏覽器在載入任何程式之前直接擋下；白名單不影響獨立版、離線填寫、簽名、表格與列印。
+
+**指令：**
+
+```bash
+npm run sync:embed           # 把 shared/embed.js 白名單烤入 vercel.json
+npm run sync:embed -- --check  # 只核對不寫入，不同步則 exit 1（CI 可用）
+node tests/embed_whitelist.test.mjs  # 白名單單元測試與部署合約（已入 npm test）
+```
 
 ---
 
@@ -376,7 +405,7 @@ npm run smoke    # 全站 43 張紙、表單、列印、QR、領袖核簽、儲�
 npm run build && npm start
 ```
 
-環境變數：`PORT`（預設 3001）、`PUBLIC_BASE_URL`、`ROVERBADGE_ORIGIN`（預設 `https://roverbadge.vercel.app`）、`LEADER_CODE`（選用，領袖模式密碼）。
+環境變數：`PORT`（預設 3001）、`PUBLIC_BASE_URL`、`ROVERBADGE_ORIGIN`（預設 `https://roverbadge.vercel.app`）、`LEADER_CODE`（選用，領袖模式密碼）、`EMBED_WHITELIST`（選用，自架伺服器追加嵌入白名單；Vercel 請用 `npm run sync:embed`）。
 
 ### 部署到 Vercel
 
@@ -390,19 +419,25 @@ repo 已附 `vercel.json`：`npm run build` → `dist`，所有路徑 rewrite �
 ## 22. 結構
 
 ```
-api/      roverbadge.js（ROVERBADGE 橋接與旅團清單 API）、leader.js（領袖密碼驗證）
-server/   index.js（Vite/靜態）、api.js（share/QR/leader/roverbadge）、store.js
-shared/   book.js（模型、SECTIONS 43 張紙／42 印刷頁、頁碼對照、分享快照、ROVERBADGE、demoBook）、syllabus.js（32 項）
+api/      roverbadge.js（ROVERBADGE 橋接與旅團清單 API）、leader.js（領袖密碼驗證）、
+          embed.js（嵌入白名單查詢與來源核實）
+server/   index.js（Vite/靜態＋全站白名單安全標頭）、api.js（share/QR/leader/roverbadge/embed）、
+          store.js、whitelist.js（白名單解析、EMBED_WHITELIST 合併、安全標頭中介層）
+shared/   book.js（模型、SECTIONS 43 張紙／42 印刷頁、頁碼對照、分享快照、ROVERBADGE、demoBook）、
+          syllabus.js（32 項）、embed.js（嵌入白名單單一真相、來源正規化、CSP 組裝）
 web/src/  App.jsx（封面／翻頁／目錄／放大）
           roverbadgeBridge.js（/api/roverbadge 可選偵測、旅團排序、完整備份與進度檔判別）
+          embedWhitelist.js（/api/embed 可選偵測、來源核實、離線退回預設白名單）
           i18n.jsx（全中／全英切換、記住語言、中英標籤自動拆解）
           components/RoverBadgeSyncCard.jsx（附錄 ROVERBADGE 同步卡）
+          components/EmbedWhitelistCard.jsx（附錄嵌入白名單卡）
           components/Legal.jsx（版權及非官方聲明）
           components/Form.jsx（逐頁表單工具）、Write.jsx（就地輸入＋自動縮字）、Ink.jsx（簽名）
           pages/Book.jsx（內頁 1–11、33–40 頁）、Training.jsx（內頁 12–32 頁）、Contents、Appendix、Welcome
-          styles.css（藍布封面、紙頁、表單線、A4 列印、.roversync__* 同步卡樣式）
-tests/    roverbadge_sync、standalone_book、page_map、demo_book、ui_contracts、roverbadge_ui 測試
-scripts/  smoke.mjs、make-wallet-assets.mjs
+          styles.css（藍布封面、紙頁、表單線、A4 列印、.roversync__* 同步卡、.embedwl__* 白名單卡樣式）
+tests/    roverbadge_sync、standalone_book、page_map、demo_book、ui_contracts、roverbadge_ui、
+          embed_contract、embed_whitelist 測試
+scripts/  smoke.mjs、sync-embed-headers.mjs（白名單 → vercel.json 烤同步）、make-wallet-assets.mjs
 ```
 
 ## 23. 已知限制
