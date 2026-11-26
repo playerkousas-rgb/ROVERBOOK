@@ -143,7 +143,7 @@ const lock = JSON.parse(read('package-lock.json'));
 const bookSrc = read('shared/book.js');
 const sw = read('web/public/sw.js');
 const html = read('web/index.html');
-check(pkg.version === '2.3.0' && lock.version === '2.3.0', 'package.json 及 package-lock.json 已升至 2.3.0');
+check(pkg.version === '2.4.0' && lock.version === '2.4.0', 'package.json 及 package-lock.json 已升至 2.4.0');
 check(bookSrc.includes(`APP_VERSION = '${APP_VERSION}'`), `APP_VERSION = ${APP_VERSION}`);
 check(sw.includes(`VERSION = '${SW_VERSION}'`), `Service Worker 快取版本已升至 ${SW_VERSION}`);
 check(html.includes(APP_VERSION), 'index.html 版本已同步');

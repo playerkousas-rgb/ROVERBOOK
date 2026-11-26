@@ -28,6 +28,7 @@ import { isLeader, onLeaderChange, leaderAvailable } from './leader.js';
 import { UPDATE_EVENT, applyPwaUpdate, hasPendingPwaUpdate } from './pwa.js';
 import { LangProvider, useLang } from './i18n.jsx';
 import { EmbedRibbon } from './components/EmbedNotice.jsx';
+import StoreSupport from './components/StoreSupport.jsx';
 
 const PAGES = {
   cover: Cover,
@@ -323,6 +324,7 @@ function BookApp({ book, saveIssue }) {
         )}
 
         <div className="chipbar__actions">
+          <StoreSupport />
           {leader && (
             <button
               className="chipbtn chipbtn--leader is-on"

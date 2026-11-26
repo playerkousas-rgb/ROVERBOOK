@@ -2,15 +2,39 @@
 <html lang="zh-HK">
   <head>
     <meta charset="utf-8" />
+    <!-- 指定入口白名單（Store Gate）：緊接 meta charset，喺 React 掛載之前先判斷入口來源 -->
+    <script src="/store_gate_v1.0.js"></script>
+    <script>
+      // 本機開發（localhost／127.0.0.1／[::1]）用 'open'，避免 npm run dev 被自己的閘擋住；
+      // 其餘（Vercel Production／Preview）一律 'entry-gate'。
+      var localDev = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+      if (typeof initStoreGate === 'function') {
+        initStoreGate({
+          appKey: 'roverbook',
+          mode: localDev ? 'open' : 'entry-gate',
+          // 唯一公開入口 = SCOUT APP STORE，即「落架開關」：APP STORE 一落架，普通人就冇入口。
+          // 成員系統係唯一例外：本身公開、又內置四本 BOOK，成員唔會冇路入；但卡上唔提、唔畫掣
+          // （silent = 照放行但唔顯示），免得白名單卡教普通人「可以由成員系統入」。
+          portalIds: ['appstore'],
+          silentPortalIds: ['member'],
+          // SG11-a：已加入主畫面嘅用戶、以及直接開網址嘅現有用戶照用（唔會鎖死自己嘅紀錄）。
+          allowStandalone: true,
+          autoRedirectSeconds: 0,
+          // 卡片文案用治理倉預設（SG19 簡短人話版），同其他 BOOK 一致，唔加自訂字句。
+          // SG18：改用常駐「讚好／收藏」回跳掣，所以唔開 supportNudge（免得同一用家被騷擾兩次）。
+        });
+      }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="app-version" content="v2.3.0" />
+    <meta name="app-version" content="v2.4.0" />
     <meta name="theme-color" content="#071b38" />
     <meta name="application-name" content="ROVERBOOK" />
     <meta
       name="description"
-      content="ROVERBOOK — 樂行童軍電子紀錄冊（v2.3.0）。毋須登入，資料留在你的裝置；可逐頁填寫、請領袖簽名、放入手機錢包。"
+      content="ROVERBOOK — 樂行童軍電子紀錄冊（v2.4.0）。毋須登入，資料留在你的裝置；可逐頁填寫、請領袖簽名、放入手機錢包。"
     />
-    <title>ROVERBOOK · 樂行童軍紀錄冊 v2.3.0</title>
+    <title>ROVERBOOK · 樂行童軍紀錄冊 v2.4.0</title>
+    <link rel="canonical" href="https://roverbook.vercel.app/" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -22,7 +46,7 @@
     <meta name="apple-mobile-web-app-title" content="ROVERBOOK" />
     <meta name="mobile-web-app-capable" content="yes" />
     <script>
-      window.APP_VERSION = 'v2.3.0';
+      window.APP_VERSION = 'v2.4.0';
     </script>
   </head>
   <body>
@@ -31,7 +55,7 @@
         id="app-boot"
         style="padding:24px;min-height:100dvh;color:#f2e7cd;background:#071b38;font-family:system-ui,sans-serif;text-align:center"
       >
-        ROVERBOOK v2.3.0 · 樂行童軍電子紀錄冊
+        ROVERBOOK v2.4.0 · 樂行童軍電子紀錄冊
       </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>

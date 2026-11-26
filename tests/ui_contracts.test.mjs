@@ -106,8 +106,8 @@ ok(/\.toasts\s*\{[^}]*left:\s*12px;[^}]*right:\s*12px;/.test(cssSrc), '.toasts �
 // 5. 版本號與 CHANGELOG 同步
 ok(
   `v${pkg.version}` === APP_VERSION &&
-    pkg.version === '2.3.0' &&
-    pkgLock.version === '2.3.0' &&
+    pkg.version === '2.4.0' &&
+    pkgLock.version === '2.4.0' &&
     htmlSrc.includes(`content="${APP_VERSION}"`) &&
     htmlSrc.includes(`window.APP_VERSION = '${APP_VERSION}'`) &&
     swSrc.includes(`VERSION = '${SW_VERSION}'`) &&
