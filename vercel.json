@@ -5,7 +5,7 @@
   "installCommand": "npm install",
   "rewrites": [
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/|assets/|icons/|img/|store_gate_v1\\.0\\.js|sw\\.js|manifest\\.webmanifest|favicon).*)",
       "destination": "/index.html"
     }
   ],

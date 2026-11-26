@@ -66,6 +66,64 @@ node tests/embed_whitelist.test.mjs  # 白名單單元測試與部署合約（�
 
 ---
 
+## 指定入口白名單（Store Gate，v2.4.0）
+
+> 與上面「服務平台 iframe 嵌入」係兩個唔同的白名單，兩者**並存、互不取代**：
+> 前者管「**被誰嵌入**」（`Content-Security-Policy: frame-ancestors`，瀏覽器強制），
+> 本節管「**由哪裡開啟**」（頂層導覽的入口來源，前端導流）。
+
+依治理真理倉 `playerkousas-rgb/readme` 的 SG1–SG19，做法對齊同系列其他支部紀錄冊：ROVERBOOK 採**頂層跳板 `entry-gate`**（**不用** `iframe-only` —— `iframe` 會令
+儲存分家，已加入主畫面的用家亦會被踢走）。閘檔案 `web/public/store_gate_v1.0.js` 由治理倉
+`templates/vercel/store_gate_v1.0.js` **原樣複製**（commit `6ebfdd72a1ea5a5e83df4a6644fc66d0236df98e`，
+與其他支部紀錄冊同一份檔），App 只在 `web/index.html` 傳入設定：
+
+```js
+initStoreGate({
+  appKey: 'roverbook',
+  mode: localDev ? 'open' : 'entry-gate',   // 本機開發（localhost）直接開放
+  portalIds: ['appstore'],                   // SG17：主站＝APP STORE（卡上第一粒掣）
+  silentPortalIds: ['library', 'member'],    // SG19：圖書館（引流）＋成員系統照放行，但卡上唔畫掣
+  allowStandalone: true,                     // SG11-a：已裝主畫面／現有用戶照用
+  autoRedirectSeconds: 0,
+});
+```
+
+| 情況 | 結果 |
+| :--- | :--- |
+| 由 SCOUT APP STORE 進入（含 `?app=roverbook` 深層連結） | 放行，並在本分頁以 `sessionStorage['roverbook.store_pass']` 記住通行 |
+| 由**通告圖書館**進入（SG19，靜默） | **放行**（`matchedPortalId: 'library'`，本分頁記住通行）；圖書館是引流入口，卡上**唔畫圖書館掣**，免得兩粒掣並排令用家唔知撳邊個 |
+| 由成員系統進入（靜默） | 放行；成員系統本身公開並已內置四本紀錄冊，成員唔會冇路入，所以卡上亦唔畫掣 |
+| 由區管理系統、GEMINI 或其他網站進入 | 不放行（不在 `portalIds`／`silentPortalIds` 內）；日後要開，只在 `silentPortalIds` 加一個 id，唔使改閘邏輯 |
+| 已加入主畫面（standalone PWA） | 直接放行；紀錄照用 |
+| 直接開啟網址（新工作階段、無入口） | 顯示白名單提示卡（治理倉預設文案，與其他 App 一致），只有一粒「前往 APP STORE」按鈕；**不**自動跳轉 |
+| 開啟分享連結 `/v/<id>` | **同樣先見白名單卡**（用戶定案 2026-11-26，與其他支部紀錄冊一致）；按掣由 APP STORE 進入後即可看到已分享章節 |
+| 離線開啟 | 閘檔案在 Service Worker 的 `SHELL` 內並以 cache-first 提供，照樣判斷得到；紀錄冊功能不變 |
+| 本機開發（`npm run dev`） | `localhost`／`127.0.0.1`／`[::1]` 自動用 `mode: 'open'`，不會被自己的閘擋住；Vercel Production／Preview 仍行 `entry-gate` |
+
+- **圖書館（SG19）**：治理倉 2026-11-17 定案——子 App **預設同時放行 `appstore` 同 `library`**，但攔截卡**只顯示 APP STORE 一粒掣**（兩粒掣並排＝用家唔知撳邊個，亦會攤薄主站）。圖書館已於 `89ef3cf1` 改好 `noreferrer`（`rel="${isTool ? 'noopener' : 'noopener noreferrer'}"`），所以由通告撳入本冊放行得到，並會正確回報入口（SG10 統計靠佢）。要改成「圖書館都畫掣」或多開一個入口，只改 `silentPortalIds`／`portalIds`，**唔使改閘邏輯**。
+- **設計目標**：擋**一般用家**（收到轉發連結、開舊書籤／搜尋結果、唔知要由 APP STORE 入嘅成員同家長），
+  **唔係擋技術人員**。識用 DevTools 改 `sessionStorage`、或自行偽造 `Referer` 嘅人一定入得到 —— 呢點係
+  已知並接受，所以唔會加後端驗票、唔會加反調試；閘腳本載入失敗時亦 fail-open，寧願放行都唔鎖死用家
+  手上嘅紀錄。
+- **不是身份驗證或安全邊界**：這是前端導流；`/api/leader`（`LEADER_CODE`）與 `/api/roverbadge` 的保護
+  **不靠**此閘。`Referer` 可被偽造、`sessionStorage` 可被改動，但都只影響「有冇經入口」的表象，
+  改不到別人的資料。
+- **離線及舊連結**：新分頁／新工作階段可能沒有通行紀錄而再見白名單卡，由任一入口進入即可。
+  已安裝的舊版需先連網更新一次，才會快取到閘檔案。
+- **落架開關**（呢個閘存在的理由）：APP STORE 一落架，卡上嘅「前往 APP STORE」都搵唔到本 App，
+  普通人就沒有入口，直開網址只會見到白名單卡；已加入主畫面的用家照用（手上有真實紀錄，唔可以因為
+  落架而失去更新／匯出）。要連成員都停，改用 `mode: 'closed'` 或 Vercel Pause，並**先叫用家匯出 JSON 備份**。
+- **讚好／收藏（SG18）**：頂欄及歡迎頁各有一粒低調「讚好／收藏」，只以
+  `ScoutStoreGate.getAppStoreUrl('roverbook')` 開新分頁返回 APP STORE 詳情卡（slug 對照主站
+  `20261116-app-slug-seed.sql`：`roverbook.vercel.app → roverbook`）；**不**直連主站資料庫、
+  不複製任何密鑰、不自行呼叫統計函式。讀不到閘腳本時該掣自動隱藏，列印時隱藏。
+  因為已有常駐回跳掣，**不開** `supportNudge`（免得同一用家被騷擾兩次）。
+- **要關站或改入口**：只改 `web/index.html` 的設定（治理倉另有 `closed`／`iframe-only` 模式），並先評估
+  現有用戶及備份；`iframe-only` 不可用於本機紀錄冊。決策與限制見
+  [`docs/adr/0006-entry-gate-whitelist.md`](docs/adr/0006-entry-gate-whitelist.md)。
+
+---
+
 ## 1. 紙本頁碼（封面不計頁碼 + 內頁 1–42）
 
 官方《Rover Scout Record Book（v 20260727）》共 **43 張紙**：第 1 張是封面（官方不印頁碼），內頁印刷頁 **1–42**。

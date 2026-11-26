@@ -6,6 +6,7 @@ import { navigate } from '../router.jsx';
 import { isBadgeProgressFile, isBookBackupFile } from '../roverbadgeBridge.js';
 import { useLang } from '../i18n.jsx';
 import { EmbedWelcomeNote } from '../components/EmbedNotice.jsx';
+import StoreSupport from '../components/StoreSupport.jsx';
 
 export default function Welcome({ onReady }) {
   const { isEn } = useLang();
@@ -99,6 +100,7 @@ export default function Welcome({ onReady }) {
             <strong>ROVERBOOK {APP_VERSION}</strong>
             <em>樂行童軍紀錄冊</em>
           </span>
+          <StoreSupport onDark className="welcome__support" />
         </div>
 
         <h1>這本紀錄冊，是你的。</h1>

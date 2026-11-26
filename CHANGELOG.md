@@ -1,5 +1,28 @@
 # Changelog · ROVERBOOK 樂行童軍紀錄冊
 
+## v2.4.0 (2026-11-26)
+
+### 新增（Added · 指定入口白名單 Store Gate，對齊同系列支部紀錄冊）
+
+- **頂層跳板 `entry-gate`**：原樣複製治理真理倉 `playerkousas-rgb/readme` @ `6ebfdd72a1ea5a5e83df4a6644fc66d0236df98e` 的 `templates/vercel/store_gate_v1.0.js` 至 `web/public/store_gate_v1.0.js`（與其他支部紀錄冊同一份檔，md5 `4f06c205…`，不在地修改閘邏輯），只在 `web/index.html` 的 `<head>`（緊接 `<meta charset>`、`<title>` 之前）以 `initStoreGate()` 傳入 ROVERBOOK 設定：`appKey: 'roverbook'`、`mode: localDev ? 'open' : 'entry-gate'`、`portalIds: ['appstore']`、`silentPortalIds: ['library', 'member']`、`allowStandalone: true`、`autoRedirectSeconds: 0`。本機 `localhost`／`127.0.0.1`／`[::1]` 自動改用 `open`，`npm run dev` 不會被自己的閘擋住；Vercel Production／Preview 照行 `entry-gate`。
+- **放行規則（SG19）**：**主站＝SCOUT APP STORE**，攔截卡只顯示它一粒掣（「落架開關」——日後在 APP STORE 落架，只靠搜尋／舊書籤的普通人就沒有主站入口；已裝主畫面用家照用，避免失去更新／匯出）。**通告圖書館是引流入口，照樣放行**（`silentPortalIds: ['library']`，`matchedPortalId: 'library'` 正常回報），但卡上唔畫圖書館掣，免得兩粒掣並排令用家唔知撳邊個；成員系統同樣靜默放行（本身公開並已內置四本紀錄冊）。區管理系統、GEMINI 及其他陌生來源不放行——日後要開，只在 `silentPortalIds` 加一個 id，唔使改閘邏輯。由 APP STORE 進入會在本分頁記住通行（`sessionStorage['roverbook.store_pass']`）；直接開網址的新工作階段顯示治理倉預設文案白名單卡，只有一粒「前往 APP STORE」按鈕，**不**自動跳轉。
+- **分享連結同樣經閘（用戶定案 2026-11-26）**：`/v/<id>` 唯讀分享頁與其他支部紀錄冊一致，收件人先經 APP STORE 進入才看得到已分享章節；分享功能、`deleteToken` 作廢機制、`#v=` 片段傳輸全部不變。
+- **不用 `iframe-only`**：BOOK 有本機長期儲存與 PWA，屬 SG2 禁區（iframe 內儲存分家、會踢走已裝主畫面的用家）。`frame-ancestors` 服務平台嵌入白名單（ADR 見 README「白名單系統」）**維持不變**，兩個白名單並存。
+- **啟動與離線**：`web/src/main.jsx` 只在 `document.documentElement` 沒有 `data-store-gated` 時才掛載 React 及註冊 PWA（避免先閃紀錄冊或裝出打不開的圖示）；`web/public/sw.js` 把 `/store_gate_v1.0.js` 放入 `SHELL` 並以 cache-first 提供（離線一樣判斷得到入口）；`vercel.json` 的 SPA rewrite 明確排除該檔（連同 `/assets/`、`/icons/`、`/img/`、`/sw.js`、`/manifest.webmanifest`、`favicon*`），避免被吞成 `index.html`。
+- **讚好／收藏（SG18）**：新增 `web/src/components/StoreSupport.jsx`，頂欄及歡迎頁各放一次，只以 `ScoutStoreGate.getAppStoreUrl('roverbook')` 開新分頁返回 APP STORE 詳情卡（slug 對照主站 migration `20261116-app-slug-seed.sql`：`roverbook.vercel.app → roverbook`）；零寫死網址、不直連主站資料庫、不複製任何密鑰；讀不到閘腳本時整粒掣隱藏，列印時隱藏，細螢幕只留心形圖標。因為已有常駐回跳掣，**不開** `supportNudge`（免得同一用家被騷擾兩次）。
+
+### 文件（Docs）
+
+- 新增 [`docs/adr/0006-entry-gate-whitelist.md`](docs/adr/0006-entry-gate-whitelist.md)：記錄決策、與 `frame-ancestors` 嵌入白名單的分工（「被誰嵌入」vs「由哪裡開啟」）、落架開關及如實限制——**設計目標是擋一般用家（誤傳連結／舊書籤／搜尋結果），不是擋技術人員**：改 `sessionStorage`、偽造 `Referer` 或自動化瀏覽器都繞得過，屬已知並接受，因此不另加後端驗票或反調試；`/api/leader`（`LEADER_CODE`）與 `/api/roverbadge` 不受此閘保護。
+- `README.md` 新增「指定入口白名單（Store Gate）」一節（逐情況放行表、私隱與限制、離線及舊連結、分享連結、落架與關站方法），並補上正式網址 `canonical`。
+- 白名單卡沿用治理倉預設文案（SG19 簡短人話版），與其他紀錄冊一致，**不**加 `customTitle`／`customMessage`。
+
+### 測試（Tests）
+
+- 新增 `tests/store_gate.test.mjs`（62 項）並加入 `npm test`：入口來源精確比對（含 `scoutappstore.vercel.app.evil.com` 前綴偽造、圖書館／區管理系統／GEMINI 攔截）、靜默放行與工作階段通行、主畫面豁免、`sessionStorage` 被封鎖時仍可進入但重整要再經入口、攔截卡只有一粒 APP STORE 按鈕且遮罩不露出底層、卡片文案＝治理倉預設、閘檔案位置（`<meta charset>` 之後、`<title>` 之前）、SW 預快取與 cache-first、SPA rewrite 排除、`main.jsx` 啟動守衛、`frame-ancestors` 不變、SG18 slug 與列印隱藏，以及「閘檔案保持治理倉原樣」與文件如實交代限制。
+- 以 jsdom 按真實 `index.html` ＋ 閘腳本實測 7 種情境：直開網址、開啟 `/v/<id>` 分享連結、已裝主畫面、由 APP STORE 進入、由成員系統進入（靜默放行）、由圖書館進入、本機 `localhost`（自動 `open`）——結果與上述放行表完全一致。
+- 版本號同步升至 `v2.4.0`：`package.json`、`package-lock.json`、`shared/book.js` `APP_VERSION`、`web/index.html` meta／`window.APP_VERSION`、Service Worker 快取 `SW_VERSION` / `VERSION = 'v8'`；`tests/demo_book.test.mjs`、`tests/ui_contracts.test.mjs` 的版號斷言同步更新。
+
 ## v2.3.0 (2026-11-26)
 
 ### 嵌入白名單系統（iframe embed whitelist）

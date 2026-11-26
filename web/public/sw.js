@@ -1,4 +1,4 @@
-/* ROVERBOOK service worker — 配合 APP_VERSION = v2.3.0
+/* ROVERBOOK service worker — 配合 APP_VERSION = v2.4.0
  *
  * 策略：
  *   導航請求（/、/p/…、/forms/…、/scan）→ network-first，失敗時用快取的 index.html
@@ -9,11 +9,13 @@
  *       activate 時清走舊版本 cache。
  */
 
-const VERSION = 'v7';
+const VERSION = 'v8';
 const CACHE = `roverbook-${VERSION}`;
 const SHELL = [
   '/',
   '/index.html',
+  // 指定入口白名單（Store Gate）必須一併快取，離線開 App 一樣判斷得到入口來源。
+  '/store_gate_v1.0.js',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
@@ -108,6 +110,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (
+    url.pathname === '/store_gate_v1.0.js' ||
     isAsset(url) ||
     url.pathname.startsWith('/icons/') ||
     url.pathname.startsWith('/img/') ||
